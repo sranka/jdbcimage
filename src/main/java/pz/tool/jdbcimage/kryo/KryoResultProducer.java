@@ -109,7 +109,7 @@ public class KryoResultProducer implements ResultProducer{
 					val = KryoInputStreamSerializer.INSTANCE.deserializeBlobData(in, row.info.connection);
 					break;
 				default:
-					throw new IllegalStateException("Unable to deserialize SQL type: "+types[i]+", Object");
+					throw new IllegalStateException("Unable to deserialize object for SQL type: "+types[i]);
 			}
 			row.values[i] = val;
 		}

@@ -1,11 +1,18 @@
 package pz.tool.jdbcimage;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Map;
+
+import pz.tool.jdbcimage.kryo.KryoInputStreamSerializer;
 
 ///////////////////////////
 // Database Importer
@@ -92,18 +99,73 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 					int type = info.types[i];
 					if (value == null){
 						stmt.setNull(pos, type);
-					} else if (value instanceof InputStream){
-						if (value instanceof ChunkedInputStream){
-							stmt.setBinaryStream(pos, (InputStream)value, ((ChunkedInputStream)value).length());
-						} else{
-							stmt.setBinaryStream(pos, (InputStream)value, ((ChunkedInputStream)value).length());
-						}
-					} else if (value instanceof Blob){
-						stmt.setBlob(pos, (Blob)value);
-					} else if (value instanceof byte[]){
-						stmt.setBytes(pos, (byte[])value);
 					} else{
-						stmt.setObject(pos, value, type);
+						switch(type){
+							case Types.BIGINT:
+								stmt.setLong(pos, (Long)value);
+								break;
+							case Types.BINARY:
+								stmt.setBytes(pos, (byte[])value);
+								break;
+							case Types.BIT:
+								stmt.setBoolean(pos, (Boolean)value);
+								break;
+							case Types.CHAR:
+							case Types.VARCHAR:
+							case Types.LONGVARCHAR:
+								stmt.setNString(pos, (String)value);
+							case Types.NCHAR:
+							case Types.NVARCHAR:
+							case Types.LONGNVARCHAR:
+								stmt.setString(pos, (String)value);
+								break;
+							case Types.DATE:
+								stmt.setDate(pos, (Date)value);
+								break;
+							case Types.TIME:
+								stmt.setTime(pos, (Time)value);
+								break;
+							case Types.TIMESTAMP:
+								stmt.setTimestamp(pos, (Timestamp)value);
+								break;
+							case Types.DECIMAL:
+							case Types.NUMERIC:
+								stmt.setBigDecimal(pos, (BigDecimal)value);
+								break;
+							case Types.DOUBLE:
+								stmt.setDouble(pos, (Double)value);
+								break;
+							case Types.INTEGER:
+								stmt.setInt(pos, (Integer)value);
+								break;
+							case Types.TINYINT:
+							case Types.SMALLINT:
+								stmt.setShort(pos, (Short)value);
+								break;
+							case Types.REAL:
+							case Types.FLOAT:
+								stmt.setFloat(pos, (Float)value);
+								break;
+							case Types.VARBINARY:
+							case Types.LONGVARBINARY:
+							case Types.BLOB:
+								if (value instanceof InputStream){
+									if (value instanceof ChunkedInputStream){
+										stmt.setBinaryStream(pos, (InputStream)value, ((ChunkedInputStream)value).length());
+									} else{
+										stmt.setBinaryStream(pos, (InputStream)value);
+									}
+								} else if (value instanceof Blob){
+									stmt.setBlob(pos, (Blob)value);
+								} else if (value instanceof byte[]){
+									stmt.setBytes(pos, (byte[])value);
+								} else{
+									throw new IllegalStateException("Unexpected value found for blob: "+value);
+								}
+								break;
+							default:
+								throw new IllegalStateException("Unable to set SQL type: "+type+" for value: "+value);
+						}
 					}
 				}
 			}

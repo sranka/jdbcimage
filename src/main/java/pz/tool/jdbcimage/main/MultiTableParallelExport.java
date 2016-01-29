@@ -47,6 +47,7 @@ public class MultiTableParallelExport extends SingleTableExport{
 					String tableName;
 					while((tableName = queue.poll()) != null){
 						long start = System.currentTimeMillis();
+						// TODO do not export when other fail
 						exportTable(tableName);
 						out.println(tableName + " : " + Duration.ofMillis(System.currentTimeMillis()-start));
 					}

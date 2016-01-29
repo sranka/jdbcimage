@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.time.Duration;
 
 import pz.tool.jdbcimage.QueryRunner;
@@ -29,7 +33,7 @@ public class SingleTableExport extends MainToolBase{
 
 		Connection con = getReadOnlyConnection();
 		try{
-			QueryRunner runner = new QueryRunner(con, getSelectStatement(tableName), serializer);
+			QueryRunner runner = new QueryRunner(con, getSelectStatement(tableName, con), serializer);
 			runner.run();
 			failed = false;
 			return runner.getDuration();
@@ -42,12 +46,42 @@ public class SingleTableExport extends MainToolBase{
 		}
 	}
 	
-	public String getSelectStatement(String tableName){
-		String retVal = "SELECT * FROM "+tableName;
-		String upper = tableName.toUpperCase();
-		if ("RY_COLLECTION".equals(upper) || "PM_VALIDATIONRESULT".equals(upper) || "RY_TAXCATEGORY".equals(upper)){
+	public String getSelectStatement(String tableName, Connection con) throws SQLException{
+		// get column names, BLOBs must be last to avoid
+		// ORA-24816: Expanded non LONG bind data supplied
+		StringBuilder columns = new StringBuilder();
+		boolean hasId = false;
+		try(Statement stmt = con.createStatement()){
+			try(ResultSet rs = stmt.executeQuery("SELECT * FROM "+tableName+" WHERE 0=1")){
+				ResultSetMetaData meta = rs.getMetaData();
+				int columnCount = meta.getColumnCount();
+				boolean needComma = false; 
+				for(int i=0; i<columnCount; i++){
+					if ("id".equalsIgnoreCase(meta.getColumnName(i+1))){
+						hasId = true;
+					}
+					if (meta.getColumnType(i+1) != Types.BLOB){
+						if (needComma) columns.append(","); else needComma=true;
+						columns.append(meta.getColumnName(i+1));
+					};
+				}
+				for(int i=0; i<columnCount; i++){
+					if (meta.getColumnType(i+1) == Types.BLOB){
+						if (needComma) columns.append(","); else needComma=true;
+						columns.append(meta.getColumnName(i+1));
+					};
+				}
+			}
+		}
+		
+		String retVal = "SELECT "+columns+" FROM "+tableName;
+//		String upper = tableName.toUpperCase();
+//		if ("RY_COLLECTION".equals(upper) || "PM_VALIDATIONRESULT".equals(upper) || "RY_TAXCATEGORY".equals(upper)){
+//			retVal += " ORDER BY id";
+//			
+//		}
+		if (hasId){
 			retVal += " ORDER BY id";
-			
 		}
 		return retVal;
 	}
