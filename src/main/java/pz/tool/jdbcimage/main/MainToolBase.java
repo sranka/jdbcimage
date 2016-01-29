@@ -59,6 +59,10 @@ public abstract class MainToolBase implements AutoCloseable{
 		bds.setUrl(jdbc_url);
 		bds.setUsername(jdbc_user);
 		bds.setPassword(jdbc_password);
+		bds.setDefaultAutoCommit(false);
+		// the minimum level supported by Oracle
+		bds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+
 		
 		dataSource = bds;
 	}
@@ -83,17 +87,13 @@ public abstract class MainToolBase implements AutoCloseable{
 	
 	public Connection getReadOnlyConnection() throws SQLException{
 		Connection con = dataSource.getConnection();
-		con.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED); // NONE is not supported
 		con.setReadOnly(true);
-		con.setAutoCommit(true);
 		
 		return con;
 	}
 	public Connection getWriteConnection() throws SQLException{
 		Connection con = dataSource.getConnection();
-		con.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED); // NONE is not supported
 		con.setReadOnly(false);
-		con.setAutoCommit(false);
 		
 		return con;
 	}
