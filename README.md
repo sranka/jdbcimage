@@ -1,5 +1,5 @@
 # jdbc-image-tool
-Quickly exports/imports database tables in a java environment.
+Quickly exports/imports database tables using JDBC and Kryo.
 
 ## Overview
 
