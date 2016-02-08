@@ -171,7 +171,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 							}
 						}
 					);
-			runParallel(commands.tableGroups
+			run(commands.tableGroups
 					.stream()
 					.map(x -> toSqlExecuteTask(x.toArray(new SqlExecuteCommand[x.size()])))
 					.collect(Collectors.toList()));
@@ -212,7 +212,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 						}
 					}
 				);
-		runParallel(commands.tableGroups
+		run(commands.tableGroups
 				.stream()
 				.map(x -> toSqlExecuteTask(x.toArray(new SqlExecuteCommand[x.size()])))
 				.collect(Collectors.toList()));
@@ -241,7 +241,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 				}
 			});
 		}
-		runParallel(tasks);
+		run(tasks);
 		return Duration.ofMillis(System.currentTimeMillis()-time);
 	}
 
@@ -267,7 +267,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 				}
 			});
 		}
-		runParallel(tasks);
+		run(tasks);
 		return Duration.ofMillis(System.currentTimeMillis()-time);
 	}
 	
@@ -304,6 +304,19 @@ public class MultiTableParallelImport extends SingleTableImport{
 		}
 	}
 	
+	/**
+	 * Run the specified tasks in the current thread.
+	 * @param tasks tasks to execute
+	 * @throws RuntimeException if any of the tasks failed. 
+	 */		
+	public void run(List<Callable<?>> tasks){
+		if (parallelism<=1){
+			runSerial(tasks);
+		} else{
+			runParallel(tasks);
+		}
+	}
+
 	/**
 	 * Run the specified tasks in the current thread.
 	 * @param tasks tasks to execute

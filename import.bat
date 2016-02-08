@@ -4,7 +4,7 @@ set jdbc_url=jdbc:oracle:thin:@localhost:1521:XE
 set jdbc_user=hpem
 set jdbc_password=changeit
 set tool_builddir=target\export
-set tool_parallelism=-1
+set tool_parallelism=7
 set tool_disableIndexes=false
 
 set OPTS=-Xmx256m
