@@ -98,6 +98,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 					if (value == null){
 						stmt.setNull(pos, type);
 					} else{
+						// ENHANCEMENT: could be set directly from producer to avoid rowData
 						switch(type){
 							case Types.BIGINT:
 								stmt.setLong(pos, (Long)value);
