@@ -27,6 +27,8 @@ public class QueryRunner implements Runnable{
 	// time stamps
 	public long started;
 	public long finished;
+	// rows processed
+	public long rows = 0; 
 
 	public void run(){
 		started = System.currentTimeMillis();
@@ -35,6 +37,7 @@ public class QueryRunner implements Runnable{
 			try(ResultSet rs = stmt.executeQuery(query)){
 				consumer.onStart(new ResultSetInfo(rs.getMetaData()));
 				while(rs.next()){
+					rows++;
 					consumer.accept(rs);
 				}
 				consumer.onFinish();

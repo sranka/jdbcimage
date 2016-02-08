@@ -7,5 +7,6 @@ target
 .cache
 atlassian-ide-plugin.xml
 *.iml
+*.log
 .java-version
 sonar-project.properties

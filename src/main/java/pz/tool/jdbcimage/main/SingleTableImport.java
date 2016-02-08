@@ -28,6 +28,26 @@ public class SingleTableImport extends MainToolBase{
 		out.println("Import time: "+ importTable(tool_table));
 	}
 	
+	public Duration truncateTable(String tableName) throws SQLException, IOException{
+		long start = System.currentTimeMillis();
+		Connection con = getWriteConnection();
+		boolean commited = false;
+		try{
+			// delete table
+			try(Statement del = con.createStatement()){
+				del.executeUpdate("TRUNCATE TABLE "+tableName);
+			}
+			con.commit();
+			commited = true;
+			return Duration.ofMillis(System.currentTimeMillis()-start);
+		} finally{
+			if (!commited){
+				try{con.rollback();} catch(Exception e){/* TODO */};
+			}
+			try{con.close();} catch(Exception e){/* TODO */};
+		}
+	}
+
 	public Duration resetTable(String tableName) throws SQLException, IOException{
 		long start = System.currentTimeMillis();
 		Connection con = getWriteConnection();

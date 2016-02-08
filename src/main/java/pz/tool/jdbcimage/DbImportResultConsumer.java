@@ -12,13 +12,11 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Map;
 
-import pz.tool.jdbcimage.kryo.KryoInputStreamSerializer;
-
 ///////////////////////////
 // Database Importer
 ///////////////////////////
 public class DbImportResultConsumer implements ResultConsumer<RowData>{
-	public static int BATCH_SIZE = 20000;
+	public static int BATCH_SIZE = 1000;
 	
 	private String tableName;
 	private Connection con;

@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class MultiTableParallelExport extends SingleTableExport{
@@ -30,7 +30,7 @@ public class MultiTableParallelExport extends SingleTableExport{
 			throw new RuntimeException(e);
 		}
 		// print platform parallelism, just FYI
-		int parallelism = Math.min(ForkJoinPool.getCommonPoolParallelism(), tables.size());
+		int parallelism = getParallelism(tables.size());
 		out.println("-- Parallelism "+ parallelism);
 		
 		// create a queue to rake table names from
@@ -38,18 +38,30 @@ public class MultiTableParallelExport extends SingleTableExport{
 		queue.addAll(tables);
 		
 		// runs export in parallel
-		ExecutorService taskExecutor = Executors.newWorkStealingPool();
+		ExecutorService taskExecutor = new ForkJoinPool(parallelism,
+				ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+				null,
+				true);
+		AtomicBoolean canContinue = new AtomicBoolean(true);
+
 		List<Future<Void>> results = new ArrayList<Future<Void>>();
 		for(int i=0; i<parallelism; i++){
 			results.add(taskExecutor.submit(new Callable<Void>(){
 				@Override
 				public Void call() throws Exception {
-					String tableName;
-					while((tableName = queue.poll()) != null){
-						long start = System.currentTimeMillis();
-						// TODO do not export when other fail
-						exportTable(tableName);
-						out.println(tableName + " : " + Duration.ofMillis(System.currentTimeMillis()-start));
+					String tableName = null;
+					try{
+						while(canContinue.get() && (tableName = queue.poll()) != null){
+							long start = System.currentTimeMillis();
+							exportTable(tableName);
+							out.println(tableName + " : " + Duration.ofMillis(System.currentTimeMillis()-start));
+						}
+						tableName = null;
+					} finally {
+						if (tableName!=null){
+							// exception state, notify other threads to stop reading from queue
+							canContinue.compareAndSet(true, false);
+						}
 					}
 					return null;
 				}

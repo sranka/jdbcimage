@@ -21,7 +21,7 @@ import pz.tool.jdbcimage.ChunkedInputStream;
  */
 public class KryoInputStreamSerializer extends Serializer<InputStream>{
 	public static KryoInputStreamSerializer INSTANCE = new KryoInputStreamSerializer();
-	private static final int BUFFER_SIZE = 1024 * 8;
+	private static final int BUFFER_SIZE = 1024 * 64;
 
 	public Object deserializeBlobData(Input in, Connection connection){
 		// read one byte to know if there is a stream

@@ -4,12 +4,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -27,12 +31,39 @@ public abstract class MainToolBase implements AutoCloseable{
 	// single export tools
 	public String tool_table = System.getProperty("tool_table","ry_resource");
 	// multi export/import tools
+	public boolean tool_ignoreEmptyTables = Boolean.valueOf(System.getProperty("tool_ignoreEmptyTables","false"));
+	public boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes","false"));
 	public String tool_builddir = System.getProperty("tool_builddir","target/export");
 	public String tool_table_file = System.getProperty("tool_table_file","src/test/resources/exampleTables.txt");
 	// dump file
 	public String tool_in_file = System.getProperty("tool_in_file","target/export/ry_resource");
 	public String tool_out_file = System.getProperty("tool_out_file","target/ry_resource.dump");
-
+	// parallelism
+	public int tool_parallelism = Integer.valueOf(System.getProperty("tool_parallelism","-1"));
+	// let you connect profiling tools
+	public boolean tool_waitOnStartup=Boolean.valueOf(System.getProperty("tool_waitOnStartup","false"));
+	/**
+	 * Gets a number of configured parallel threads, but at most max number.
+	 * @param max max number to return or non-positive number to ignore
+	 * @return parallelism number 
+	 */
+	public int getParallelism(int max){
+		int retVal = tool_parallelism;
+		
+		if (retVal == -1){
+			retVal = ForkJoinPool.getCommonPoolParallelism();
+		}
+		if (max<=0){
+			return retVal;
+		} else{
+			return retVal>max?max:retVal;
+		}
+	}
+	
+	public boolean isIgnoreEmptyTables(){
+		return tool_ignoreEmptyTables;
+	}
+	
 	//////////////////////
 	// State
 	//////////////////////
@@ -46,6 +77,14 @@ public abstract class MainToolBase implements AutoCloseable{
 	}
 	
 	protected void started(){
+		if (tool_waitOnStartup){
+			out.println("Paused on startup, press ENTER to continue ...");
+			try {
+				System.in.read();
+			} catch (IOException e) {
+				// nothing to do
+			}
+		}
 		out.println("Started - "+ new Date(System.currentTimeMillis()));
 	}
 	protected void finished(){
@@ -60,6 +99,12 @@ public abstract class MainToolBase implements AutoCloseable{
 		bds.setUsername(jdbc_user);
 		bds.setPassword(jdbc_password);
 		bds.setDefaultAutoCommit(false);
+
+		List<String> connectionInits = Arrays.asList(
+				"ALTER SESSION ENABLE PARALLEL DDL", //could possibly make index disabling quicker
+				"ALTER SESSION SET skip_unusable_indexes = TRUE" //avoid ORA errors caused by unusable indexes
+				);
+		bds.setConnectionInitSqls(connectionInits);
 		// the minimum level supported by Oracle
 		bds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 

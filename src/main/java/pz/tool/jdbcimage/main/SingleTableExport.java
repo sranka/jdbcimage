@@ -32,8 +32,9 @@ public class SingleTableExport extends MainToolBase{
 		boolean failed = true;
 
 		Connection con = getReadOnlyConnection();
+		QueryRunner runner = null;
 		try{
-			QueryRunner runner = new QueryRunner(con, getSelectStatement(tableName, con), serializer);
+			runner = new QueryRunner(con, getSelectStatement(tableName, con), serializer);
 			runner.run();
 			failed = false;
 			return runner.getDuration();
@@ -41,8 +42,10 @@ public class SingleTableExport extends MainToolBase{
 			try{con.close();} catch(Exception e){/* TODO log */};
 			// close the file
 			try{out.close();} catch(Exception e){/* TODO log */};
-			// delete the output if it failed
-			if (failed) file.delete();
+			// delete the output if it failed or zero rows read
+			if (failed || (runner.rows == 0 && isIgnoreEmptyTables())) {
+				file.delete();
+			}
 		}
 	}
 	
