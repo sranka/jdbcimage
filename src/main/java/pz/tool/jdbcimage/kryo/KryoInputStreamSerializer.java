@@ -46,19 +46,21 @@ public class KryoInputStreamSerializer extends Serializer<InputStream>{
 			total+=count;
 			// create BLOB or input stream
 			if (connection == null){
+				// input stream
 				if (chunks == null){
 					chunks = new ArrayList<byte[]>();
 					chunks.add(firstBytes);
 				}
 				chunks.add(in.readBytes(count));
 			} else{
+				// blob
 				try{
 					// TODO verbose log creating Blob
 					Blob blob = connection.createBlob();
 					OutputStream out = blob.setBinaryStream(1);
-					out.write(firstBytes);
-					out.write(in.readBytes(count));
-					transferToOutputStream(in, out);
+					out.write(firstBytes);// print out first chunk
+					byte[] buffer = firstBytes.length<in.getBuffer().length?new byte[in.getBuffer().length]:firstBytes;
+					transferToOutputStream(count, buffer, in, out);
 					return blob;
 				} catch (SQLException | IOException e) {
 					// TODO log
@@ -74,16 +76,24 @@ public class KryoInputStreamSerializer extends Serializer<InputStream>{
 		}
 	}
 	/**
-	 * Can be called in order to transfer input to a blob supplied.
+	 * Called to transfer `count` bytes from the buffer and then 
+	 * reuse the buffer to copy the whole data stream.
+	 * @param count initial count to copy from input, non-negative
+	 * @param buffer buffer to use
 	 * @param in input to read from
 	 * @param out blob to write to
 	 * @throws IOException
 	 */
-	public void transferToOutputStream(Input in, OutputStream out) throws IOException{
-		int count;
-		while((count = in.readInt())!=-1){
-			out.write(in.readBytes(count));
-		}
+	private void transferToOutputStream(int count, byte[] buffer, Input in, OutputStream out) throws IOException{
+		do{
+			// read count using a buffer
+			while (count>0){
+				int toReadCount = count>buffer.length?buffer.length:count;
+				in.readBytes(buffer, 0, toReadCount);
+				out.write(buffer,0,toReadCount);
+				count-=toReadCount;
+			}
+		}while((count = in.readInt())!=-1);
 		out.flush(); // no more data to write
 	}
 	
