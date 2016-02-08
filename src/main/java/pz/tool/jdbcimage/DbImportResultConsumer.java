@@ -170,10 +170,9 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 			stmt.addBatch();batchPosition++;
 			if (batchPosition>=BATCH_SIZE){
 				stmt.executeBatch();
+				con.commit();
 				batchPosition = 0;
 			}
-			stmt.executeBatch();
-			con.commit();
 		} catch (SQLException e) {
 			// TODO log
 			throw new RuntimeException(e);
