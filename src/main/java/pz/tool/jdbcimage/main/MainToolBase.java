@@ -50,7 +50,7 @@ public abstract class MainToolBase implements AutoCloseable{
 	public int getParallelism(int max){
 		int retVal = tool_parallelism;
 		
-		if (retVal == -1){
+		if (retVal <=0 ){
 			retVal = ForkJoinPool.getCommonPoolParallelism();
 		}
 		if (max<=0){
