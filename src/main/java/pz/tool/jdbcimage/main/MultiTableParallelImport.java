@@ -14,26 +14,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * parallel import of an image directory.
- * @author zavora
+ * DB import that runs in multiple threads.
  */
 public class MultiTableParallelImport extends SingleTableImport{
 	
 	// tables to import
 	private List<String> tables = null;
 	private Map<String,String> tableSet = null;
-	private int parallelism = 1; // filled by the run method
 	
+	/**
+	 * Durations to print out at the end.
+	 */
 	private static class Durations{
 		Duration disableConstraints = null;
 		Duration disableIndexes = null;
@@ -54,15 +49,17 @@ public class MultiTableParallelImport extends SingleTableImport{
 		return tableSet.containsKey(table.toLowerCase());
 	}
 	
+	/**
+	 * Main execution point.
+	 */
 	public void run() throws SQLException, IOException{
-		long start = System.currentTimeMillis();
 		// print platform parallelism, just FYI
-		parallelism = getParallelism(-1);
 		out.println("-- Parallelism "+ parallelism);
 
 		Durations durations = new Durations();
 		try {
 			// collect tables to import
+			// TODO ignore tables that do not exist
 			setTables(Files.list(Paths.get(tool_builddir))
 				.filter(x -> {
 					File f = x.toFile();
@@ -89,14 +86,12 @@ public class MultiTableParallelImport extends SingleTableImport{
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		Duration totalTime = Duration.ofMillis(System.currentTimeMillis()-start);
 		out.println("Disable contrainsts time: "+ durations.disableConstraints);
 		out.println("Disable indexes time: "+ durations.disableIndexes);
 		out.println("Delete data time: "+ durations.deleteData);
 		out.println("Import data time: "+ durations.importData);
 		out.println("Enable indexes time: "+ durations.enableIndexes);
 		out.println("Enable contraints time: "+ durations.enableConstraints);
-		out.println("Total processing time: "+ totalTime);
 	}
 	
 	/**
@@ -271,9 +266,6 @@ public class MultiTableParallelImport extends SingleTableImport{
 		return Duration.ofMillis(System.currentTimeMillis()-time);
 	}
 	
-	/////////////////////////////////
-	// Helpers
-	/////////////////////////////////
 	/**
 	 * Executes a query and maps results.
 	 * @param query query to execute
@@ -304,86 +296,6 @@ public class MultiTableParallelImport extends SingleTableImport{
 		}
 	}
 	
-	/**
-	 * Run the specified tasks in the current thread.
-	 * @param tasks tasks to execute
-	 * @throws RuntimeException if any of the tasks failed. 
-	 */		
-	public void run(List<Callable<?>> tasks){
-		if (parallelism<=1){
-			runSerial(tasks);
-		} else{
-			runParallel(tasks);
-		}
-	}
-
-	/**
-	 * Run the specified tasks in the current thread.
-	 * @param tasks tasks to execute
-	 * @throws RuntimeException if any of the tasks failed. 
-	 */		
-	public void runSerial(List<Callable<?>> tasks){
-		for(Callable<?> t: tasks){
-			try {
-				t.call();
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-	}
-	/**
-	 * Run the specified tasks in parallel and wait for them to finish.
-	 * @param tasks tasks to execute
-	 * @throws RuntimeException if any of the tasks failed. 
-	 */		
-	public void runParallel(List<Callable<?>> tasks){
-		// runs tasks in parallel
-		ExecutorService taskExecutor = new ForkJoinPool(parallelism,
-				ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-				null,
-				true);
-		AtomicBoolean canContinue = new AtomicBoolean(true);
-
-		List<Future<?>> results = new ArrayList<Future<?>>();
-		for(Callable<?> task: tasks){
-			results.add(taskExecutor.submit(new Callable<Object>(){
-				@Override
-				public Object call() throws Exception {
-					boolean failed = true;
-					try{
-						Object result = null;
-						if (canContinue.get()){
-							result = task.call();
-						}
-						failed = false;
-						return result;
-					} finally {
-						if (failed){
-							// exception state, notify other threads to stop reading from queue
-							canContinue.compareAndSet(true, false);
-						}
-					}
-				}
-			}));
-		}
-
-		// wait for the executor to finish
-		taskExecutor.shutdown();
-		try {
-			taskExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-
-		// check for exceptions
-		for(Future<?> execution: results){
-			try {
-				execution.get();
-			} catch (InterruptedException | ExecutionException e) {
-				throw new RuntimeException(e);
-			}
-		}
-	}
 	public Callable<Void> toSqlExecuteTask(SqlExecuteCommand... commands){
 		return new Callable<Void>(){
 			@Override

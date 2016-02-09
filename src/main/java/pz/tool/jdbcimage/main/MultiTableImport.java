@@ -9,11 +9,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * DB Import that runs in a single thread.
+ */
 public class MultiTableImport extends SingleTableImport{
 	
 	public void run(){
-		long start = System.currentTimeMillis();
 		Duration deleteTime = null;
+		long start = System.currentTimeMillis();
 		try {
 			List<String> tables = Files.lines(Paths.get(tool_table_file))
 					.filter(x -> new File(tool_builddir, x).exists())
@@ -46,7 +49,6 @@ public class MultiTableImport extends SingleTableImport{
 		Duration totalTime = Duration.ofMillis(System.currentTimeMillis()-start);
 		out.println("Total delete time: "+ deleteTime);
 		out.println("Total insert time: "+ totalTime.minus(deleteTime));
-		out.println("Total processing time: "+ totalTime);
 	}
     
 	public static void main(String... args) throws Exception{

@@ -10,10 +10,19 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -69,6 +78,8 @@ public abstract class MainToolBase implements AutoCloseable{
 	//////////////////////
 	protected PrintStream out = null;
 	protected DataSource dataSource = null;
+	protected int parallelism = 1; // filled by the started method
+	protected long started; // filled by the started method 
 	
 	public MainToolBase(){
 		initOutput();
@@ -85,9 +96,12 @@ public abstract class MainToolBase implements AutoCloseable{
 				// nothing to do
 			}
 		}
-		out.println("Started - "+ new Date(System.currentTimeMillis()));
+		parallelism = getParallelism(-1);
+		started = System.currentTimeMillis();
+		out.println("Started - "+ new Date(started));
 	}
 	protected void finished(){
+		out.println("Total processing time - "+ Duration.ofMillis(System.currentTimeMillis()-started));
 		out.println("Finished - "+ new Date(System.currentTimeMillis()));
 	}
 	protected void initOutput(){
@@ -141,5 +155,87 @@ public abstract class MainToolBase implements AutoCloseable{
 		con.setReadOnly(false);
 		
 		return con;
+	}
+	/**
+	 * Run the specified tasks in parallel or in the current thread depending on configured parallelism.
+	 * @param tasks tasks to execute
+	 * @throws RuntimeException if any of the tasks failed. 
+	 */		
+	public void run(List<Callable<?>> tasks){
+		if (parallelism<=1){
+			runSerial(tasks);
+		} else{
+			runParallel(tasks);
+		}
+	}
+
+	/**
+	 * Run the specified tasks in the current thread.
+	 * @param tasks tasks to execute
+	 * @throws RuntimeException if any of the tasks failed. 
+	 */		
+	public void runSerial(List<Callable<?>> tasks){
+		for(Callable<?> t: tasks){
+			try {
+				t.call();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+	/**
+	 * Run the specified tasks in parallel and wait for them to finish.
+	 * @param tasks tasks to execute
+	 * @throws RuntimeException if any of the tasks failed. 
+	 */		
+	public void runParallel(List<Callable<?>> tasks){
+		// OPTIMIZED parallel execution using a queue to quickly take tasks from
+		LinkedBlockingQueue<Callable<?>> queue = new LinkedBlockingQueue<>(tasks);
+
+		// runs tasks in parallel
+		ExecutorService taskExecutor = new ForkJoinPool(parallelism,
+				ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+				null,
+				true);
+		AtomicBoolean canContinue = new AtomicBoolean(true);
+		
+		List<Future<Void>> results = new ArrayList<Future<Void>>();
+		for(int i=0; i<parallelism; i++){
+			results.add(taskExecutor.submit(new Callable<Void>(){
+				@Override
+				public Void call() throws Exception {
+					Callable<?> task = null;
+					try{
+						while(canContinue.get() && (task = queue.poll()) != null){
+							task.call();
+						}
+						task = null;
+					} finally {
+						if (task!=null){
+							// exception state, notify other threads to stop reading from queue
+							canContinue.compareAndSet(true, false);
+						}
+					}
+					return null;
+				}
+			}));
+		}
+
+		// wait for the executor to finish
+		taskExecutor.shutdown();
+		try {
+			taskExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+
+		// check for exceptions
+		for(Future<?> execution: results){
+			try {
+				execution.get();
+			} catch (InterruptedException | ExecutionException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 }

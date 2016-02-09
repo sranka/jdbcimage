@@ -6,10 +6,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
 
+/**
+ * DB Export that runs in a single thread.
+ */
 public class MultiTableExport extends SingleTableExport{
 	
 	public void run(){
-		long start = System.currentTimeMillis();
 		try {
 			Files.lines(Paths.get(tool_table_file)).forEach(x -> {
 					try{
@@ -21,7 +23,6 @@ public class MultiTableExport extends SingleTableExport{
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		out.println("Total processing time: "+ Duration.ofMillis(System.currentTimeMillis()-start));
 		out.println("Files saved to: "+new File(tool_builddir));
 	}
     
