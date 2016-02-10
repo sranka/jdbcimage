@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -43,7 +45,6 @@ public abstract class MainToolBase implements AutoCloseable{
 	public boolean tool_ignoreEmptyTables = Boolean.valueOf(System.getProperty("tool_ignoreEmptyTables","false"));
 	public boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes","false"));
 	public String tool_builddir = System.getProperty("tool_builddir","target/export");
-	public String tool_table_file = System.getProperty("tool_table_file","src/test/resources/exampleTables.txt");
 	// dump file
 	public String tool_in_file = System.getProperty("tool_in_file","target/export/ry_resource");
 	public String tool_out_file = System.getProperty("tool_out_file","target/ry_resource.dump");
@@ -125,6 +126,27 @@ public abstract class MainToolBase implements AutoCloseable{
 		
 		dataSource = bds;
 	}
+	
+	/**
+	 * Gets a list of tables in the current catalog.
+	 * @return list of tables
+	 */
+	public List<String> getUserTables(){
+		try(Connection con = getReadOnlyConnection()){
+			DatabaseMetaData metaData = con.getMetaData();
+			List<String> retVal = new ArrayList<>();
+			// for Oracle: schema = currentUser.toUpperCase()
+			try(ResultSet tables = metaData.getTables(con.getCatalog(),jdbc_user.toUpperCase(),"%",new String[]{"TABLE"})){
+				while(tables.next()){
+					String tableName = tables.getString(3);
+					retVal.add(tableName);
+				}
+			}
+			return retVal;
+		} catch(Exception e){
+			throw new RuntimeException(e);
+		}
+	}
 
 	public void close(){
 		finished();
@@ -142,6 +164,23 @@ public abstract class MainToolBase implements AutoCloseable{
 	}
 	public static InputStream toResultInput(File f) throws FileNotFoundException{
 		return new InflaterInputStream(new FileInputStream(f));
+	}
+	
+	/**
+	 * Escapes column name
+	 * @param s s
+	 * @return escaped column name so that it can be used in queries.
+	 */
+	public String escapeColumnName(String s){
+		return "\""+s+"\"";
+	}
+	/**
+	 * Escapes table name
+	 * @param s s
+	 * @return escaped table name so that it can be used in queries.
+	 */
+	public String escapeTableName(String s){
+		return "\""+s+"\"";
 	}
 	
 	public Connection getReadOnlyConnection() throws SQLException{

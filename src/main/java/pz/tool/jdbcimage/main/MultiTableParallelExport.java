@@ -1,9 +1,6 @@
 package pz.tool.jdbcimage.main;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -15,20 +12,14 @@ import java.util.stream.Collectors;
 public class MultiTableParallelExport extends SingleTableExport{
 	
 	public void run(){
-		List<String> tables;
-		try {
-			tables = Files.lines(Paths.get(tool_table_file))
-					.filter(x -> !x.contains("."))
-					.collect(Collectors.toList());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		// get tables to export
+		List<String> tables = getUserTables();
+
 		// print platform parallelism, just FYI
 		out.println("-- Parallelism "+ parallelism);
 		
 		// runs export in parallel
 		run(tables.stream().map(x -> getExportTask(x)).collect(Collectors.toList()));
-		
 		out.println("Files saved to: "+new File(tool_builddir));
 	}
 	

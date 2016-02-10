@@ -55,7 +55,7 @@ public class SingleTableExport extends MainToolBase{
 		StringBuilder columns = new StringBuilder();
 		boolean hasId = false;
 		try(Statement stmt = con.createStatement()){
-			try(ResultSet rs = stmt.executeQuery("SELECT * FROM "+tableName+" WHERE 0=1")){
+			try(ResultSet rs = stmt.executeQuery("SELECT * FROM "+escapeTableName(tableName)+" WHERE 0=1")){
 				ResultSetMetaData meta = rs.getMetaData();
 				int columnCount = meta.getColumnCount();
 				boolean needComma = false; 
@@ -65,24 +65,19 @@ public class SingleTableExport extends MainToolBase{
 					}
 					if (meta.getColumnType(i+1) != Types.BLOB){
 						if (needComma) columns.append(","); else needComma=true;
-						columns.append(meta.getColumnName(i+1));
+						columns.append(escapeColumnName(meta.getColumnName(i+1)));
 					};
 				}
 				for(int i=0; i<columnCount; i++){
 					if (meta.getColumnType(i+1) == Types.BLOB){
 						if (needComma) columns.append(","); else needComma=true;
-						columns.append(meta.getColumnName(i+1));
+						columns.append(escapeColumnName(meta.getColumnName(i+1)));
 					};
 				}
 			}
 		}
 		
-		String retVal = "SELECT "+columns+" FROM "+tableName;
-//		String upper = tableName.toUpperCase();
-//		if ("RY_COLLECTION".equals(upper) || "PM_VALIDATIONRESULT".equals(upper) || "RY_TAXCATEGORY".equals(upper)){
-//			retVal += " ORDER BY id";
-//			
-//		}
+		String retVal = "SELECT "+columns+" FROM "+escapeTableName(tableName);
 		if (hasId){
 			retVal += " ORDER BY id";
 		}
