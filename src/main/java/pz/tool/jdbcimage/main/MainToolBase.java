@@ -635,7 +635,8 @@ public abstract class MainToolBase implements AutoCloseable{
 								}
 							}
 						);
-				run(commands.tableGroups
+				// TODO DEADLOCK problems when running in parallel
+				runSerial(commands.tableGroups
 						.stream()
 						.map(x -> toSqlExecuteTask(x.toArray(new SqlExecuteCommand[x.size()])))
 						.collect(Collectors.toList()));
