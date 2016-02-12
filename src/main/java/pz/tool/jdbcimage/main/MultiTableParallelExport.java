@@ -2,7 +2,6 @@ package pz.tool.jdbcimage.main;
 
 import java.io.File;
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -12,8 +11,8 @@ import java.util.stream.Collectors;
 public class MultiTableParallelExport extends SingleTableExport{
 	
 	public void run(){
-		// get tables to export
-		List<String> tables = getUserTables();
+		// setup tables to export
+		setTables(getUserTables());
 
 		// print platform parallelism, just FYI
 		out.println("-- Parallelism "+ parallelism);

@@ -103,8 +103,6 @@ public class KryoResultProducer implements ResultProducer{
 					break;
 				case Types.VARBINARY:
 				case Types.LONGVARBINARY:
-					// TODO possibly better handle large streams to avoid NPE
-					val = kryo.readObjectOrNull(in, InputStream.class, KryoInputStreamSerializer.INSTANCE);
 				case Types.BLOB:
 					val = KryoInputStreamSerializer.INSTANCE.deserializeBlobData(in, row.info.connection);
 					break;

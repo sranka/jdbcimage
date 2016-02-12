@@ -24,8 +24,8 @@ public class SingleTableImport extends MainToolBase{
 
 	public void run() throws SQLException, IOException{
 		out.println("Importing from: "+new File(tool_builddir, tool_table));
-		out.println("Reset time: "+ resetTable(tool_table));
-		out.println("Import time: "+ importTable(tool_table));
+		out.println("Reset time: "+ truncateTable(tool_table));
+		out.println("Import time: "+ importTable(tool_table, dbFacade.getTablesWithIdentityColumns().contains(tool_table)));
 	}
 	
 	public Duration truncateTable(String tableName) throws SQLException, IOException{
@@ -35,7 +35,7 @@ public class SingleTableImport extends MainToolBase{
 		try{
 			// delete table
 			try(Statement del = con.createStatement()){
-				del.executeUpdate("TRUNCATE TABLE "+tableName);
+				del.executeUpdate(dbFacade.getTruncateTableSql(tableName));
 			}
 			con.commit();
 			commited = true;
@@ -48,26 +48,15 @@ public class SingleTableImport extends MainToolBase{
 		}
 	}
 
-	public Duration resetTable(String tableName) throws SQLException, IOException{
-		long start = System.currentTimeMillis();
-		Connection con = getWriteConnection();
-		boolean commited = false;
-		try{
-			// delete table
-			try(Statement del = con.createStatement()){
-				del.executeUpdate("DELETE FROM "+tableName);
-			}
-			con.commit();
-			commited = true;
-			return Duration.ofMillis(System.currentTimeMillis()-start);
-		} finally{
-			if (!commited){
-				try{con.rollback();} catch(Exception e){/* TODO */};
-			}
-			try{con.close();} catch(Exception e){/* TODO */};
-		}
-	}
-	public Duration importTable(String tableName) throws SQLException, IOException{
+	/**
+	 * Imports specific tables.
+	 * @param tableName tables name
+	 * @param hasIdentityColumn has identity column 
+	 * @return
+	 * @throws SQLException
+	 * @throws IOException
+	 */
+	public Duration importTable(String tableName, boolean hasIdentityColumn) throws SQLException, IOException{
 		File file = new File(tool_builddir, tableName);
 		InputStream in = toResultInput(file);
 		KryoResultProducer producer = new KryoResultProducer(in);
@@ -90,8 +79,10 @@ public class SingleTableImport extends MainToolBase{
 				con.rollback(); // no changes
 			}
 			// import data
+			dbFacade.beforeImportTable(con, tableName, hasIdentityColumn);
 			ResultProducerRunner runner = new ResultProducerRunner(producer, new DbImportResultConsumer(tableName, con, actualColumns));
 			runner.run();
+			dbFacade.afterImportTable(con, tableName, hasIdentityColumn);
 			return runner.getDuration();
 		} finally{
 			try{con.close();} catch(Exception e){/* TODO */};

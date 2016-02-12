@@ -8,9 +8,8 @@ Quickly exports/imports database tables using JDBC and Kryo.
 
 ## Missing pieces
 * unit tests
-* support for other databases (current only Oracle)
-* missing table causes failure on data import
 * directly produce and consume zip file
 * exception logging in the code (ToDo items in the code)
 * cleanup of generated directory upon failure
+* support for other databases (current only Oracle, MSSQL)
 

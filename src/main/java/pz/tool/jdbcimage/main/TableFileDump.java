@@ -20,6 +20,9 @@ import pz.tool.jdbcimage.kryo.KryoResultProducer;
  *
  */
 public class TableFileDump extends MainToolBase{
+	// dump file
+	public String tool_in_file = System.getProperty("tool_in_file","target/exportMssql/rs_report_def_bundles");
+	public String tool_out_file = System.getProperty("tool_out_file","target/rs_report_def_bundles.dump");
 
 	@Override
 	protected void initDataSource() {
