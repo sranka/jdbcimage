@@ -3,7 +3,7 @@
 set tool_in_file=%1%
 set tool_out_file=%tool_in_file%.dump
 
-set OPTS=-Xmx512m
+set OPTS=-Xmx256m
 set OPTS=%OPTS% "-Dtool_in_file=%tool_in_file%"
 set OPTS=%OPTS% "-Dtool_out_file=%tool_out_file%"
 
