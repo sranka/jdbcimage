@@ -32,9 +32,9 @@ public class QueryRunner implements Runnable{
 
 	public void run(){
 		started = System.currentTimeMillis();
-		try(Statement stmt = con.createStatement()){
+		try(Statement stmt = createStatement()){
 			stmt.setFetchSize(FETCH_SIZE);
-			try(ResultSet rs = stmt.executeQuery(query)){
+			try(ResultSet rs = executeQuery(stmt)){
 				consumer.onStart(new ResultSetInfo(rs.getMetaData()));
 				while(rs.next()){
 					rows++;
@@ -55,6 +55,12 @@ public class QueryRunner implements Runnable{
 		}
 	}
 	
+	protected Statement createStatement() throws SQLException{
+		return con.createStatement();
+	}
+	protected ResultSet executeQuery(Statement stmt) throws SQLException{
+		return stmt.executeQuery(query);
+	}
 	public Duration getDuration(){
 		return Duration.ofMillis(finished - started);
 	}
