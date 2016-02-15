@@ -51,7 +51,7 @@ public class SingleTableExport extends MainToolBase{
 	}
 	
 	public String getSelectStatement(String tableName, Connection con) throws SQLException{
-		// get column names, BLOBs must be last to avoid
+		// get column names, VARBINARY and BLOBs must be last to avoid
 		// ORA-24816: Expanded non LONG bind data supplied
 		StringBuilder columns = new StringBuilder();
 		boolean hasId = false;
@@ -64,7 +64,14 @@ public class SingleTableExport extends MainToolBase{
 					if ("id".equalsIgnoreCase(meta.getColumnName(i+1))){
 						hasId = true;
 					}
-					if (meta.getColumnType(i+1) != Types.BLOB){
+					int colType = meta.getColumnType(i+1);
+					if (colType != Types.BLOB && colType != Types.VARBINARY){
+						if (needComma) columns.append(","); else needComma=true;
+						columns.append(dbFacade.escapeColumnName(meta.getColumnName(i+1)));
+					};
+				}
+				for(int i=0; i<columnCount; i++){
+					if (meta.getColumnType(i+1) == Types.VARBINARY){
 						if (needComma) columns.append(","); else needComma=true;
 						columns.append(dbFacade.escapeColumnName(meta.getColumnName(i+1)));
 					};

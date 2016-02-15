@@ -66,6 +66,7 @@ public class SingleTableImport extends MainToolBase{
 
 		try{
 			// detect actual columns, ignore case
+			long start = System.currentTimeMillis();
 			Map<String, String> actualColumns = new HashMap<>(); 
 			try(Statement detect = con.createStatement()){
 				try(ResultSet rs = detect.executeQuery("SELECT * FROM "+tableName+" WHERE 0=1")){
@@ -81,10 +82,11 @@ public class SingleTableImport extends MainToolBase{
 			}
 			// import data
 			dbFacade.beforeImportTable(con, tableName, hasIdentityColumn);
-			ResultProducerRunner runner = new ResultProducerRunner(producer, new DbImportResultConsumer(tableName, con, actualColumns));
+			ResultProducerRunner runner = new ResultProducerRunner(producer, new DbImportResultConsumer(tableName, con, dbFacade, actualColumns));
 			runner.run();
 			dbFacade.afterImportTable(con, tableName, hasIdentityColumn);
-			return runner.getDuration();
+
+			return Duration.ofMillis(System.currentTimeMillis() - start);
 		} finally{
 			LoggedUtils.close(con);
 			LoggedUtils.close(in);

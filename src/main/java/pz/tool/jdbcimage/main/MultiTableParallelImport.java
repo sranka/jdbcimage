@@ -49,7 +49,14 @@ public class MultiTableParallelImport extends SingleTableImport{
 					File f = x.toFile();
 					return f.isFile() && !f.getName().contains(".");
 				}).map(x -> x.getFileName().toString())
-				.filter(x -> dbTablesMap.containsKey(x.toLowerCase()))
+				.map(x -> {
+					String retVal = dbTablesMap.get(x.toLowerCase());
+					if (retVal == null){
+						out.println("SKIPPED - table "+x+" does not exists!");
+					}
+					return retVal;
+				})
+				.filter(x -> x!=null)
 				.collect(Collectors.toList()));
 			if (tables.size() != 0){
 				// apply a procedure that ignores indexes and constraints 

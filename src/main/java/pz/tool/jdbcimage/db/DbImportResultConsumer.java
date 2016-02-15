@@ -20,6 +20,7 @@ import pz.tool.jdbcimage.LoggedUtils;
 import pz.tool.jdbcimage.ResultConsumer;
 import pz.tool.jdbcimage.ResultSetInfo;
 import pz.tool.jdbcimage.RowData;
+import pz.tool.jdbcimage.main.MainToolBase.DBFacade;
 
 /**
  * Import pushed data into a database.
@@ -30,6 +31,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 	
 	private String tableName;
 	private Connection con;
+	private DBFacade db;
 	private Map<String,String> actualColumns; 
 	
 	// initialize in on start
@@ -45,12 +47,14 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 	 * Creates database importer.
 	 * @param tableName table to insert to
 	 * @param connection connection to write rows to
+	 * @param dbFacade used to escape table and column names
 	 * @param list of actual columns to know what columns to skip 
 	 * with a key being lower case of the name, value is the actual name
 	 */
-	public DbImportResultConsumer(String tableName, Connection connection, Map<String,String> actualColumns) {
+	public DbImportResultConsumer(String tableName, Connection connection, DBFacade db,  Map<String,String> actualColumns) {
 		this.tableName = tableName;
 		this.con = connection;
+		this.db = db;
 		this.actualColumns = actualColumns;
 	}
 
@@ -67,13 +71,13 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 
 		// create SQL and placeholder positions
 		StringBuilder insertSQL = new StringBuilder(200);
-		insertSQL.append("INSERT INTO ").append(tableName).append(" (");
+		insertSQL.append("INSERT INTO ").append(db.escapeTableName(tableName)).append(" (");
 		int pos = 1;
 		for(int i=0; i<columns.length; i++){
 			String column = actualColumns.get(columns[i].toLowerCase());
 			if (column!=null){
 				if (pos!=1) insertSQL.append(',');
-				insertSQL.append(column);
+				insertSQL.append(db.escapeColumnName(column));
 				placeholderPositions[i] = pos++;
 			} else{
 				placeholderPositions[i] = null;
