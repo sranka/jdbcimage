@@ -107,6 +107,7 @@ public class KryoResultProducer implements ResultProducer{
 					val = KryoInputStreamSerializer.INSTANCE.deserializeBlobData(in, row.info.connection);
 					break;
 				case Types.CLOB: // TODO CLOB handling
+				case Types.NCLOB: // TODO CLOB handling
 				default:
 					throw new IllegalStateException("Unable to deserialize object for SQL type: "+types[i]);
 			}

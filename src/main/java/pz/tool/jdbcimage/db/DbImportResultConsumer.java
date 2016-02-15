@@ -177,6 +177,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 								}
 								break;
 							case Types.CLOB: // TODO handle CLOB values
+							case Types.NCLOB: // TODO handle CLOB values
 							default:
 								throw new IllegalStateException("Unable to set SQL type: "+type+" for value: "+value);
 						}

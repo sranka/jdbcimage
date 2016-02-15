@@ -7,6 +7,8 @@ import java.sql.Statement;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
+import pz.tool.jdbcimage.LoggedUtils;
+
 /**
  * Described SQL Command to execute. 
  */
@@ -42,7 +44,7 @@ public class SqlExecuteCommand{
 								con.commit();
 							}
 						} catch (SQLException e) {
-							// TODO log
+							LoggedUtils.ignore("Unable to commit orrollback connection!", e);
 						}
 					}
 					return null;

@@ -116,6 +116,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 						kryo.writeObjectOrNull(out, blob, KryoBlobSerializer.INSTANCE);
 						break;
 					case Types.CLOB: // TODO CLOB handling
+					case Types.NCLOB: // TODO CLOB handling
 					default:
 						throw new IllegalStateException("Unable to serialize SQL type: "+info.types[i]+", Object: "+rs.getObject(i+1));
 				}
