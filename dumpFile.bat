@@ -1,7 +1,7 @@
 @setlocal
 @echo off
-set tool_in_file=%1%
-set tool_out_file=%tool_in_file%.dump
+set tool_in_file=%1
+set tool_out_file=%2
 
 set OPTS=-Xmx256m
 set OPTS=%OPTS% "-Dtool_in_file=%tool_in_file%"

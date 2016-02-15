@@ -23,7 +23,7 @@ import pz.tool.jdbcimage.kryo.KryoResultProducer;
 public class TableFileDump extends MainToolBase{
 	// dump file
 	public String tool_in_file = System.getProperty("tool_in_file","target/exportMssql/rs_report_def_bundles");
-	public String tool_out_file = System.getProperty("tool_out_file","target/rs_report_def_bundles.dump");
+	public String tool_out_file = System.getProperty("tool_out_file",null);
 
 	@Override
 	protected void initDataSource() {
@@ -33,10 +33,16 @@ public class TableFileDump extends MainToolBase{
 	public void run() throws Exception{
 		File inFile = new File(tool_in_file);
 		out.println("Input file: "+inFile);
-		File outFile = new File(tool_out_file);
 		InputStream in = toResultInput(inFile);
-		FileOutputStream _target = new FileOutputStream(outFile);
-		PrintStream target = new PrintStream(_target);
+		PrintStream target;
+		if (tool_out_file != null && tool_out_file.length()>0){
+			File outFile = new File(tool_out_file);
+			out.println("Output file: "+outFile);
+			FileOutputStream _target = new FileOutputStream(outFile);
+			target = new PrintStream(_target);
+		} else{
+			target = out;
+		}
 		try{
 			ResultProducerRunner runner = new ResultProducerRunner(new KryoResultProducer(in), new ResultConsumer<RowData>(){
 				private ResultSetInfo info;
@@ -67,7 +73,7 @@ public class TableFileDump extends MainToolBase{
 							int count;
 							try{
 								while((count = in.read(chunk))!=-1){
-									_target.write(chunk,0,count);
+									target.write(chunk,0,count);
 								}
 								target.println();
 							} catch(IOException e){
@@ -87,9 +93,10 @@ public class TableFileDump extends MainToolBase{
 			LoggedUtils.close(in);
 			// close the file
 			target.flush();
-			LoggedUtils.close(target);
+			if (target!=out){
+				LoggedUtils.close(target);
+			}
 			// do not delete the outFile even if it failed
-			out.println("Saved to: "+outFile);
 		}
 	}
 	

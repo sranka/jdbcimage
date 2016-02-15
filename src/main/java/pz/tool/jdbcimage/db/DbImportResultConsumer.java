@@ -125,11 +125,11 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 								break;
 							case Types.CHAR:
 							case Types.VARCHAR:
-							case Types.LONGVARCHAR:
+							case Types.LONGVARCHAR: // TODO handle CLOB values
 								stmt.setNString(pos, (String)value);
 							case Types.NCHAR:
 							case Types.NVARCHAR:
-							case Types.LONGNVARCHAR:
+							case Types.LONGNVARCHAR: // TODO handle CLOB values
 								stmt.setString(pos, (String)value);
 								break;
 							case Types.DATE:
@@ -176,6 +176,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 									throw new IllegalStateException("Unexpected value found for blob: "+value);
 								}
 								break;
+							case Types.CLOB: // TODO handle CLOB values
 							default:
 								throw new IllegalStateException("Unable to set SQL type: "+type+" for value: "+value);
 						}

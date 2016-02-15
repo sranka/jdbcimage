@@ -52,7 +52,7 @@ public abstract class MainToolBase implements AutoCloseable{
 	public String jdbc_user = System.getProperty("jdbc_user","hpem");
 	public String jdbc_password = System.getProperty("jdbc_password","changeit");
 	// single export tools
-	public String tool_table = System.getProperty("tool_table","ry_resource");
+	public String tool_table = System.getProperty("tool_table","ry_syncMeta");
 	// multi export/import tools
 	public boolean tool_ignoreEmptyTables = Boolean.valueOf(System.getProperty("tool_ignoreEmptyTables","false"));
 	public boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes","false"));
@@ -436,12 +436,12 @@ public abstract class MainToolBase implements AutoCloseable{
 
 		@Override
 		public String escapeColumnName(String s){
-			return "\""+s+"\"";
+			return "\""+s.toUpperCase()+"\"";
 		}
 
 		@Override
 		public String escapeTableName(String s){
-			return "\""+s+"\"";
+			return "\""+s.toUpperCase()+"\"";
 		}
 		
 		@Override

@@ -65,12 +65,13 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 						kryo.writeObjectOrNull(out, bVal, Boolean.class);
 						break;
 					case Types.CHAR:
-					case Types.NCHAR:
-					case Types.LONGVARCHAR:
-					case Types.LONGNVARCHAR:
 					case Types.VARCHAR:
-					case Types.NVARCHAR:
+					case Types.LONGVARCHAR: // TODO move to CLOB
 						kryo.writeObjectOrNull(out, rs.getString(i+1), String.class);
+					case Types.NCHAR:
+					case Types.LONGNVARCHAR: // TODO move to CLOB
+					case Types.NVARCHAR:
+						kryo.writeObjectOrNull(out, rs.getNString(i+1), String.class);
 						break;
 					case Types.DATE:
 						kryo.writeObjectOrNull(out, rs.getDate(i+1), Date.class);
@@ -114,6 +115,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 						if (rs.wasNull()) blob = null;
 						kryo.writeObjectOrNull(out, blob, KryoBlobSerializer.INSTANCE);
 						break;
+					case Types.CLOB: // TODO CLOB handling
 					default:
 						throw new IllegalStateException("Unable to serialize SQL type: "+info.types[i]+", Object: "+rs.getObject(i+1));
 				}
