@@ -12,8 +12,9 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import pz.tool.jdbcimage.DbImportResultConsumer;
+import pz.tool.jdbcimage.LoggedUtils;
 import pz.tool.jdbcimage.ResultProducerRunner;
+import pz.tool.jdbcimage.db.DbImportResultConsumer;
 import pz.tool.jdbcimage.kryo.KryoResultProducer;
 
 /**
@@ -42,9 +43,9 @@ public class SingleTableImport extends MainToolBase{
 			return Duration.ofMillis(System.currentTimeMillis()-start);
 		} finally{
 			if (!commited){
-				try{con.rollback();} catch(Exception e){/* TODO */};
+				try{con.rollback();} catch(Exception e){LoggedUtils.ignore("Unable to rollback!",e);}
 			}
-			try{con.close();} catch(Exception e){/* TODO */};
+			LoggedUtils.close(con);
 		}
 	}
 
@@ -85,9 +86,8 @@ public class SingleTableImport extends MainToolBase{
 			dbFacade.afterImportTable(con, tableName, hasIdentityColumn);
 			return runner.getDuration();
 		} finally{
-			try{con.close();} catch(Exception e){/* TODO */};
-			// close the file
-			try{in.close();} catch(Exception e){/* TODO */};
+			LoggedUtils.close(con);
+			LoggedUtils.close(in);
 		}
 	}
 	

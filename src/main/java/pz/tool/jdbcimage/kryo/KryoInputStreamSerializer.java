@@ -8,6 +8,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
@@ -20,6 +23,7 @@ import pz.tool.jdbcimage.ChunkedInputStream;
  * @author zavora
  */
 public class KryoInputStreamSerializer extends Serializer<InputStream>{
+	private static final Log log = LogFactory.getLog(KryoInputStreamSerializer.class);
 	public static KryoInputStreamSerializer INSTANCE = new KryoInputStreamSerializer();
 	private static final int BUFFER_SIZE = 1024 * 64;
 
@@ -55,7 +59,7 @@ public class KryoInputStreamSerializer extends Serializer<InputStream>{
 			} else{
 				// blob
 				try{
-					// TODO verbose log creating Blob
+					if (log.isDebugEnabled()) log.debug("Creating database blob");
 					Blob blob = connection.createBlob();
 					OutputStream out = blob.setBinaryStream(1);
 					out.write(firstBytes);// print out first chunk
@@ -63,8 +67,7 @@ public class KryoInputStreamSerializer extends Serializer<InputStream>{
 					transferToOutputStream(count, buffer, in, out);
 					return blob;
 				} catch (SQLException | IOException e) {
-					// TODO log
-					throw new RuntimeException(e);
+					throw new RuntimeException(e); 
 				}
 			}
 		}
@@ -131,7 +134,6 @@ public class KryoInputStreamSerializer extends Serializer<InputStream>{
 		}
 	}
 	protected void chunkInfo(int chunks){
-		// TODO verbose log following
-		// if (chunks>1) System.out.println(" --> chunks:"+chunks);
+		if (chunks>1 && log.isDebugEnabled()) log.debug(" --> chunks:"+chunks);
 	}
 }

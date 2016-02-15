@@ -1,4 +1,4 @@
-package pz.tool.jdbcimage;
+package pz.tool.jdbcimage.db;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -12,10 +12,20 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Map;
 
-///////////////////////////
-// Database Importer
-///////////////////////////
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import pz.tool.jdbcimage.ChunkedInputStream;
+import pz.tool.jdbcimage.LoggedUtils;
+import pz.tool.jdbcimage.ResultConsumer;
+import pz.tool.jdbcimage.ResultSetInfo;
+import pz.tool.jdbcimage.RowData;
+
+/**
+ * Import pushed data into a database.
+ */
 public class DbImportResultConsumer implements ResultConsumer<RowData>{
+	private static final Log log = LogFactory.getLog(DbImportResultConsumer.class);
 	public static int BATCH_SIZE = 1000;
 	
 	private String tableName;
@@ -70,7 +80,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 			}
 		}
 		if (pos == 1) {
-			// TODO log this out to that the table import was skipped
+			log.debug("No columns available for import!");
 			return; // no columns to write
 		}
 		insertSQL.append(") VALUES (");
@@ -81,7 +91,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 		try {
 			stmt = con.prepareStatement(insertSQL.toString());
 		} catch (SQLException e) {
-			// TODO log
+			LoggedUtils.ignore("Unable to prepare statement!", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -175,7 +185,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 				batchPosition = 0;
 			}
 		} catch (SQLException e) {
-			// TODO log
+			LoggedUtils.ignore("Unable to rollback!", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -191,7 +201,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 		try{
 			con.rollback();
 		} catch(SQLException e){
-			// TODO log
+			LoggedUtils.ignore("Unable to rollback!", e);
 		}
 		closeStatement();
 	}

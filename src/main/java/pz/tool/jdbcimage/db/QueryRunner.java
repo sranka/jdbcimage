@@ -1,4 +1,4 @@
-package pz.tool.jdbcimage;
+package pz.tool.jdbcimage.db;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -6,10 +6,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 
+import pz.tool.jdbcimage.LoggedUtils;
+import pz.tool.jdbcimage.ResultConsumer;
+import pz.tool.jdbcimage.ResultSetInfo;
+
 
 /**
- * A simple class that runs a specified query and pushes the each row to a specified consumer. 
- * @author zavora
+ * Runs a specified query and pushes each row to a specified consumer. 
  */
 public class QueryRunner implements Runnable{
 	public static int FETCH_SIZE = 100;
@@ -49,7 +52,7 @@ public class QueryRunner implements Runnable{
 			try {
 				con.rollback(); // nothing to commit
 			} catch (SQLException e) {
-				// TODO log
+				LoggedUtils.ignore("Unable to rollback!", e);
 			}
 			finished = System.currentTimeMillis();
 		}

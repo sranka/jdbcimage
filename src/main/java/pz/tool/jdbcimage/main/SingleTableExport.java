@@ -11,7 +11,8 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.time.Duration;
 
-import pz.tool.jdbcimage.QueryRunner;
+import pz.tool.jdbcimage.LoggedUtils;
+import pz.tool.jdbcimage.db.QueryRunner;
 import pz.tool.jdbcimage.kryo.KryoResultSetConsumer;
 
 /**
@@ -39,9 +40,9 @@ public class SingleTableExport extends MainToolBase{
 			failed = false;
 			return runner.getDuration();
 		} finally{
-			try{con.close();} catch(Exception e){/* TODO log */};
+			LoggedUtils.close(con);
 			// close the file
-			try{out.close();} catch(Exception e){/* TODO log */};
+			LoggedUtils.close(out);
 			// delete the output if it failed or zero rows read
 			if (failed || (runner.rows == 0 && isIgnoreEmptyTables())) {
 				file.delete();

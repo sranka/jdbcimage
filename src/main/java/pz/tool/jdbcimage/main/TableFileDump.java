@@ -8,6 +8,7 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 
+import pz.tool.jdbcimage.LoggedUtils;
 import pz.tool.jdbcimage.ResultConsumer;
 import pz.tool.jdbcimage.ResultProducerRunner;
 import pz.tool.jdbcimage.ResultSetInfo;
@@ -72,7 +73,7 @@ public class TableFileDump extends MainToolBase{
 							} catch(IOException e){
 								throw new RuntimeException(e);
 							} finally{
-								try{in.close();}catch(IOException e){/* TODO log */}
+								LoggedUtils.close(in);
 							}
 						} else{
 							target.println(value);
@@ -83,10 +84,10 @@ public class TableFileDump extends MainToolBase{
 			});
 			runner.run();
 		} finally{
-			try{in.close();} catch(Exception e){/* TODO log */};
+			LoggedUtils.close(in);
 			// close the file
 			target.flush();
-			try{target.close();} catch(Exception e){/* TODO log */};
+			LoggedUtils.close(target);
 			// do not delete the outFile even if it failed
 			out.println("Saved to: "+outFile);
 		}

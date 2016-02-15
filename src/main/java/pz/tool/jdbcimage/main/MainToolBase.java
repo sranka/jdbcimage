@@ -31,6 +31,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -38,6 +39,10 @@ import java.util.zip.InflaterInputStream;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+
+import pz.tool.jdbcimage.LoggedUtils;
+import pz.tool.jdbcimage.db.SqlExecuteCommand;
+import pz.tool.jdbcimage.db.TableGroupedCommands;
 
 public abstract class MainToolBase implements AutoCloseable{
 	//////////////////////
@@ -174,7 +179,7 @@ public abstract class MainToolBase implements AutoCloseable{
 			try {
 				((BasicDataSource)dataSource).close();
 			} catch (SQLException e) {
-				/* TODO log */
+				LoggedUtils.ignore("Unable to close data source!", e);
 			}
 		}
 	}
@@ -197,6 +202,15 @@ public abstract class MainToolBase implements AutoCloseable{
 		con.setReadOnly(false);
 		
 		return con;
+	}
+	public Supplier<Connection> getWriteConnectionSupplier(){
+		return () -> {
+			try{
+				return getWriteConnection();
+			} catch(SQLException e){
+				throw new RuntimeException(e);
+			}
+		};
 	}
 	/**
 	 * Run the specified tasks in parallel or in the current thread depending on configured parallelism.
@@ -305,76 +319,13 @@ public abstract class MainToolBase implements AutoCloseable{
 				try {
 					con.rollback(); // nothing to commit
 				} catch (SQLException e) {
-					// TODO log
+					LoggedUtils.ignore("Unable to rollback!", e);
 				}
 			}
 			return retVal;
 		}
 	}
 
-	/**
-	 * Described SQL Command to execute. 
-	 */
-	public static class SqlExecuteCommand{
-		public String description;
-		public String sql;
-
-		public SqlExecuteCommand(String description, String sql) {
-			this.description = description;
-			this.sql = sql;
-		}
-	}
-	
-	/**
-	 * IndexCommand groups index modifications by table name
-	 * so that each group can be run in parallel.
-	 */ 
-	public static class TableGroupedCommands{
-		public List<List<SqlExecuteCommand>> tableGroups = new ArrayList<>();
-		private List<SqlExecuteCommand> lastGroup = null;
-		private String lastTable = null;
-		
-		public void add(String table, String description, String sql){
-			if (!table.equals(lastTable)){
-				lastTable = table;
-				lastGroup = new ArrayList<>();
-				tableGroups.add(lastGroup);
-			}
-			lastGroup.add(new SqlExecuteCommand(description,sql));
-		}
-	}
-
-	public Callable<Void> toSqlExecuteTask(SqlExecuteCommand... commands){
-		return new Callable<Void>(){
-			@Override
-			public Void call() throws Exception {
-				try(Connection con = getWriteConnection()){
-					boolean failed = true;
-					SqlExecuteCommand last = null;
-					try(Statement stmt = con.createStatement()){
-						for(SqlExecuteCommand cmd: commands){
-							last = cmd;
-							stmt.execute(last.sql);
-							out.println("SUCCESS: "+last.description);
-						}
-						failed = false;
-					} finally{
-						try {
-							if (failed) {
-								if (last!=null) out.println("FAILURE: "+last.description);
-								con.rollback(); // nothing to commit
-							} else{
-								con.commit();
-							}
-						} catch (SQLException e) {
-							// TODO log
-						}
-					}
-					return null;
-				}
-			}
-		};
-	}
 	
 	///////////////////////////////////////
 	// Database specific instructions
@@ -536,7 +487,11 @@ public abstract class MainToolBase implements AutoCloseable{
 						);
 				run(commands.tableGroups
 						.stream()
-						.map(x -> toSqlExecuteTask(x.toArray(new SqlExecuteCommand[x.size()])))
+						.map(x -> SqlExecuteCommand.toSqlExecuteTask(
+								getWriteConnectionSupplier(),
+								out,
+								x.toArray(new SqlExecuteCommand[x.size()]))
+								)
 						.collect(Collectors.toList()));
 			}
 			return Duration.ofMillis(System.currentTimeMillis()-time);
@@ -578,7 +533,11 @@ public abstract class MainToolBase implements AutoCloseable{
 					);
 			run(commands.tableGroups
 					.stream()
-					.map(x -> toSqlExecuteTask(x.toArray(new SqlExecuteCommand[x.size()])))
+					.map(x -> SqlExecuteCommand.toSqlExecuteTask(
+							getWriteConnectionSupplier(),
+							out,
+							x.toArray(new SqlExecuteCommand[x.size()]))
+							)
 					.collect(Collectors.toList()));
 			return Duration.ofMillis(System.currentTimeMillis()-time);
 		}
@@ -635,10 +594,14 @@ public abstract class MainToolBase implements AutoCloseable{
 								}
 							}
 						);
-				// TODO DEADLOCK problems when running in parallel
+				// there are DEADLOCK problems when running in parallel
 				runSerial(commands.tableGroups
 						.stream()
-						.map(x -> toSqlExecuteTask(x.toArray(new SqlExecuteCommand[x.size()])))
+						.map(x -> SqlExecuteCommand.toSqlExecuteTask(
+								getWriteConnectionSupplier(),
+								out,
+								x.toArray(new SqlExecuteCommand[x.size()]))
+								)
 						.collect(Collectors.toList()));
 			}
 			return Duration.ofMillis(System.currentTimeMillis()-time);
@@ -690,7 +653,7 @@ public abstract class MainToolBase implements AutoCloseable{
 					try {
 						con.rollback(); // nothing to commit
 					} catch (SQLException e) {
-						// TODO log
+						LoggedUtils.ignore("Unable to rollback!", e);
 					}
 				}
 			} catch(SQLException e){
