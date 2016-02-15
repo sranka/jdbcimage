@@ -10,5 +10,5 @@ Quickly exports/imports database tables using JDBC and Kryo.
 * unit tests
 * directly produce and consume zip file
 * cleanup of generated directory upon failure
-* support for other databases (other than Oracle, MSSQL) and new column types
+* support for other databases (other than Oracle, MSSQL) and additional column types (CLOB...)
 
