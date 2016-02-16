@@ -7,8 +7,8 @@ Quickly exports/imports database tables using JDBC and Kryo.
 3. Run the script
 
 ## Missing pieces
-* unit tests
+* tests
 * directly produce and consume zip file
 * cleanup of generated directory upon failure
-* support for other databases (other than Oracle, MSSQL) and additional column types (CLOB...)
+* support for other databases (other than Oracle, MSSQL) and additional column types
 
