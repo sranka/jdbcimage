@@ -3,6 +3,7 @@ package pz.tool.jdbcimage.kryo;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -66,10 +67,9 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 						break;
 					case Types.CHAR:
 					case Types.VARCHAR:
-					case Types.LONGVARCHAR: // TODO move to CLOB
 						kryo.writeObjectOrNull(out, rs.getString(i+1), String.class);
+						break;
 					case Types.NCHAR:
-					case Types.LONGNVARCHAR: // TODO move to CLOB
 					case Types.NVARCHAR:
 						kryo.writeObjectOrNull(out, rs.getNString(i+1), String.class);
 						break;
@@ -115,8 +115,18 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 						if (rs.wasNull()) blob = null;
 						kryo.writeObjectOrNull(out, blob, KryoBlobSerializer.INSTANCE);
 						break;
-					case Types.CLOB: // TODO CLOB handling
-					case Types.NCLOB: // TODO CLOB handling
+					case Types.LONGVARCHAR:
+					case Types.CLOB:
+						Clob clob = rs.getClob(i+1);
+						if (rs.wasNull()) clob = null;
+						kryo.writeObjectOrNull(out, clob, KryoClobSerializer.INSTANCE);
+						break;
+					case Types.LONGNVARCHAR:
+					case Types.NCLOB:
+						Clob nclob = rs.getNClob(i+1);
+						if (rs.wasNull()) clob = null;
+						kryo.writeObjectOrNull(out, nclob, KryoClobSerializer.INSTANCE);
+						break;
 					default:
 						throw new IllegalStateException("Unable to serialize SQL type: "+info.types[i]+", Object: "+rs.getObject(i+1));
 				}

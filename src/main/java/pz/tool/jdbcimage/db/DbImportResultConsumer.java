@@ -1,10 +1,13 @@
 package pz.tool.jdbcimage.db;
 
 import java.io.InputStream;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -16,6 +19,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import pz.tool.jdbcimage.ChunkedInputStream;
+import pz.tool.jdbcimage.ChunkedReader;
 import pz.tool.jdbcimage.LoggedUtils;
 import pz.tool.jdbcimage.ResultConsumer;
 import pz.tool.jdbcimage.ResultSetInfo;
@@ -125,11 +129,9 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 								break;
 							case Types.CHAR:
 							case Types.VARCHAR:
-							case Types.LONGVARCHAR: // TODO handle CLOB values
 								stmt.setNString(pos, (String)value);
 							case Types.NCHAR:
 							case Types.NVARCHAR:
-							case Types.LONGNVARCHAR: // TODO handle CLOB values
 								stmt.setString(pos, (String)value);
 								break;
 							case Types.DATE:
@@ -176,8 +178,26 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 									throw new IllegalStateException("Unexpected value found for blob: "+value);
 								}
 								break;
-							case Types.CLOB: // TODO handle CLOB values
-							case Types.NCLOB: // TODO handle CLOB values
+							case Types.LONGVARCHAR:
+							case Types.CLOB:
+							case Types.LONGNVARCHAR:
+							case Types.NCLOB:
+								if (value instanceof Reader){
+									if (value instanceof ChunkedReader){
+										stmt.setCharacterStream(pos, (Reader)value, ((ChunkedReader)value).length());
+									} else{
+										stmt.setCharacterStream(pos, (Reader)value);
+									}
+								} else if (value instanceof Clob){
+									if (type == Types.LONGNVARCHAR || type == Types.NCLOB){
+										stmt.setNClob(pos, (NClob)value);
+									} else{
+										stmt.setClob(pos, (Clob)value);
+									}
+								} else{
+									throw new IllegalStateException("Unexpected value found for clob: "+value);
+								}
+								break;
 							default:
 								throw new IllegalStateException("Unable to set SQL type: "+type+" for value: "+value);
 						}

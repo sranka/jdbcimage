@@ -436,12 +436,12 @@ public abstract class MainToolBase implements AutoCloseable{
 
 		@Override
 		public String escapeColumnName(String s){
-			return "\""+s.toUpperCase()+"\"";
+			return "\""+s+"\"";
 		}
 
 		@Override
 		public String escapeTableName(String s){
-			return "\""+s.toUpperCase()+"\"";
+			return "\""+s+"\"";
 		}
 		
 		@Override

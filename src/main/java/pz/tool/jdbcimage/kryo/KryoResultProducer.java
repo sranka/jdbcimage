@@ -68,8 +68,6 @@ public class KryoResultProducer implements ResultProducer{
 					break;
 				case Types.CHAR:
 				case Types.NCHAR:
-				case Types.LONGVARCHAR: // TODO MOVE TO CLOB
-				case Types.LONGNVARCHAR: // TODO MOVE TO CLOB
 				case Types.VARCHAR:
 				case Types.NVARCHAR:
 					val = kryo.readObjectOrNull(in, String.class);
@@ -106,8 +104,14 @@ public class KryoResultProducer implements ResultProducer{
 				case Types.BLOB:
 					val = KryoInputStreamSerializer.INSTANCE.deserializeBlobData(in, row.info.connection);
 					break;
+				case Types.LONGVARCHAR: // TODO MOVE TO CLOB
 				case Types.CLOB: // TODO CLOB handling
+					val = KryoReaderSerializer.INSTANCE.deserializeClobData(in, row.info.connection);
+					break;
+				case Types.LONGNVARCHAR: // TODO MOVE TO CLOB
 				case Types.NCLOB: // TODO CLOB handling
+					val = KryoReaderSerializer.INSTANCE.deserializeNClobData(in, row.info.connection);
+					break;
 				default:
 					throw new IllegalStateException("Unable to deserialize object for SQL type: "+types[i]);
 			}
