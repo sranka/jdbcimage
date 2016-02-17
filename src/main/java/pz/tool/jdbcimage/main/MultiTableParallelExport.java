@@ -18,8 +18,9 @@ public class MultiTableParallelExport extends SingleTableExport{
 		out.println("-- Parallelism "+ parallelism);
 		
 		// runs export in parallel
+		out.println("Exporting table files to: "+new File(tool_builddir));
 		run(tables.stream().map(x -> getExportTask(x)).collect(Collectors.toList()));
-		out.println("Files saved to: "+new File(tool_builddir));
+		zip();
 	}
 	
 	private Callable<?> getExportTask(String tableName){
@@ -44,6 +45,9 @@ public class MultiTableParallelExport extends SingleTableExport{
 	}
     
 	public static void main(String... args) throws Exception{
-		try(MultiTableParallelExport tool = new MultiTableParallelExport()){tool.run();}
+		try(MultiTableParallelExport tool = new MultiTableParallelExport()){
+			tool.setupZipFile(args);
+			tool.run();
+		}
 	}
 }

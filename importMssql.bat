@@ -15,4 +15,4 @@ set OPTS=%OPTS% "-Dtool_parallelism=%tool_parallelism%"
 set OPTS=%OPTS% "-Dtool_disableIndexes=%tool_disableIndexes%"
 set OPTS=%OPTS% "-Dtool_waitOnStartup=false"
 
-java %OPTS% -classpath target/jdbc-image-tools.jar;lib/sqljdbc4.jar pz.tool.jdbcimage.main.MultiTableParallelImport
+java %OPTS% -classpath target/jdbc-image-tools.jar;lib/sqljdbc4.jar pz.tool.jdbcimage.main.MultiTableParallelImport %1

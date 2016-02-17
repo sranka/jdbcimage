@@ -37,7 +37,8 @@ public class MultiTableParallelImport extends SingleTableImport{
 	public void run() throws SQLException, IOException{
 		// print platform parallelism, just FYI
 		out.println("-- Parallelism "+ parallelism);
-
+		unzip(); // unzip input if it exists
+		
 		Durations durations = new Durations();
 		try {
 			List<String> dbTables = getUserTables();
@@ -138,6 +139,9 @@ public class MultiTableParallelImport extends SingleTableImport{
 	}
 
 	public static void main(String... args) throws Exception{
-		try(MultiTableParallelImport tool = new MultiTableParallelImport()){tool.run();}
+		try(MultiTableParallelImport tool = new MultiTableParallelImport()){
+			tool.setupZipFile(args);
+			tool.run();
+		} 
 	}
 }

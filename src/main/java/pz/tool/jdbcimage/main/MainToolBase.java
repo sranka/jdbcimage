@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,6 +37,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.sql.DataSource;
 
@@ -57,10 +62,115 @@ public abstract class MainToolBase implements AutoCloseable{
 	public boolean tool_ignoreEmptyTables = Boolean.valueOf(System.getProperty("tool_ignoreEmptyTables","false"));
 	public boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes","false"));
 	public String tool_builddir = System.getProperty("tool_builddir","target/export");
+	public String zipFile = null;
 	// parallelism
 	public int tool_parallelism = Integer.valueOf(System.getProperty("tool_parallelism","-1"));
 	// let you connect profiling tools
 	public boolean tool_waitOnStartup=Boolean.valueOf(System.getProperty("tool_waitOnStartup","false"));
+	
+	/**
+	 * Setups zip file from command line arguments supplied.
+	 * @param args arguments.
+	 */
+	public void setupZipFile(String[] args){
+		if (args.length>0){
+			if (!args[0].endsWith(".zip")){
+				throw new IllegalArgumentException("zip file expected, but: "+args[0]);
+			}
+			tool_builddir = new File(
+					tool_builddir,
+					String.valueOf(System.currentTimeMillis())).toString();
+			new File(tool_builddir).mkdirs();
+			zipFile = args[0];
+		}
+	}
+	
+	/**
+	 * Zip files.
+	 * @param directory directory with files
+	 * @param zipFile zip to create
+	 */
+	public void zip(){
+		if (zipFile!=null){
+			long start = System.currentTimeMillis();
+			try(ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))){
+				zos.setLevel(ZipOutputStream.STORED);
+				byte[] buffer = new byte[4096];
+				Files.list(Paths.get(tool_builddir))
+					.forEach(x -> {
+						File f = x.toFile();
+						if (f.isFile() && !f.getName().contains(".")){
+							try (FileInputStream fis = new FileInputStream(f)){
+								ZipEntry zipEntry = new ZipEntry(f.getName());
+								zos.putNextEntry(zipEntry);
+								int count;
+								while ((count = fis.read(buffer)) >= 0) {
+									zos.write(buffer, 0, count);
+								}
+								zos.closeEntry();
+							} catch (IOException e) {
+								throw new RuntimeException(e);
+							}
+						}
+					});
+				out.println("Zipped to '"+zipFile+"' - "+ Duration.ofMillis(System.currentTimeMillis()-start));
+			} catch(IOException e){
+				throw new RuntimeException(e);
+			}
+		}
+	}
+	
+	/**
+	 * Delete build directory.
+	 * @param directory directory to delete
+	 */
+	public void deleteBuildDirectory(){
+		File dir = new File(tool_builddir);
+		if (dir.exists()){
+			long start = System.currentTimeMillis();
+			try {
+				Files.list(Paths.get(tool_builddir))
+				.forEach(x -> {
+					File f = x.toFile();
+					f.delete();
+				});
+				dir.delete();
+			} catch (Exception e) {
+				LoggedUtils.ignore("Unable to delete "+tool_builddir, e);
+			}
+			out.println("Delete build directory time - "+ Duration.ofMillis(System.currentTimeMillis()-start));
+		}
+	}
+	/**
+	 * Unzip files.
+	 * @param directory directory to write to
+	 * @param zipFile zip to read from
+	 */
+	public void unzip(){
+		//extract
+		if (zipFile!=null){
+			try(ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))){
+				long start = System.currentTimeMillis();
+				byte[] buffer = new byte[4096];
+				ZipEntry nextEntry;
+				while((nextEntry = zis.getNextEntry())!=null){
+					try (FileOutputStream fos = new FileOutputStream (new File(tool_builddir,nextEntry.getName()))){
+						int count;
+						while ((count = zis.read(buffer)) >= 0) {
+							fos.write(buffer, 0, count);
+						}
+						zis.closeEntry();
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}
+				out.println("Unzipped '"+zipFile+"' - "+ Duration.ofMillis(System.currentTimeMillis()-start));
+			} catch(IOException e){
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
 	/**
 	 * Gets a number of configured parallel threads, but at most max number.
 	 * @param max max number to return or non-positive number to ignore
@@ -126,6 +236,20 @@ public abstract class MainToolBase implements AutoCloseable{
 		return tableSet.containsKey(tableName);
 	}
 
+	public void close(){
+		if (zipFile!=null){
+			deleteBuildDirectory();
+		}
+		finished();
+		if (dataSource!=null){
+			try {
+				((BasicDataSource)dataSource).close();
+			} catch (SQLException e) {
+				LoggedUtils.ignore("Unable to close data source!", e);
+			}
+		}
+	}
+
 	protected void finished(){
 		out.println("Total processing time - "+ Duration.ofMillis(System.currentTimeMillis()-started));
 		out.println("Finished - "+ new Date(System.currentTimeMillis()));
@@ -173,17 +297,6 @@ public abstract class MainToolBase implements AutoCloseable{
 		}
 	}
 
-	public void close(){
-		finished();
-		if (dataSource!=null){
-			try {
-				((BasicDataSource)dataSource).close();
-			} catch (SQLException e) {
-				LoggedUtils.ignore("Unable to close data source!", e);
-			}
-		}
-	}
-	
 	public static OutputStream toResultOutput(File f) throws FileNotFoundException{
 		return new DeflaterOutputStream(new FileOutputStream(f));
 	}

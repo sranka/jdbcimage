@@ -17,4 +17,4 @@ set OPTS=%OPTS% "-Dtool_ignoreEmptyTables=%tool_ignoreEmptyTables%"
 set OPTS=%OPTS% "-Dtool_waitOnStartup=false"
 
 mkdir %tool_builddir%
-java %OPTS% -classpath target/jdbc-image-tools.jar;lib/ojdbc7_g.jar;lib/orai18n.jar pz.tool.jdbcimage.main.MultiTableParallelExport
+java %OPTS% -classpath target/jdbc-image-tools.jar;lib/ojdbc7_g.jar;lib/orai18n.jar pz.tool.jdbcimage.main.MultiTableParallelExport %1
