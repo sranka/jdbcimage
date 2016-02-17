@@ -1,10 +1,12 @@
 package pz.tool.jdbcimage.main;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 
@@ -30,7 +32,7 @@ public class TableFileDump extends MainToolBase{
 		// no data source required
 	}
 	
-	public void run() throws Exception{
+	public void run(String[] args) throws Exception{
 		File inFile = new File(tool_in_file);
 		out.println("Input file: "+inFile);
 		InputStream in = toResultInput(inFile);
@@ -66,6 +68,7 @@ public class TableFileDump extends MainToolBase{
 						target.print(info.columns[i]);
 						target.print(" ");
 						Object value = t.values[i];
+						if (value instanceof byte[]) value = new ByteArrayInputStream((byte[])value);
 						if (value instanceof InputStream){
 							InputStream in = (InputStream) value;
 							target.flush();
@@ -74,6 +77,21 @@ public class TableFileDump extends MainToolBase{
 							try{
 								while((count = in.read(chunk))!=-1){
 									target.write(chunk,0,count);
+								}
+								target.println();
+							} catch(IOException e){
+								throw new RuntimeException(e);
+							} finally{
+								LoggedUtils.close(in);
+							}
+						}else if (value instanceof Reader){
+							Reader in = (Reader) value;
+							target.flush();
+							char[] chunk = new char[100];
+							int count;
+							try{
+								while((count = in.read(chunk))!=-1){
+									target.print(new String(chunk,0,count));
 								}
 								target.println();
 							} catch(IOException e){
@@ -122,6 +140,11 @@ public class TableFileDump extends MainToolBase{
 	}
 	
 	public static void main(String... args) throws Exception{
-		try(TableFileDump tool = new TableFileDump()){tool.run();}
+		try(TableFileDump tool = new TableFileDump()){
+			tool.run(args);
+		} catch(IllegalArgumentException e){
+			System.out.println("FAILED: "+e.getMessage());
+			System.exit(1);
+		}
 	}
 }

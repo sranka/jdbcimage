@@ -297,10 +297,50 @@ public abstract class MainToolBase implements AutoCloseable{
 		}
 	}
 
-	public static OutputStream toResultOutput(File f) throws FileNotFoundException{
+	public OutputStream toResultOutput(File f) throws FileNotFoundException{
 		return new DeflaterOutputStream(new FileOutputStream(f));
 	}
-	public static InputStream toResultInput(File f) throws FileNotFoundException{
+	public InputStream toResultInput(File f) throws FileNotFoundException{
+		boolean zip = false;
+		if (!f.exists() || (zip = f.getName().endsWith(".zip"))){
+			int sep = -1;
+			String zipFile = "";
+			if (zip || (sep = f.getName().indexOf("!"))>0){
+				if (sep>0){
+					zipFile = f.getName().substring(sep+1);
+					f = new File(f.getParent(),f.getName().substring(0, sep));
+				}
+				if (f.getName().endsWith(".zip") && f.exists()){
+					try {
+						ZipInputStream zis = new ZipInputStream(new FileInputStream(f));
+						ZipEntry entry;
+						while((entry = zis.getNextEntry())!=null){
+							if (entry.getName().equalsIgnoreCase(zipFile)){
+								return new InflaterInputStream(zis);
+							}
+							zis.closeEntry();
+						}
+						zis.close();
+						// re-read to offer names
+						out.println("Following files are availanle the image: ");
+						zis = new ZipInputStream(new FileInputStream(f)); 
+						while((entry = zis.getNextEntry())!=null){
+							out.print(" ");
+							out.print(f);
+							out.print("!");
+							out.println(entry.getName());
+							zis.closeEntry();
+						}
+						out.println();
+						zis.close();
+						throw new IllegalArgumentException("Specify a valid file inside the image zip!");
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}
+			}
+			throw new IllegalArgumentException("File not found: "+f);
+		}
 		return new InflaterInputStream(new FileInputStream(f));
 	}
 	
