@@ -1,5 +1,6 @@
 # jdbc-image-tool
-Quickly exports/imports database tables using JDBC and Kryo.
+Quickly exports/imports database tables using JDBC and Kryo. 
+Supports Oracle and MSSQL databases.
 
 ## Overview
 1. Build the project using maven3: mvn3 install
@@ -8,7 +9,3 @@ Quickly exports/imports database tables using JDBC and Kryo.
 
 ## Missing pieces
 * tests
-* directly produce and consume zip file
-* cleanup of generated directory upon failure
-* support for other databases (other than Oracle, MSSQL) and additional column types
-
