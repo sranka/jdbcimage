@@ -104,12 +104,12 @@ public class KryoResultProducer implements ResultProducer{
 				case Types.BLOB:
 					val = KryoInputStreamSerializer.INSTANCE.deserializeBlobData(in, row.info.connection);
 					break;
-				case Types.LONGVARCHAR: // TODO MOVE TO CLOB
-				case Types.CLOB: // TODO CLOB handling
+				case Types.LONGVARCHAR: 
+				case Types.CLOB: 
 					val = KryoReaderSerializer.INSTANCE.deserializeClobData(in, row.info.connection);
 					break;
-				case Types.LONGNVARCHAR: // TODO MOVE TO CLOB
-				case Types.NCLOB: // TODO CLOB handling
+				case Types.LONGNVARCHAR: 
+				case Types.NCLOB: 
 					val = KryoReaderSerializer.INSTANCE.deserializeNClobData(in, row.info.connection);
 					break;
 				default:
