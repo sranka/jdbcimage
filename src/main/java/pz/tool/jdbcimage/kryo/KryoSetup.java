@@ -14,11 +14,11 @@ public class KryoSetup {
 			kryo.setReferences(false);
 			kryo.register(ResultSetInfo.class);
 			return kryo;
-	    };
+	    }
 	};
 	/**
 	 * Returns a kryo instance to use.
-	 * @return
+	 * @return kryo instance
 	 */
 	public static Kryo getKryo(){
 		return kryos.get();

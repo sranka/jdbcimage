@@ -29,20 +29,20 @@ public class SingleTableImport extends MainToolBase{
 		out.println("Import time: "+ importTable(tool_table, dbFacade.getTablesWithIdentityColumns().contains(tool_table)));
 	}
 	
-	public Duration truncateTable(String tableName) throws SQLException, IOException{
+	public Duration truncateTable(String tableName) throws SQLException {
 		long start = System.currentTimeMillis();
 		Connection con = getWriteConnection();
-		boolean commited = false;
+		boolean committed = false;
 		try{
 			// delete table
 			try(Statement del = con.createStatement()){
 				del.executeUpdate(dbFacade.getTruncateTableSql(tableName));
 			}
 			con.commit();
-			commited = true;
+			committed = true;
 			return Duration.ofMillis(System.currentTimeMillis()-start);
 		} finally{
-			if (!commited){
+			if (!committed){
 				try{con.rollback();} catch(Exception e){LoggedUtils.ignore("Unable to rollback!",e);}
 			}
 			LoggedUtils.close(con);
@@ -53,7 +53,7 @@ public class SingleTableImport extends MainToolBase{
 	 * Imports specific tables.
 	 * @param tableName tables name
 	 * @param hasIdentityColumn has identity column 
-	 * @return
+	 * @return time spent
 	 * @throws SQLException
 	 * @throws IOException
 	 */

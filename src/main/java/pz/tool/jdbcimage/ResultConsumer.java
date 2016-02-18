@@ -13,23 +13,23 @@ public interface ResultConsumer<T> extends Consumer<T>{
 	 * @param t object to get row data from
 	 */
 	@Override
-	public void accept(T t);
+	void accept(T t);
 
 	/**
 	 * Called before the result set rows are processed.
-	 * @param rs result set
+	 * @param info result set info
 	 */
-	public default void onStart(ResultSetInfo info){
+	default void onStart(ResultSetInfo info){
 	}
 	/**
 	 * Called upon finish of the processing.
 	 */
-	public default void onFinish(){
+	default void onFinish(){
 	}
 	/**
 	 * Called upon processing failure.
-	 * @param Exception exception
+	 * @param e exception
 	 */
-	public default void onFailure(Exception e){
+	default void onFailure(Exception e){
 	}
 }

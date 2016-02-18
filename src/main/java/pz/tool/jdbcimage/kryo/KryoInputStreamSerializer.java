@@ -52,7 +52,7 @@ public class KryoInputStreamSerializer extends Serializer<InputStream>{
 			if (connection == null){
 				// input stream
 				if (chunks == null){
-					chunks = new ArrayList<byte[]>();
+					chunks = new ArrayList<>();
 					chunks.add(firstBytes);
 				}
 				chunks.add(in.readBytes(count));

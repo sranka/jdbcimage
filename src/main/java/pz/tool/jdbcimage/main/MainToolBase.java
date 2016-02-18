@@ -86,9 +86,7 @@ public abstract class MainToolBase implements AutoCloseable{
 	}
 	
 	/**
-	 * Zip files.
-	 * @param directory directory with files
-	 * @param zipFile zip to create
+	 * Zips files in the build directory to a configured zipFile.
 	 */
 	public void zip(){
 		if (zipFile!=null){
@@ -121,8 +119,7 @@ public abstract class MainToolBase implements AutoCloseable{
 	}
 	
 	/**
-	 * Delete build directory.
-	 * @param directory directory to delete
+	 * Deletes build directory.
 	 */
 	public void deleteBuildDirectory(){
 		File dir = new File(tool_builddir);
@@ -143,8 +140,6 @@ public abstract class MainToolBase implements AutoCloseable{
 	}
 	/**
 	 * Unzip files.
-	 * @param directory directory to write to
-	 * @param zipFile zip to read from
 	 */
 	public void unzip(){
 		//extract
@@ -409,11 +404,9 @@ public abstract class MainToolBase implements AutoCloseable{
 				true);
 		AtomicBoolean canContinue = new AtomicBoolean(true);
 		
-		List<Future<Void>> results = new ArrayList<Future<Void>>();
+		List<Future<Void>> results = new ArrayList<>();
 		for(int i=0; i<parallelism; i++){
-			results.add(taskExecutor.submit(new Callable<Void>(){
-				@Override
-				public Void call() throws Exception {
+			results.add(taskExecutor.submit(() ->{
 					Callable<?> task = null;
 					try{
 						while(canContinue.get() && (task = queue.poll()) != null){
@@ -427,7 +420,6 @@ public abstract class MainToolBase implements AutoCloseable{
 						}
 					}
 					return null;
-				}
 			}));
 		}
 
@@ -458,7 +450,7 @@ public abstract class MainToolBase implements AutoCloseable{
 	 */
 	public <T> List<T> executeQuery(String query, Function<ResultSet,T> mapper) throws SQLException{
 		try(Connection con = getReadOnlyConnection()){
-			List<T> retVal = new ArrayList<T>();
+			List<T> retVal = new ArrayList<>();
 			try(Statement stmt = con.createStatement()){
 				try(ResultSet rs = stmt.executeQuery(query)){
 					while(rs.next()){
@@ -493,7 +485,7 @@ public abstract class MainToolBase implements AutoCloseable{
 	public static abstract class DBFacade{
 		/**
 		 * Setups data source.
-		 * @param bds
+		 * @param bds datasource
 		 */
 		public abstract void setupDataSource(BasicDataSource bds);
 		/**
@@ -505,7 +497,7 @@ public abstract class MainToolBase implements AutoCloseable{
 
 		/**
 		 * Turns on/off table constraints.
-		 * @param enable
+		 * @param enable true to enable
 		 * @return operation time
 		 * @throws SQLException
 		 */
@@ -513,7 +505,7 @@ public abstract class MainToolBase implements AutoCloseable{
 		
 		/**
 		 * Turns on/off table indexes.
-		 * @param enable
+		 * @param enable true to enable
 		 * @return operation time
 		 * @throws SQLException
 		 */
@@ -564,7 +556,7 @@ public abstract class MainToolBase implements AutoCloseable{
 		
 		/**
 		 * Returns tables that have no identity columns.
-		 * @return
+		 * @return set of tables that contain identity columns
 		 */
 		public Set<String> getTablesWithIdentityColumns() {
 			return Collections.emptySet();
@@ -791,7 +783,7 @@ public abstract class MainToolBase implements AutoCloseable{
 		}
 		/**
 		 * Returns tables that have no identity columns.
-		 * @return
+		 * @return set of tables that contain identity columns
 		 */
 		public Set<String> getTablesWithIdentityColumns() {
 			Set<String> retVal = new HashSet<>();

@@ -91,21 +91,18 @@ public class MultiTableParallelImport extends SingleTableImport{
 		long time = System.currentTimeMillis();
 		List<Callable<?>> tasks = new ArrayList<>(tables.size());
 		for(String table: tables){
-			tasks.add(new Callable<Void>(){
-				@Override
-				public Void call() throws Exception {
-					boolean failed = true;
-					try{
-						truncateTable(table);
-						out.println("SUCCESS: Truncated table "+table);
-						failed = false;
-					} finally{
-						if (failed){
-							out.println("FAILURE: Truncate table "+table);
-						}
+			tasks.add(() -> {
+				boolean failed = true;
+				try{
+					truncateTable(table);
+					out.println("SUCCESS: Truncated table "+table);
+					failed = false;
+				} finally{
+					if (failed){
+						out.println("FAILURE: Truncate table "+table);
 					}
-					return null;
 				}
+				return null;
 			});
 		}
 		run(tasks);
@@ -117,21 +114,18 @@ public class MultiTableParallelImport extends SingleTableImport{
 		List<Callable<?>> tasks = new ArrayList<>(tables.size());
 		Set<String> tablesWithIdentityColumns = dbFacade.getTablesWithIdentityColumns();
 		for(String table: tables){
-			tasks.add(new Callable<Void>(){
-				@Override
-				public Void call() throws Exception {
-					boolean failed = true;
-					try{
-						Duration time = importTable(table, tablesWithIdentityColumns.contains(table));
-						out.println("SUCCESS: Imported data to "+table+" in "+time);
-						failed = false;
-					} finally{
-						if (failed){
-							out.println("FAILURE: Import data to table "+table);
-						}
+			tasks.add(() -> {
+				boolean failed = true;
+				try{
+					importTable(table, tablesWithIdentityColumns.contains(table));
+					out.println("SUCCESS: Imported data to "+table+" in "+time);
+					failed = false;
+				} finally{
+					if (failed){
+						out.println("FAILURE: Import data to table "+table);
 					}
-					return null;
 				}
+				return null;
 			});
 		}
 		run(tasks);

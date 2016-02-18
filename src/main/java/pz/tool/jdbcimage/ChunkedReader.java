@@ -11,6 +11,7 @@ import java.util.List;
  * @author zavora
  */
 public class ChunkedReader extends Reader{
+	private static final char[] EMPTY_CHUNK = new char[0];
 	private Iterator<char[]> chunks;
 	private long totalLength;
 	private boolean finished;
@@ -27,13 +28,14 @@ public class ChunkedReader extends Reader{
 		} else{
 			if (totalLength <= 0){
 				// calculate length
-				totalLength = chunks.stream().mapToLong(x -> x.length).sum();
+				totalLength = chunks.stream().mapToLong(x -> x==null?0:x.length).sum();
 			}
 			this.totalLength = totalLength;
 			this.chunks = chunks.iterator();
 			this.currentChunk = this.chunks.next();
 			this.pos = 0;
-			forward(0); // skip possibly empty chunks 
+			if (currentChunk == null) currentChunk = EMPTY_CHUNK;
+			forward(0); // skip possibly empty chunks
 		}
 	}
 	
@@ -52,6 +54,7 @@ public class ChunkedReader extends Reader{
 			pos = 0;
 			if (chunks.hasNext()){
 				currentChunk = chunks.next();
+				if (currentChunk == null) currentChunk = EMPTY_CHUNK;
 			} else{
 				finished = true;
 				return false;

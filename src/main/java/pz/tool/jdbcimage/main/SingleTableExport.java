@@ -68,19 +68,19 @@ public class SingleTableExport extends MainToolBase{
 					if (colType != Types.BLOB && colType != Types.VARBINARY){
 						if (needComma) columns.append(","); else needComma=true;
 						columns.append(dbFacade.escapeColumnName(meta.getColumnName(i+1)));
-					};
+					}
 				}
 				for(int i=0; i<columnCount; i++){
 					if (meta.getColumnType(i+1) == Types.VARBINARY){
 						if (needComma) columns.append(","); else needComma=true;
 						columns.append(dbFacade.escapeColumnName(meta.getColumnName(i+1)));
-					};
+					}
 				}
 				for(int i=0; i<columnCount; i++){
 					if (meta.getColumnType(i+1) == Types.BLOB){
 						if (needComma) columns.append(","); else needComma=true;
 						columns.append(dbFacade.escapeColumnName(meta.getColumnName(i+1)));
-					};
+					}
 				}
 			}
 		}

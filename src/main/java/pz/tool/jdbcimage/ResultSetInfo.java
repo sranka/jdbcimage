@@ -3,6 +3,7 @@ package pz.tool.jdbcimage;
 import java.sql.Connection;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 /**
  * Represents information about the result so it can be serialized and compared.
@@ -15,15 +16,13 @@ public class ResultSetInfo {
 
 	/**
 	 * Serialization initializer.
-	 * @param meta
-	 * @throws SQLException
 	 */
 	public ResultSetInfo(){
 	}
 
 	/**
 	 * Initializes itself from meta data.
-	 * @param meta
+	 * @param meta meta data
 	 * @throws SQLException
 	 */
 	public ResultSetInfo(ResultSetMetaData meta) throws SQLException{
@@ -45,13 +44,12 @@ public class ResultSetInfo {
 	public int getColumnCount(){
 		return columns.length;
 	}
-	
-	/**
-	 * Simple to string method.
-	 */
-	public String toString(){
-		StringBuilder sb = new StringBuilder();
-		sb.append(getClass().getSimpleName()).append("\n");
-		return sb.toString();
-	}
+
+    @Override
+    public String toString() {
+        return "ResultSetInfo{" +
+                "columns=" + Arrays.toString(columns) +
+                ", types=" + Arrays.toString(types) +
+                '}';
+    }
 }

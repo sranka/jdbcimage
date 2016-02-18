@@ -51,8 +51,8 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 	 * Creates database importer.
 	 * @param tableName table to insert to
 	 * @param connection connection to write rows to
-	 * @param dbFacade used to escape table and column names
-	 * @param list of actual columns to know what columns to skip 
+	 * @param db used to escape table and column names
+	 * @param actualColumns list of actual columns to know what columns to skip
 	 * with a key being lower case of the name, value is the actual name
 	 */
 	public DbImportResultConsumer(String tableName, Connection connection, DBFacade db,  Map<String,String> actualColumns) {

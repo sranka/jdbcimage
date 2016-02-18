@@ -75,7 +75,7 @@ public class KryoReaderSerializer extends Serializer<Reader>{
 			if (connection == null){
 				// input stream
 				if (chunks == null){
-					chunks = new ArrayList<char[]>();
+					chunks = new ArrayList<>();
 					chunks.add(firstChars);
 				}
 				chunks.add(in.readChars(count));

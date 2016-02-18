@@ -19,29 +19,26 @@ public class MultiTableParallelExport extends SingleTableExport{
 		
 		// runs export in parallel
 		out.println("Exporting table files to: "+new File(tool_builddir));
-		run(tables.stream().map(x -> getExportTask(x)).collect(Collectors.toList()));
+		run(tables.stream().map(this::getExportTask).collect(Collectors.toList()));
 		zip();
 	}
 	
 	private Callable<?> getExportTask(String tableName){
-		return new Callable<Void>(){
-			@Override
-			public Void call() throws Exception {
-				boolean failed = true;
-				try{
-					long start = System.currentTimeMillis();
-					exportTable(tableName);
-					out.println("SUCCESS: Exported table "+tableName + " - " + Duration.ofMillis(System.currentTimeMillis()-start));
-					failed = false;
-				} finally {
-					if (failed){
-						// exception state, notify other threads to stop reading from queue
-						out.println("FAILURE: Export of table "+tableName);
-					}
+		return () -> {
+			boolean failed = true;
+			try{
+				long start = System.currentTimeMillis();
+				exportTable(tableName);
+				out.println("SUCCESS: Exported table "+tableName + " - " + Duration.ofMillis(System.currentTimeMillis()-start));
+				failed = false;
+			} finally {
+				if (failed){
+					// exception state, notify other threads to stop reading from queue
+					out.println("FAILURE: Export of table "+tableName);
 				}
-				return null;
 			}
-		};		
+			return null;
+		};
 	}
     
 	public static void main(String... args) throws Exception{

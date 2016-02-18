@@ -124,7 +124,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 					case Types.LONGNVARCHAR:
 					case Types.NCLOB:
 						Clob nclob = rs.getNClob(i+1);
-						if (rs.wasNull()) clob = null;
+						if (rs.wasNull()) nclob = null;
 						kryo.writeObjectOrNull(out, nclob, KryoClobSerializer.INSTANCE);
 						break;
 					default:

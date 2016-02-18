@@ -55,7 +55,7 @@ public class KryoResultProducer implements ResultProducer{
 		}
 		// fill in row
 		for(int i=0; i<types.length; i++){
-			Object val = null;
+			Object val;
 			switch(types[i]){
 				case Types.BIGINT:
 					val = kryo.readObjectOrNull(in, Long.class);

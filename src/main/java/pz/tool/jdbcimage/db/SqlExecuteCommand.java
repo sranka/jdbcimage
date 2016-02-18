@@ -22,33 +22,30 @@ public class SqlExecuteCommand{
 	}
 	
 	public static Callable<Void> toSqlExecuteTask(Supplier<Connection> connectionSupplier, PrintStream out, SqlExecuteCommand... commands){
-		return new Callable<Void>(){
-			@Override
-			public Void call() throws Exception {
-				try(Connection con = connectionSupplier.get()){
-					boolean failed = true;
-					SqlExecuteCommand last = null;
-					try(Statement stmt = con.createStatement()){
-						for(SqlExecuteCommand cmd: commands){
-							last = cmd;
-							stmt.execute(last.sql);
-							if (out!=null) out.println("SUCCESS: "+last.description);
-						}
-						failed = false;
-					} finally{
-						try {
-							if (failed) {
-								if (last!=null && out!=null) out.println("FAILURE: "+last.description);
-								con.rollback(); // nothing to commit
-							} else{
-								con.commit();
-							}
-						} catch (SQLException e) {
-							LoggedUtils.ignore("Unable to commit orrollback connection!", e);
-						}
+		return () -> {
+			try(Connection con = connectionSupplier.get()){
+				boolean failed = true;
+				SqlExecuteCommand last = null;
+				try(Statement stmt = con.createStatement()){
+					for(SqlExecuteCommand cmd: commands){
+						last = cmd;
+						stmt.execute(last.sql);
+						if (out!=null) out.println("SUCCESS: "+last.description);
 					}
-					return null;
+					failed = false;
+				} finally{
+					try {
+						if (failed) {
+							if (last!=null && out!=null) out.println("FAILURE: "+last.description);
+							con.rollback(); // nothing to commit
+						} else{
+							con.commit();
+						}
+					} catch (SQLException e) {
+						LoggedUtils.ignore("Unable to commit or rollback connection!", e);
+					}
 				}
+				return null;
 			}
 		};
 	}

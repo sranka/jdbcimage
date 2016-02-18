@@ -10,6 +10,7 @@ import java.util.List;
  * @author zavora
  */
 public class ChunkedInputStream extends InputStream{
+	private static final byte[] EMPTY_CHUNK = new byte[0];
 	private Iterator<byte[]> chunks;
 	private long totalLength;
 	private boolean finished;
@@ -22,13 +23,14 @@ public class ChunkedInputStream extends InputStream{
 		} else{
 			if (totalLength <= 0){
 				// calculate length
-				totalLength = chunks.stream().mapToLong(x -> x.length).sum();
+				totalLength = chunks.stream().mapToLong(x -> x!=null?x.length:0).sum();
 			}
 			this.totalLength = totalLength;
 			this.chunks = chunks.iterator();
 			this.currentChunk = this.chunks.next();
 			this.pos = 0;
-			forward(0); // skip possibly empty chunks 
+			if (currentChunk == null) currentChunk = EMPTY_CHUNK;
+			forward(0); // skip possibly empty chunks
 		}
 	}
 	
@@ -47,6 +49,7 @@ public class ChunkedInputStream extends InputStream{
 			pos = 0;
 			if (chunks.hasNext()){
 				currentChunk = chunks.next();
+				if (currentChunk == null) currentChunk = EMPTY_CHUNK;
 			} else{
 				finished = true;
 				return false;

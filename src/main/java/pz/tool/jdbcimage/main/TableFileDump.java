@@ -126,8 +126,8 @@ public class TableFileDump extends MainToolBase{
 		jdbcTypeToName = new HashMap<>();
 		try{
 			Field[] fields = java.sql.Types.class.getFields();
-			for(int i=0; i<fields.length; i++){
-				jdbcTypeToName.put(fields[i].getInt(null),fields[i].getName());
+			for (Field field : fields) {
+				jdbcTypeToName.put(field.getInt(null), field.getName());
 			}
 		} catch(Exception e){
 			throw new RuntimeException(e);

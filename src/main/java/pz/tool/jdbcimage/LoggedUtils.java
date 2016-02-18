@@ -24,7 +24,8 @@ public class LoggedUtils {
 
 	/**
 	 * Ignores the exception with message supplied.
-	 * @param closeable to close
+	 * @param ignoreMessage message to display
+	 * @param e exception to log
 	 */
 	public static void ignore(String ignoreMessage, Exception e){
 		log.warn(ignoreMessage,e);
