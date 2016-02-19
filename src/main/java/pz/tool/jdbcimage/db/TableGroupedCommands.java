@@ -8,16 +8,16 @@ import java.util.List;
  * to avoid database deadlocks.
  */ 
 public class TableGroupedCommands{
-	public List<List<SqlExecuteCommand>> tableGroups = new ArrayList<>();
-	private List<SqlExecuteCommand> lastGroup = null;
-	private String lastTable = null;
-	
-	public void add(String table, String description, String sql){
-		if (!table.equals(lastTable)){
-			lastTable = table;
-			lastGroup = new ArrayList<>();
-			tableGroups.add(lastGroup);
-		}
-		lastGroup.add(new SqlExecuteCommand(description,sql));
-	}
+    public List<List<SqlExecuteCommand>> tableGroups = new ArrayList<>();
+    private List<SqlExecuteCommand> lastGroup = null;
+    private String lastTable = null;
+
+    public void add(String table, String description, String sql){
+        if (!table.equals(lastTable)){
+            lastTable = table;
+            lastGroup = new ArrayList<>();
+            tableGroups.add(lastGroup);
+        }
+        lastGroup.add(new SqlExecuteCommand(description,sql));
+    }
 }

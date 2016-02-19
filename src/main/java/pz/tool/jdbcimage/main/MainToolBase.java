@@ -1,13 +1,12 @@
 package pz.tool.jdbcimage.main;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import org.apache.commons.dbcp2.BasicDataSource;
+import pz.tool.jdbcimage.LoggedUtils;
+import pz.tool.jdbcimage.db.SqlExecuteCommand;
+import pz.tool.jdbcimage.db.TableGroupedCommands;
+
+import javax.sql.DataSource;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -15,39 +14,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
-
-import javax.sql.DataSource;
-
-import org.apache.commons.dbcp2.BasicDataSource;
-
-import pz.tool.jdbcimage.LoggedUtils;
-import pz.tool.jdbcimage.db.SqlExecuteCommand;
-import pz.tool.jdbcimage.db.TableGroupedCommands;
+import java.util.zip.*;
 
 public abstract class MainToolBase implements AutoCloseable{
 	//////////////////////
@@ -212,7 +185,8 @@ public abstract class MainToolBase implements AutoCloseable{
 			try {
 				System.in.read();
 			} catch (IOException e) {
-				// nothing to do
+				// should never occur
+				throw new RuntimeException(e);
 			}
 		}
 		parallelism = getParallelism(-1);

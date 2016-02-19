@@ -1,21 +1,17 @@
 package pz.tool.jdbcimage.main;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
 import pz.tool.jdbcimage.LoggedUtils;
 import pz.tool.jdbcimage.ResultProducerRunner;
 import pz.tool.jdbcimage.db.DbImportResultConsumer;
 import pz.tool.jdbcimage.kryo.KryoResultProducer;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.*;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Import a single table from the database.  

@@ -1,19 +1,18 @@
 package pz.tool.jdbcimage.kryo;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.FastInput;
+import com.esotericsoftware.kryo.io.Input;
+import pz.tool.jdbcimage.ResultProducer;
+import pz.tool.jdbcimage.ResultSetInfo;
+import pz.tool.jdbcimage.RowData;
+
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.FastInput;
-import com.esotericsoftware.kryo.io.Input;
-
-import pz.tool.jdbcimage.ResultProducer;
-import pz.tool.jdbcimage.ResultSetInfo;
-import pz.tool.jdbcimage.RowData;
 
 /**
  * Pull-style produced with all row data out of the supplied input stream.

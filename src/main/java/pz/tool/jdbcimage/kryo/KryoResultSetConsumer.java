@@ -1,22 +1,14 @@
 package pz.tool.jdbcimage.kryo;
 
-import java.io.OutputStream;
-import java.math.BigDecimal;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
-
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.io.FastOutput;
-
+import com.esotericsoftware.kryo.io.Output;
 import pz.tool.jdbcimage.ResultConsumer;
 import pz.tool.jdbcimage.ResultSetInfo;
+
+import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.sql.*;
 
 /**
  * Serializes the result set into the supplied output stream.

@@ -1,13 +1,13 @@
 package pz.tool.jdbcimage.kryo;
 
-import java.io.InputStream;
-import java.sql.Blob;
-import java.sql.SQLException;
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+
+import java.io.InputStream;
+import java.sql.Blob;
+import java.sql.SQLException;
 
 /**
  * Kryo serializer for JDBC BLOB instances.

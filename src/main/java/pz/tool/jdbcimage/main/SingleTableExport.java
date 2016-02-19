@@ -1,19 +1,14 @@
 package pz.tool.jdbcimage.main;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.time.Duration;
-
 import pz.tool.jdbcimage.LoggedUtils;
 import pz.tool.jdbcimage.db.QueryRunner;
 import pz.tool.jdbcimage.kryo.KryoResultSetConsumer;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.sql.*;
+import java.time.Duration;
 
 /**
  * Performs export of a single table.
@@ -44,7 +39,7 @@ public class SingleTableExport extends MainToolBase{
 			// close the file
 			LoggedUtils.close(out);
 			// delete the output if it failed or zero rows read
-			if (failed || (runner.rows == 0 && isIgnoreEmptyTables())) {
+			if (failed || ((runner.rows == 0) && isIgnoreEmptyTables())) {
 				file.delete();
 			}
 		}

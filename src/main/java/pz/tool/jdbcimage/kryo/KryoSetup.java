@@ -1,7 +1,6 @@
 package pz.tool.jdbcimage.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
-
 import pz.tool.jdbcimage.ResultSetInfo;
 
 /**
