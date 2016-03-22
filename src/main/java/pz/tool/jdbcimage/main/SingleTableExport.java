@@ -40,7 +40,9 @@ public class SingleTableExport extends MainToolBase{
 			LoggedUtils.close(out);
 			// delete the output if it failed or zero rows read
 			if (failed || ((runner.rows == 0) && isIgnoreEmptyTables())) {
-				file.delete();
+				if (!file.delete()){
+					LoggedUtils.ignore("Unable to delete "+file,null);
+				}
 			}
 		}
 	}

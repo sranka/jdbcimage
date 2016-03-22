@@ -2,8 +2,6 @@ package pz.tool.jdbcimage.main;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import pz.tool.jdbcimage.LoggedUtils;
-import pz.tool.jdbcimage.db.SqlExecuteCommand;
-import pz.tool.jdbcimage.db.TableGroupedCommands;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -19,7 +17,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.zip.*;
 
 public abstract class MainToolBase implements AutoCloseable{
@@ -53,7 +50,9 @@ public abstract class MainToolBase implements AutoCloseable{
 			tool_builddir = new File(
 					tool_builddir,
 					String.valueOf(System.currentTimeMillis())).toString();
-			new File(tool_builddir).mkdirs();
+			if (!new File(tool_builddir).mkdirs()){
+				LoggedUtils.ignore("Unable to create directory "+tool_builddir,null);
+			}
 			zipFile = args[0];
 		}
 	}
@@ -102,9 +101,13 @@ public abstract class MainToolBase implements AutoCloseable{
 				Files.list(Paths.get(tool_builddir))
 				.forEach(x -> {
 					File f = x.toFile();
-					f.delete();
+					if (!f.delete()){
+						LoggedUtils.ignore("Unable to delete "+f,null);
+					}
 				});
-				dir.delete();
+				if (!dir.delete()){
+					LoggedUtils.ignore("Unable to delete "+dir,null);
+				}
 			} catch (Exception e) {
 				LoggedUtils.ignore("Unable to delete "+tool_builddir, e);
 			}
@@ -183,8 +186,9 @@ public abstract class MainToolBase implements AutoCloseable{
 		if (tool_waitOnStartup){
 			out.println("Paused on startup, press ENTER to continue ...");
 			try {
-				System.in.read();
-			} catch (IOException e) {
+                //noinspection ResultOfMethodCallIgnored
+                System.in.read();
+            } catch (IOException e) {
 				// should never occur
 				throw new RuntimeException(e);
 			}
@@ -235,9 +239,9 @@ public abstract class MainToolBase implements AutoCloseable{
 
 		// isolate database specific instructions
 		if (jdbc_url.startsWith("jdbc:oracle")){
-			dbFacade = new Oracle();
+			dbFacade = new Oracle(this);
 		} else if (jdbc_url.startsWith("jdbc:sqlserver")){
-			dbFacade = new Mssql();
+			dbFacade = new Mssql(this);
 		} else{
 			throw new IllegalArgumentException("Unsupported database type: "+jdbc_url);
 		}
@@ -445,340 +449,5 @@ public abstract class MainToolBase implements AutoCloseable{
 		}
 	}
 
-	
-	///////////////////////////////////////
-	// Database specific instructions
-	///////////////////////////////////////
 
-	/**
-	 * Facade that isolates specifics of a particular database 
-	 * in regards to operations used by import/export.
-	 * 
-	 * @author zavora
-	 */
-	public static abstract class DBFacade{
-		/**
-		 * Setups data source.
-		 * @param bds datasource
-		 */
-		public abstract void setupDataSource(BasicDataSource bds);
-		/**
-		 * Gets a result set representing current user user tables.
-		 * @param con connection
-		 * @return result
-		 */
-		public abstract ResultSet getUserTables(Connection con) throws SQLException;
-
-		/**
-		 * Turns on/off table constraints.
-		 * @param enable true to enable
-		 * @return operation time
-		 * @throws SQLException
-		 */
-		public abstract Duration modifyConstraints(boolean enable) throws SQLException;
-		
-		/**
-		 * Turns on/off table indexes.
-		 * @param enable true to enable
-		 * @return operation time
-		 * @throws SQLException
-		 */
-		public abstract Duration modifyIndexes(boolean enable) throws SQLException;
-
-		/**
-		 * Called before rows are inserted into table.
-		 * @param con connection
-		 * @param table table name
-		 * @param hasIdentityColumn indicates whether the table has identity column
-		 */
-		public void afterImportTable(Connection con, String table, boolean hasIdentityColumn) throws SQLException{
-		}
-
-		/**
-		 * Called before rows are inserted into table.
-		 * @param con connection
-		 * @param table table name
-		 * @param hasIdentityColumn indicates whether the table has identity column
-		 */
-		public void beforeImportTable(Connection con, String table, boolean hasIdentityColumn) throws SQLException{
-		}
-		/**
-		 * Gets the SQL DML that truncates the content of a table.
-		 * @param tableName table
-		 * @return command to execute
-		 */
-		public String getTruncateTableSql(String tableName){
-			return "TRUNCATE TABLE "+escapeTableName(tableName);			
-		}
-		
-		/**
-		 * Escapes column name
-		 * @param s s
-		 * @return escaped column name so that it can be used in queries.
-		 */
-		public String escapeColumnName(String s){
-			return s;
-		}
-		/**
-		 * Escapes table name
-		 * @param s s
-		 * @return escaped table name so that it can be used in queries.
-		 */
-		public String escapeTableName(String s){
-			return s;
-		}
-		
-		/**
-		 * Returns tables that have no identity columns.
-		 * @return set of tables that contain identity columns
-		 */
-		public Set<String> getTablesWithIdentityColumns() {
-			return Collections.emptySet();
-		}
-	}
-	public class Oracle extends DBFacade{
-		@Override
-		public void setupDataSource(BasicDataSource bds) {
-			List<String> connectionInits = Arrays.asList(
-					"ALTER SESSION ENABLE PARALLEL DDL", //could possibly make index disabling quicker
-					"ALTER SESSION SET skip_unusable_indexes = TRUE" //avoid ORA errors caused by unusable indexes
-					);
-			bds.setConnectionInitSqls(connectionInits);
-			// the minimum level supported by Oracle
-			bds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-		}
-
-		@Override
-		public ResultSet getUserTables(Connection con) throws SQLException{
-			return con.getMetaData().getTables(con.getCatalog(),jdbc_user.toUpperCase(),"%",new String[]{"TABLE"});
-		}
-
-		@Override
-		public String escapeColumnName(String s){
-			return "\""+s+"\"";
-		}
-
-		@Override
-		public String escapeTableName(String s){
-			return "\""+s+"\"";
-		}
-		
-		@Override
-		public Duration modifyConstraints(boolean enable) throws SQLException{
-			long time = System.currentTimeMillis();
-			String[] conditions;
-			if (enable){
-				// on enable: enable foreign indexes after other types
-				conditions = new String[]{"CONSTRAINT_TYPE<>'R'","CONSTRAINT_TYPE='R'"};
-			} else{
-				// on disable: disable foreign indexes first  
-				conditions = new String[]{"CONSTRAINT_TYPE='R'","CONSTRAINT_TYPE<>'R'"};
-			}
-			TableGroupedCommands commands = new TableGroupedCommands();
-			for(int i=0; i<2; i++){
-				executeQuery(
-							"SELECT OWNER,TABLE_NAME,CONSTRAINT_NAME FROM user_constraints WHERE "+conditions[i]+" order by TABLE_NAME",
-							row -> {
-								try {
-									String owner = row.getString(1);
-									String tableName = row.getString(2);
-									String constraint = row.getString(3);
-									if (containsTable(tableName)){
-										if (enable){
-											String desc = "Enable constraint "+constraint+" on table "+tableName;
-											String sql = "ALTER TABLE "+owner+"."+tableName
-											 + " MODIFY CONSTRAINT "+constraint+" ENABLE";
-											commands.add(tableName, desc, sql);
-										} else{
-											String desc = "Disable constraint "+constraint+" on table "+tableName;
-											String sql = "ALTER TABLE "+owner+"."+tableName
-											 + " MODIFY CONSTRAINT "+constraint+" DISABLE";
-											commands.add(tableName, desc, sql);
-										}
-										return null;
-									} else{
-										return null;
-									}
-								} catch (SQLException e) {
-									throw new RuntimeException(e);
-								}
-							}
-						);
-				run(commands.tableGroups
-						.stream()
-						.map(x -> SqlExecuteCommand.toSqlExecuteTask(
-								getWriteConnectionSupplier(),
-								out,
-								x.toArray(new SqlExecuteCommand[x.size()]))
-								)
-						.collect(Collectors.toList()));
-			}
-			return Duration.ofMillis(System.currentTimeMillis()-time);
-		}
-
-		@Override
-		public Duration modifyIndexes(boolean enable) throws SQLException{
-			long time = System.currentTimeMillis();
-			TableGroupedCommands commands = new TableGroupedCommands();
-			executeQuery(
-					    /** exclude LOB indexes, since they cannot be altered */
-						"SELECT TABLE_OWNER,TABLE_NAME,INDEX_NAME FROM user_indexes where INDEX_TYPE<>'LOB' order by TABLE_NAME",
-						row -> {
-							try {
-								String owner = row.getString(1);
-								String tableName = row.getString(2);
-								String index = row.getString(3);
-								if (containsTable(tableName)){
-									if (enable){
-										String desc = "Rebuild index "+index+" on table "+tableName;
-										String sql = "ALTER INDEX "+owner+"."+index
-												// SHOULD BE "REBUILD ONLINE" ... but it works only on Enterprise Edition on oracle
-										          + " REBUILD"; 
-										commands.add(tableName, desc, sql);
-									} else{
-										String desc = "Disable index "+index+" on table "+tableName;
-										String sql = "ALTER INDEX "+owner+"."+index
-												   +" UNUSABLE";
-										commands.add(tableName, desc, sql);
-									}
-									return null;
-								} else{
-									return null;
-								}
-							} catch (SQLException e) {
-								throw new RuntimeException(e);
-							}
-						}
-					);
-			run(commands.tableGroups
-					.stream()
-					.map(x -> SqlExecuteCommand.toSqlExecuteTask(
-							getWriteConnectionSupplier(),
-							out,
-							x.toArray(new SqlExecuteCommand[x.size()]))
-							)
-					.collect(Collectors.toList()));
-			return Duration.ofMillis(System.currentTimeMillis()-time);
-		}
-	}
-	public class Mssql extends DBFacade{
-		@Override
-		public void setupDataSource(BasicDataSource bds) {
-			bds.setDefaultTransactionIsolation(Connection.TRANSACTION_NONE);
-		}
-		@Override
-		public ResultSet getUserTables(Connection con) throws SQLException{
-			return con.getMetaData().getTables(con.getCatalog(),"dbo","%",new String[]{"TABLE"});		
-		}
-		@Override
-		public String escapeColumnName(String s){
-			return "["+s+"]";
-		}
-		@Override
-		public String escapeTableName(String s){
-			return "["+s+"]";
-		}
-		@Override
-		public Duration modifyConstraints(boolean enable) throws SQLException {
-			long time = System.currentTimeMillis();
-			List<String> queries = new ArrayList<>();
-			// table name, foreign key name
-			queries.add("SELECT t.Name, dc.Name "
-					+   "FROM sys.tables t INNER JOIN sys.foreign_keys dc ON t.object_id = dc.parent_object_id "
-					+   "ORDER BY t.Name");
-			TableGroupedCommands commands = new TableGroupedCommands();
-			for(String query: queries){
-				executeQuery(
-							query,
-							row -> {
-								try {
-									String tableName = row.getString(1);
-									String constraint = row.getString(2);
-									if (containsTable(tableName)){
-										if (enable){
-											String desc = "Enable constraint "+constraint+" on table "+tableName;
-											String sql = "ALTER TABLE ["+tableName+"] CHECK CONSTRAINT ["+constraint+"]";
-											commands.add(tableName, desc, sql);
-										} else{
-											String desc = "Disable constraint "+constraint+" on table "+tableName;
-											String sql = "ALTER TABLE ["+tableName+"] NOCHECK CONSTRAINT ["+constraint+"]";
-											commands.add(tableName, desc, sql);
-										}
-										return null;
-									} else{
-										return null;
-									}
-								} catch (SQLException e) {
-									throw new RuntimeException(e);
-								}
-							}
-						);
-				// there are DEADLOCK problems when running in parallel
-				runSerial(commands.tableGroups
-						.stream()
-						.map(x -> SqlExecuteCommand.toSqlExecuteTask(
-								getWriteConnectionSupplier(),
-								out,
-								x.toArray(new SqlExecuteCommand[x.size()]))
-								)
-						.collect(Collectors.toList()));
-			}
-			return Duration.ofMillis(System.currentTimeMillis()-time);
-		
-		}
-		@Override
-		public Duration modifyIndexes(boolean enable) throws SQLException {
-			long time = System.currentTimeMillis();
-			out.println("Index "+(enable?"enable":"disable")+" not supported on MSSQL!");
-			return Duration.ofMillis(System.currentTimeMillis()-time);
-		}
-		@Override
-		public String getTruncateTableSql(String tableName){
-			// unable to use TRUNCATE TABLE on MSSQL server even with CONSTRAINTS DISABLED!
-			return "DELETE FROM "+escapeTableName(tableName);			
-		}
-		
-		@Override
-		public void afterImportTable(Connection con, String table, boolean hasIdentityColumn) throws SQLException{
-			if (hasIdentityColumn){
-				try(Statement stmt = con.createStatement()){
-					stmt.execute("SET IDENTITY_INSERT ["+table+"] OFF");
-				}
-			}
-		}
-
-		@Override
-		public void beforeImportTable(Connection con, String table, boolean hasIdentityColumn) throws SQLException{
-			if (hasIdentityColumn){
-				try(Statement stmt = con.createStatement()){
-					stmt.execute("SET IDENTITY_INSERT ["+table+"] ON");
-				}
-			}
-		}
-		/**
-		 * Returns tables that have no identity columns.
-		 * @return set of tables that contain identity columns
-		 */
-		public Set<String> getTablesWithIdentityColumns() {
-			Set<String> retVal = new HashSet<>();
-			try(Connection con = getReadOnlyConnection()){
-				try(Statement stmt = con.createStatement()){
-					try(ResultSet rs = stmt.executeQuery("select name from sys.objects where type = 'U' and OBJECTPROPERTY(object_id, 'TableHasIdentity')=1")){
-						while(rs.next()){
-							retVal.add(rs.getString(1));
-						}
-					}
-				} finally{
-					try {
-						con.rollback(); // nothing to commit
-					} catch (SQLException e) {
-						LoggedUtils.ignore("Unable to rollback!", e);
-					}
-				}
-			} catch(SQLException e){
-				throw new RuntimeException(e);
-			}
-			return retVal;
-		}
-	}
 }

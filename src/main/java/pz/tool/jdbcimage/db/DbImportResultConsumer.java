@@ -3,7 +3,7 @@ package pz.tool.jdbcimage.db;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import pz.tool.jdbcimage.*;
-import pz.tool.jdbcimage.main.MainToolBase.DBFacade;
+import pz.tool.jdbcimage.main.DBFacade;
 
 import java.io.InputStream;
 import java.io.Reader;
