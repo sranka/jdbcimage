@@ -37,7 +37,7 @@ public abstract class MainToolBase implements AutoCloseable{
 	public int tool_parallelism = Integer.valueOf(System.getProperty("tool_parallelism","-1"));
 	// let you connect profiling tools
 	public boolean tool_waitOnStartup=Boolean.valueOf(System.getProperty("tool_waitOnStartup","false"));
-	
+
 	/**
 	 * Setups zip file from command line arguments supplied.
 	 * @param args arguments.
@@ -242,6 +242,8 @@ public abstract class MainToolBase implements AutoCloseable{
 			dbFacade = new Oracle(this);
 		} else if (jdbc_url.startsWith("jdbc:sqlserver")){
 			dbFacade = new Mssql(this);
+		} else if (jdbc_url.startsWith("jdbc:postgresql")){
+			dbFacade = new PostgreSQL(this);
 		} else{
 			throw new IllegalArgumentException("Unsupported database type: "+jdbc_url);
 		}

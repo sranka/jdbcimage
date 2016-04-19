@@ -11,6 +11,7 @@ public class TableGroupedCommands{
     public List<List<SqlExecuteCommand>> tableGroups = new ArrayList<>();
     private List<SqlExecuteCommand> lastGroup = null;
     private String lastTable = null;
+    private boolean empty = true;
 
     public void add(String table, String description, String sql){
         if (!table.equals(lastTable)){
@@ -18,6 +19,11 @@ public class TableGroupedCommands{
             lastGroup = new ArrayList<>();
             tableGroups.add(lastGroup);
         }
+        empty = false;
         lastGroup.add(new SqlExecuteCommand(description,sql));
+    }
+
+    public boolean isEmpty() {
+        return empty;
     }
 }

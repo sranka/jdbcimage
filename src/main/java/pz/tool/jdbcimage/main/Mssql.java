@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -47,8 +46,7 @@ public class Mssql extends DBFacade {
     }
 
     @Override
-    public Duration modifyConstraints(boolean enable) throws SQLException {
-        long time = System.currentTimeMillis();
+    public void modifyConstraints(boolean enable) throws SQLException {
         List<String> queries = new ArrayList<>();
         // table name, foreign key name
         queries.add("SELECT t.Name, dc.Name "
@@ -91,15 +89,11 @@ public class Mssql extends DBFacade {
                     )
                     .collect(Collectors.toList()));
         }
-        return Duration.ofMillis(System.currentTimeMillis() - time);
-
     }
 
     @Override
-    public Duration modifyIndexes(boolean enable) throws SQLException {
-        long time = System.currentTimeMillis();
+    public void modifyIndexes(boolean enable) throws SQLException {
         mainToolBase.out.println("Index " + (enable ? "enable" : "disable") + " not supported on MSSQL!");
-        return Duration.ofMillis(System.currentTimeMillis() - time);
     }
 
     @Override
@@ -127,7 +121,7 @@ public class Mssql extends DBFacade {
     }
 
     /**
-     * Returns tables that have no identity columns.
+     * Returns tables that have identity columns.
      *
      * @return set of tables that contain identity columns
      */

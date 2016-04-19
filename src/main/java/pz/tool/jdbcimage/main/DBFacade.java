@@ -31,18 +31,16 @@ public abstract class DBFacade {
     /**
      * Turns on/off table constraints.
      * @param enable true to enable
-     * @return operation time
      * @throws SQLException
      */
-    public abstract Duration modifyConstraints(boolean enable) throws SQLException;
+    public abstract void modifyConstraints(boolean enable) throws SQLException;
 
     /**
      * Turns on/off table indexes.
      * @param enable true to enable
-     * @return operation time
      * @throws SQLException
      */
-    public abstract Duration modifyIndexes(boolean enable) throws SQLException;
+    public abstract void modifyIndexes(boolean enable) throws SQLException;
 
     /**
      * Called before rows are inserted into table.
