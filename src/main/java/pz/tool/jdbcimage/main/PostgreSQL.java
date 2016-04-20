@@ -4,11 +4,10 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import pz.tool.jdbcimage.db.SqlExecuteCommand;
 import pz.tool.jdbcimage.db.TableGroupedCommands;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -31,10 +30,16 @@ public class PostgreSQL extends DBFacade {
     }
 
     @Override
-    public ResultSet getUserTables(Connection con) throws SQLException {
-        return con.getMetaData().getTables(con.getCatalog(), con.getSchema(), "%", new String[]{"TABLE"});
+    public List<String> getUserTables(Connection con) throws SQLException {
+        List<String> retVal = new ArrayList<>();
+        try(ResultSet tables = con.getMetaData().getTables(con.getCatalog(), con.getSchema(), "%", new String[]{"TABLE"})){
+            while(tables.next()){
+                String tableName = tables.getString(3);
+                retVal.add(tableName);
+            }
+        }
+        return retVal;
     }
-
     @Override
     public String escapeColumnName(String s) {
         return "\""+s+"\"";
@@ -179,4 +184,25 @@ public class PostgreSQL extends DBFacade {
     public void modifyIndexes(boolean enable) throws SQLException {
         mainToolBase.out.println("Index " + (enable ? "enable" : "disable") + " not supported on PostgreSQL!");
     }
+
+    @Override
+    public int toSupportedSqlType(int sqlType) {
+        switch (sqlType){
+            // postgresql does not support unicode character types
+            case Types.NCHAR: return Types.CHAR;
+            case Types.NVARCHAR: return Types.VARCHAR;
+            case Types.LONGNVARCHAR: return Types.LONGVARCHAR;
+            // postgresql does not support BLOBs and CLOBs in the JDBC driver
+            case Types.BLOB: return Types.VARBINARY;
+            case Types.CLOB: return Types.LONGNVARCHAR;
+            case Types.NCLOB: return Types.LONGNVARCHAR;
+        }
+        return sqlType;
+    }
+
+    @Override
+    public boolean canCreateBlobs() {
+        return false;
+    }
+
 }

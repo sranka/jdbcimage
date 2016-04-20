@@ -11,6 +11,7 @@ import java.util.Arrays;
 public class ResultSetInfo {
 	public String[] columns;
 	public int[] types;
+
 	/** current database connection, filled when started ... intended to create blobs */
 	public transient Connection connection;
 
@@ -19,6 +20,8 @@ public class ResultSetInfo {
 	 */
 	public ResultSetInfo(){
 	}
+
+
 
 	/**
 	 * Initializes itself from meta data.

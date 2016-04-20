@@ -3,10 +3,9 @@ package pz.tool.jdbcimage.main;
 import org.apache.commons.dbcp2.BasicDataSource;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -26,7 +25,7 @@ public abstract class DBFacade {
      * @param con connection
      * @return result
      */
-    public abstract ResultSet getUserTables(Connection con) throws SQLException;
+    public abstract List<String> getUserTables(Connection con) throws SQLException;
 
     /**
      * Turns on/off table constraints.
@@ -91,5 +90,22 @@ public abstract class DBFacade {
      */
     public Set<String> getTablesWithIdentityColumns() {
         return Collections.emptySet();
+    }
+
+    /**
+     * Converts the requested type to a DB-supported alternative.
+     * @param sqlType SQL type defined in {@link java.sql.Types java.sql.Types}
+     * @return supported type
+     */
+    public int toSupportedSqlType(int sqlType) {
+        return sqlType;
+    }
+    /**
+     * Checks whether the database instance can create and use BLOB, CLOB and NCLOB instances.
+     *
+     * @return can create blobs?
+     */
+    public boolean canCreateBlobs(){
+        return true;
     }
 }

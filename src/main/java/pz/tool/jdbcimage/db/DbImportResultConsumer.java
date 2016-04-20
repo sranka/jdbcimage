@@ -50,7 +50,9 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
     @Override
     public void onStart(ResultSetInfo info) {
         // set connection to info, so blobs can be serialized without extra resources
-        info.connection = con;
+        if (this.db.canCreateBlobs()){
+            info.connection = con;
+        }
         // initialize batch position
         batchPosition = 0;
 
@@ -97,7 +99,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                 Integer pos = placeholderPositions[i];
                 if (pos != null){ // data not ignored
                     Object value = t.values[i];
-                    int type = info.types[i];
+                    int type = db.toSupportedSqlType(info.types[i]);
                     if (value == null){
                         stmt.setNull(pos, type);
                     } else{
@@ -114,10 +116,11 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                                 break;
                             case Types.CHAR:
                             case Types.VARCHAR:
-                                stmt.setNString(pos, (String)value);
+                                stmt.setString(pos, (String)value);
+                                break;
                             case Types.NCHAR:
                             case Types.NVARCHAR:
-                                stmt.setString(pos, (String)value);
+                                stmt.setNString(pos, (String)value);
                                 break;
                             case Types.DATE:
                                 stmt.setDate(pos, (Date)value);

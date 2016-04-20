@@ -258,16 +258,8 @@ public abstract class MainToolBase implements AutoCloseable{
 	 */
 	public List<String> getUserTables(){
 		try(Connection con = getReadOnlyConnection()){
-			List<String> retVal = new ArrayList<>();
-			// for Oracle: schema = currentUser.toUpperCase()
-			try(ResultSet tables = dbFacade.getUserTables(con)){
-				while(tables.next()){
-					String tableName = tables.getString(3);
-					retVal.add(tableName);
-				}
-			}
-			return retVal;
-		} catch(Exception e){
+			return dbFacade.getUserTables(con);
+		} catch(SQLException e){
 			throw new RuntimeException(e);
 		}
 	}

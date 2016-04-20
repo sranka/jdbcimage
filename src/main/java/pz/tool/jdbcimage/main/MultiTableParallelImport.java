@@ -64,10 +64,12 @@ public class MultiTableParallelImport extends SingleTableImport{
 				time = System.currentTimeMillis();
 				dbFacade.modifyConstraints(false);
 				durations.disableConstraints = Duration.ofMillis(System.currentTimeMillis() - time);
-				// 2. make indexes unusable
-				time = System.currentTimeMillis();
-				if (tool_disableIndexes) dbFacade.modifyIndexes(false);
-				durations.disableIndexes = Duration.ofMillis(System.currentTimeMillis() - time);
+				// 2. make indexes unusable skiped
+				if (tool_disableIndexes){
+					time = System.currentTimeMillis();
+					dbFacade.modifyIndexes(false);
+					durations.disableIndexes = Duration.ofMillis(System.currentTimeMillis() - time);
+				}
 				// 3. delete data
 				time = System.currentTimeMillis();
 				deleteData();
@@ -77,9 +79,11 @@ public class MultiTableParallelImport extends SingleTableImport{
 				importData();
 				durations.importData = Duration.ofMillis(System.currentTimeMillis() - time);
 				// 5. rebuild indexes
-				time = System.currentTimeMillis();
-				if (tool_disableIndexes) dbFacade.modifyIndexes(true);
-				durations.enableIndexes = Duration.ofMillis(System.currentTimeMillis() - time);
+				if (tool_disableIndexes){
+					time = System.currentTimeMillis();
+					dbFacade.modifyIndexes(true);
+					durations.enableIndexes = Duration.ofMillis(System.currentTimeMillis() - time);
+				}
 				// 6. enable constraints
 				time = System.currentTimeMillis();
 				dbFacade.modifyConstraints(true);
@@ -89,10 +93,10 @@ public class MultiTableParallelImport extends SingleTableImport{
 			throw new RuntimeException(e);
 		}
 		out.println("Disable constraints time: "+ durations.disableConstraints);
-		out.println("Disable indexes time: "+ durations.disableIndexes);
+		if (tool_disableIndexes) out.println("Disable indexes time: "+ durations.disableIndexes);
 		out.println("Delete data time: "+ durations.deleteData);
 		out.println("Import data time: "+ durations.importData);
-		out.println("Enable indexes time: "+ durations.enableIndexes);
+		if (tool_disableIndexes) out.println("Enable indexes time: "+ durations.enableIndexes);
 		out.println("Enable constraints time: "+ durations.enableConstraints);
 	}
 	
@@ -127,7 +131,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 				boolean failed = true;
 				try{
 					importTable(table, tablesWithIdentityColumns.contains(table));
-					out.println("SUCCESS: Imported data to "+table+" in "+time);
+					out.println("SUCCESS: Imported data to "+table+" in "+Duration.ofMillis(System.currentTimeMillis()-time));
 					failed = false;
 				} finally{
 					if (failed){
