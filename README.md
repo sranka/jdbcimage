@@ -1,6 +1,6 @@
 # jdbc-image-tool
 Quickly exports/imports database tables using JDBC and Kryo. 
-Supports Oracle and MSSQL databases.
+Supports Oracle, MSSQL and PostgreSQL databases.
 
 ## Overview
 1. Build the project using maven3
@@ -14,10 +14,12 @@ Supports Oracle and MSSQL databases.
    * importMssql image.zip
    * importOracle image.zip
    * exportOracle image.zip
+   * importPostgresql image.zip
+   * exportPostgresql image.zip
    * dumpFile image.zip
       * lists the tables that you can dump, see next item
    * dumpFile image.zip!passwd
       * dumps contents of the passwd table stored inside image.zip
 
 ## Missing pieces
-* tests
+* tests, better documentation

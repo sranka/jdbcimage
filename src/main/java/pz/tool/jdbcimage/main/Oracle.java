@@ -5,11 +5,11 @@ import pz.tool.jdbcimage.db.SqlExecuteCommand;
 import pz.tool.jdbcimage.db.TableGroupedCommands;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -34,8 +34,37 @@ public class Oracle extends DBFacade {
     }
 
     @Override
-    public ResultSet getUserTables(Connection con) throws SQLException {
-        return con.getMetaData().getTables(con.getCatalog(), mainToolBase.jdbc_user.toUpperCase(), "%", new String[]{"TABLE"});
+    public List<String> getUserTables(Connection con) throws SQLException {
+        // return tables that are not materialized views as well
+        // exclude materialized views
+        Map<String,Boolean> toExclude = new HashMap<>();
+        mainToolBase.executeQuery(
+                "SELECT OBJECT_NAME FROM USER_OBJECTS WHERE OBJECT_TYPE='MATERIALIZED VIEW'",
+                row ->{
+                    try {
+                        toExclude.put(row.getString(1),true);
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return null;
+                }
+        );
+        // include tables
+        return mainToolBase.executeQuery(
+                "SELECT OBJECT_NAME FROM USER_OBJECTS WHERE OBJECT_TYPE='TABLE'",
+                row ->{
+                    try {
+                        String tableName = row.getString(1);
+                        if (toExclude.containsKey(tableName)){
+                            return null;
+                        } else{
+                            return tableName;
+                        }
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        );
     }
 
     @Override
@@ -49,8 +78,7 @@ public class Oracle extends DBFacade {
     }
 
     @Override
-    public Duration modifyConstraints(boolean enable) throws SQLException {
-        long time = System.currentTimeMillis();
+    public void modifyConstraints(boolean enable) throws SQLException {
         String[] conditions;
         if (enable) {
             // on enable: enable foreign indexes after other types
@@ -98,12 +126,10 @@ public class Oracle extends DBFacade {
                     )
                     .collect(Collectors.toList()));
         }
-        return Duration.ofMillis(System.currentTimeMillis() - time);
     }
 
     @Override
-    public Duration modifyIndexes(boolean enable) throws SQLException {
-        long time = System.currentTimeMillis();
+    public void modifyIndexes(boolean enable) throws SQLException {
         TableGroupedCommands commands = new TableGroupedCommands();
         mainToolBase.executeQuery(
                 /** exclude LOB indexes, since they cannot be altered */
@@ -143,6 +169,5 @@ public class Oracle extends DBFacade {
                         x.toArray(new SqlExecuteCommand[x.size()]))
                 )
                 .collect(Collectors.toList()));
-        return Duration.ofMillis(System.currentTimeMillis() - time);
     }
 }
