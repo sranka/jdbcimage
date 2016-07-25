@@ -35,7 +35,9 @@ public class PostgreSQL extends DBFacade {
         try(ResultSet tables = con.getMetaData().getTables(con.getCatalog(), con.getSchema(), "%", new String[]{"TABLE"})){
             while(tables.next()){
                 String tableName = tables.getString(3);
-                retVal.add(tableName);
+                if (!STATE_TABLE_NAME.equalsIgnoreCase(tableName)) {
+                    retVal.add(tableName);
+                }
             }
         }
         return retVal;
