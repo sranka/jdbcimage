@@ -4,8 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Contains utilities that performs a specific action and 
- * only logs a failure of that action.
+ * Contains logging utilities.
  */
 public class LoggedUtils {
 	private static final Log log = LogFactory.getLog(LoggedUtils.class);
