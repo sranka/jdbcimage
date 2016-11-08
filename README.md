@@ -9,7 +9,7 @@ Supports Oracle, MSSQL and PostgreSQL databases.
    * jdbc_url
    * jdbc_user
    * jdbc_password
-3. Run the script with with a zip file as the only argument
+3. Run the script with a zip file as the only argument
    * exportMssql image.zip
    * importMssql image.zip
    * importOracle image.zip
