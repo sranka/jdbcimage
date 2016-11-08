@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Implementation of a reader that operates over chunks by char[]. 
+ * Implementation of a reader that operates over chunks of char[]. 
  * @author zavora
  */
 public class ChunkedReader extends Reader{
