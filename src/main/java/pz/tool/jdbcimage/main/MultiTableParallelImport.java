@@ -31,8 +31,8 @@ public class MultiTableParallelImport extends SingleTableImport{
 	 * Main execution point.
 	 */
 	public void run() throws SQLException, IOException{
-		// print platform parallelism, just FYI
-		out.println("-- Parallelism "+ parallelism);
+		// print platform concurrency, just FYI
+		out.println("Concurrency: "+ concurrency);
 		unzip(); // unzip input if it exists
 		
 		Durations durations = new Durations();

@@ -3,8 +3,8 @@ Quickly exports/imports database tables using JDBC and Kryo.
 Supports Oracle, MSSQL and PostgreSQL databases.
 
 ## Overview
-1. Build the project using maven3
-   * mvn3 install
+1. Build the project using maven 3
+   * mvn install
 2. Modify the associated import/export script with your database connection parameters
    * jdbc_url
    * jdbc_user
@@ -22,4 +22,4 @@ Supports Oracle, MSSQL and PostgreSQL databases.
       * dumps contents of the passwd table stored inside image.zip
 
 ## Missing pieces
-* tests, better documentation
+* tests, review, better organization of shell scripts, error handling of invalid args

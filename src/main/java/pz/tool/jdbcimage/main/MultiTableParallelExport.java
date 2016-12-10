@@ -14,8 +14,8 @@ public class MultiTableParallelExport extends SingleTableExport{
 		// setup tables to export
 		setTables(getUserTables());
 
-		// print platform parallelism, just FYI
-		out.println("-- Parallelism "+ parallelism);
+		// print platform concurrency, just FYI
+		out.println("Concurrency: "+ concurrency);
 		
 		// runs export in parallel
 		out.println("Exporting table files to: "+new File(tool_builddir));

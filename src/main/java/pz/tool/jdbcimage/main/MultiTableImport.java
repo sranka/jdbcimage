@@ -7,7 +7,7 @@ public class MultiTableImport extends MultiTableParallelImport{
 	@Override
 	protected void started() {
 		super.started();
-		parallelism = 1;
+		concurrency = 1;
 	}
 	
 	public static void main(String... args) throws Exception{
