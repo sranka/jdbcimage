@@ -6,4 +6,4 @@ OPTS=-Xmx256m
 OPTS="$OPTS -Dtool_in_file=$tool_in_file"
 OPTS="$OPTS -Dtool_out_file=$tool_out_file"
 
-java -classpath target/jdbc-image-tools.jar pz.tool.jdbcimage.main.TableFileDump
+java $OPTS -classpath target/jdbc-image-tools.jar pz.tool.jdbcimage.main.TableFileDump

@@ -249,6 +249,8 @@ public abstract class MainToolBase implements AutoCloseable {
 			dbFacade = new Mssql(this);
 		} else if (jdbc_url.startsWith("jdbc:postgresql")) {
 			dbFacade = new PostgreSQL(this);
+		} else if (jdbc_url.startsWith("jdbc:mysql") || jdbc_url.startsWith("jdbc:mariadb")) {
+			dbFacade = new MariaDB(this);
 		} else {
 			throw new IllegalArgumentException("Unsupported database type: " + jdbc_url);
 		}
@@ -279,7 +281,7 @@ public abstract class MainToolBase implements AutoCloseable {
 		if (!f.exists() || (zip = f.getName().endsWith(".zip"))) {
 			int sep = -1;
 			String zipFile = "";
-			if (zip || (sep = f.getName().indexOf("!")) > 0) {
+			if (zip || (sep = f.getName().indexOf("#")) > 0) {
 				if (sep > 0) {
 					zipFile = f.getName().substring(sep + 1);
 					f = new File(f.getParent(), f.getName().substring(0, sep));
@@ -296,12 +298,12 @@ public abstract class MainToolBase implements AutoCloseable {
 						}
 						zis.close();
 						// re-read to offer names
-						out.println("Following files are availanle the image: ");
+						out.println("Following files are available in the image: ");
 						zis = new ZipInputStream(new FileInputStream(f));
 						while ((entry = zis.getNextEntry()) != null) {
 							out.print(" ");
 							out.print(f);
-							out.print("!");
+							out.print("#");
 							out.println(entry.getName());
 							zis.closeEntry();
 						}
@@ -431,7 +433,7 @@ public abstract class MainToolBase implements AutoCloseable {
 	 * @param query  query to execute
 	 * @param mapper function to map result set rows
 	 * @return list of results
-	 * @throws SQLException
+	 * @throws SQLException db error
 	 */
 	public <T> List<T> executeQuery(String query, Function<ResultSet, T> mapper) throws SQLException {
 		try (Connection con = getReadOnlyConnection()) {
