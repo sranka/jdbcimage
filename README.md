@@ -23,3 +23,4 @@ Supports Oracle, MSSQL and PostgreSQL databases.
 
 ## Missing pieces
 * tests, review, better organization of shell scripts, error handling of invalid args
+* mysql support
