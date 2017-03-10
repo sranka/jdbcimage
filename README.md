@@ -23,4 +23,8 @@ Supports Oracle, MSSQL and PostgreSQL databases.
 
 ## Missing pieces
 * tests, review, better organization of shell scripts, error handling of invalid args
+<<<<<<< d42231b33e37f4511ecc61e8574ded7864f9fcdb
 * mysql support
+=======
+* docker support
+>>>>>>> doc only
