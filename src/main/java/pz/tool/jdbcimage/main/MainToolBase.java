@@ -153,7 +153,7 @@ public abstract class MainToolBase implements AutoCloseable {
 		int retVal = tool_concurrency;
 
 		if (retVal <= 0) {
-			retVal = ForkJoinPool.getCommonPoolParallelism();
+			retVal = Runtime.getRuntime().availableProcessors(); //ForkJoinPool.getCommonPoolParallelism();
 		}
 		if (max <= 0) {
 			return retVal;

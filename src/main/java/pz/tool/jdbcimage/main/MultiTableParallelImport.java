@@ -64,7 +64,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 				time = System.currentTimeMillis();
 				dbFacade.modifyConstraints(false);
 				durations.disableConstraints = Duration.ofMillis(System.currentTimeMillis() - time);
-				// 2. make indexes unusable skiped
+				// 2. make indexes unusable skipped
 				if (tool_disableIndexes){
 					time = System.currentTimeMillis();
 					dbFacade.modifyIndexes(false);
