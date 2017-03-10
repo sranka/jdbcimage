@@ -1,12 +1,13 @@
 package pz.tool.jdbcimage.main;
 
 import org.apache.commons.dbcp2.BasicDataSource;
-import pz.tool.jdbcimage.db.SqlExecuteCommand;
-import pz.tool.jdbcimage.db.TableGroupedCommands;
 
-import java.sql.*;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * DB facade for MariaDB.
@@ -21,7 +22,7 @@ public class MariaDB extends DBFacade {
     @Override
     public void setupDataSource(BasicDataSource bds) {
         bds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-        bds.setConnectionInitSqls(Arrays.asList("SET FOREIGN_KEY_CHECKS = 0"));
+        bds.setConnectionInitSqls(Collections.singletonList("SET FOREIGN_KEY_CHECKS = 0"));
     }
 
     @Override
@@ -48,12 +49,12 @@ public class MariaDB extends DBFacade {
 
     @Override
     public void modifyConstraints(boolean enable) throws SQLException {
-        mainToolBase.out.println("Foreign key checks disabled in created database connections.");
+        if (!enable) mainToolBase.out.println("Foreign key checks disabled in created database connections.");
     }
 
     @Override
     public void modifyIndexes(boolean enable) throws SQLException {
-        mainToolBase.out.println("Index " + (enable ? "enable" : "disable") + " not supported on PostgreSQL!");
+        mainToolBase.out.println("Index " + (enable ? "enable" : "disable") + " not supported on MariaDB!");
     }
 
     @Override

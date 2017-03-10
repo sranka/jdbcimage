@@ -39,7 +39,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 		try {
 			List<String> dbTables = getUserTables();
 			Map<String,String> dbTablesMap = new HashMap<>();
-			dbTables.stream().forEach(x -> dbTablesMap.put(x.toLowerCase(),x));
+			dbTables.forEach(x -> dbTablesMap.put(x.toLowerCase(),x));
 			// collect tables to import (ignore tables that do not exist)
 			setTables(Files.list(Paths.get(tool_builddir))
 				.filter(x -> {
@@ -53,7 +53,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 					}
 					return retVal;
 				})
-				.filter(x -> x!=null)
+				.filter(Objects::nonNull)
 				.collect(Collectors.toList()));
 			if (tables.size() != 0){
 				// apply a procedure that ignores indexes and constraints 

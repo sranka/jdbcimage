@@ -132,7 +132,7 @@ public class Oracle extends DBFacade {
     public void modifyIndexes(boolean enable) throws SQLException {
         TableGroupedCommands commands = new TableGroupedCommands();
         mainToolBase.executeQuery(
-                /** exclude LOB indexes, since they cannot be altered */
+                /* exclude LOB indexes, since they cannot be altered */
                 "SELECT TABLE_OWNER,TABLE_NAME,INDEX_NAME FROM user_indexes where INDEX_TYPE<>'LOB' order by TABLE_NAME",
                 row -> {
                     try {

@@ -122,7 +122,7 @@ public class KryoResultProducer implements ResultProducer{
 
 	@Override
 	public void close() {
-		// nothing to close
+		// nothing to close herein
 	}
 
 }

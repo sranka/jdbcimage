@@ -41,6 +41,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.4</version> <!-- only because of maven warnings -->
 				<configuration>
 					<finalName>jdbc-image-tools</finalName>
 				</configuration>
@@ -48,6 +49,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.2</version> <!-- only because of maven warnings -->
 				<configuration>
 					<source>${version.jdk}</source>
 					<target>${version.jdk}</target>
