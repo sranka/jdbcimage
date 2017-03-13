@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.zip.*;
 
@@ -243,15 +244,23 @@ public abstract class MainToolBase implements AutoCloseable {
 		bds.setDefaultAutoCommit(false);
 
 		// isolate database specific instructions
-		if (jdbc_url.startsWith("jdbc:oracle")) {
-			dbFacade = new Oracle(this);
-		} else if (jdbc_url.startsWith("jdbc:sqlserver")) {
-			dbFacade = new Mssql(this);
-		} else if (jdbc_url.startsWith("jdbc:postgresql")) {
-			dbFacade = new PostgreSQL(this);
-		} else if (jdbc_url.startsWith("jdbc:mysql") || jdbc_url.startsWith("jdbc:mariadb")) {
-			dbFacade = new MariaDB(this);
-		} else {
+		List<Predicate<String>> matchers = Arrays.asList(
+				dbtype -> jdbc_url.startsWith("jdbc:"+dbtype),
+				dbtype -> jdbc_url.contains(":"+dbtype+":")
+		);
+		for(Predicate<String> matcher: matchers){
+			if (matcher.test("oracle")) {
+				dbFacade = new Oracle(this);
+			} else if (matcher.test("sqlserver")){
+				dbFacade = new Mssql(this);
+			} else if (matcher.test("postgresql")) {
+				dbFacade = new PostgreSQL(this);
+			} else if (matcher.test("mysql") || matcher.test("mariadb")) {
+				dbFacade = new MariaDB(this);
+			}
+			if (dbFacade !=null) break;
+		}
+		if (dbFacade == null){
 			throw new IllegalArgumentException("Unsupported database type: " + jdbc_url);
 		}
 
