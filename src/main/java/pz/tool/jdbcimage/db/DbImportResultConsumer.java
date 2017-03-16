@@ -171,10 +171,15 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                             case Types.LONGNVARCHAR:
                             case Types.NCLOB:
                                 if (value instanceof Reader){
+                                    value = db.convertCharacterStreamInput((Reader)value);
                                     if (value instanceof ChunkedReader){
                                         stmt.setCharacterStream(pos, (Reader)value, ((ChunkedReader)value).length());
-                                    } else{
+                                    } else if (value instanceof Reader ){
                                         stmt.setCharacterStream(pos, (Reader)value);
+                                    } else if (value instanceof CharSequence){
+                                        stmt.setString(pos, value.toString());
+                                    } else{
+                                        throw new IllegalStateException("Unexpected value found for clob: "+value);
                                     }
                                 } else if (value instanceof Clob){
                                     if (type == Types.LONGNVARCHAR || type == Types.NCLOB){

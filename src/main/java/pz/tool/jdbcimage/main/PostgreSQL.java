@@ -1,9 +1,11 @@
 package pz.tool.jdbcimage.main;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import pz.tool.jdbcimage.ChunkedReader;
 import pz.tool.jdbcimage.db.SqlExecuteCommand;
 import pz.tool.jdbcimage.db.TableGroupedCommands;
 
+import java.io.Reader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -207,4 +209,13 @@ public class PostgreSQL extends DBFacade {
         return false;
     }
 
+    @Override
+    public Object convertCharacterStreamInput(Reader reader) {
+        if (reader instanceof ChunkedReader){
+            return ((ChunkedReader)reader).readAsString();
+        } else{
+            // let the implementation handle this
+            return reader;
+        }
+    }
 }

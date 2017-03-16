@@ -3,6 +3,7 @@ package pz.tool.jdbcimage.main;
 import java.io.File;
 import java.time.Duration;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -12,23 +13,23 @@ public class MultiTableParallelExport extends SingleTableExport{
 	
 	public void run(){
 		// setup tables to export
-		setTables(getUserTables());
+		setTables(getUserTables().stream().collect(Collectors.toMap(Function.identity(), Function.identity())));
 
 		// print platform concurrency, just FYI
 		out.println("Concurrency: "+ concurrency);
 		
 		// runs export in parallel
 		out.println("Exporting table files to: "+new File(tool_builddir));
-		run(tables.stream().map(this::getExportTask).collect(Collectors.toList()));
+		run(tables.entrySet().stream().map(x -> getExportTask(x.getKey(), x.getValue())).collect(Collectors.toList()));
 		zip();
 	}
 	
-	private Callable<?> getExportTask(String tableName){
+	private Callable<?> getExportTask(String tableName, String fileName){
 		return () -> {
 			boolean failed = true;
 			try{
 				long start = System.currentTimeMillis();
-				exportTable(tableName);
+				exportTable(tableName, fileName);
 				out.println("SUCCESS: Exported table "+tableName + " - " + Duration.ofMillis(System.currentTimeMillis()-start));
 				failed = false;
 			} finally {

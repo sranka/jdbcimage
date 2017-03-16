@@ -17,12 +17,12 @@ import java.time.Duration;
 public class SingleTableExport extends MainToolBase{
 
 	public void run() throws SQLException, IOException{
-		out.println("Processing time: "+ exportTable(tool_table));
+		out.println("Processing time: "+ exportTable(tool_table,tool_table));
 		out.println("Saved to: "+new File(tool_builddir, tool_table));
 	}
 	
-	public Duration exportTable(String tableName) throws SQLException, IOException{
-		File file = new File(tool_builddir, tableName);
+	public Duration exportTable(String tableName, String fileName) throws SQLException, IOException{
+		File file = new File(tool_builddir, fileName);
 		OutputStream out = toResultOutput(file);
 		KryoResultSetConsumer serializer = new KryoResultSetConsumer(out);
 		boolean failed = true;

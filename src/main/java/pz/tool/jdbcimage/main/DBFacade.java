@@ -2,6 +2,7 @@ package pz.tool.jdbcimage.main;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -107,5 +108,15 @@ public abstract class DBFacade {
      */
     public boolean canCreateBlobs(){
         return true;
+    }
+    /**
+     * Postgresql does not support statement.setCharacterStream(Reader),
+     * this method can be used to convert a supplied reader to String.
+     *
+     * @param reader reader to convert, never null
+     * @return converted reader, identity by default
+     */
+    public Object convertCharacterStreamInput(Reader reader){
+        return reader;
     }
 }

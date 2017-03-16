@@ -175,9 +175,8 @@ public abstract class MainToolBase implements AutoCloseable {
 	protected int concurrency = 1; // filled by the started method
 	protected long started; // filled by the started method
 	protected DBFacade dbFacade = null;
-	// tables to import
-	protected List<String> tables = null;
-	protected Map<String, String> tableSet;
+	// tables to import, key is database table name, value is the expected output/input file name
+	protected Map<String,String> tables = null;
 
 	public MainToolBase() {
 		initOutput();
@@ -201,16 +200,12 @@ public abstract class MainToolBase implements AutoCloseable {
 		out.println("Started - " + new Date(started));
 	}
 
-	protected void setTables(List<String> tables) {
+	protected void setTables(Map<String,String> tables) {
 		this.tables = tables;
-		this.tableSet = new HashMap<>();
-		for (String t : tables) {
-			tableSet.put(t, t);
-		}
 	}
 
 	public boolean containsTable(String tableName) {
-		return tableSet.containsKey(tableName);
+		return tables.containsKey(tableName);
 	}
 
 	public void close() {

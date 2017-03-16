@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 /**
  * DB import that runs in multiple threads.
@@ -45,16 +44,20 @@ public class MultiTableParallelImport extends SingleTableImport{
 				.filter(x -> {
 					File f = x.toFile();
 					return f.isFile() && !f.getName().contains(".");
-				}).map(x -> x.getFileName().toString())
-				.map(x -> {
-					String retVal = dbTablesMap.get(x.toLowerCase());
-					if (retVal == null){
-						out.println("SKIPPED - table "+x+" does not exists!");
-					}
-					return retVal;
 				})
-				.filter(Objects::nonNull)
-				.collect(Collectors.toList()));
+				.collect(
+						LinkedHashMap<String,String>::new,
+						(map, x) -> {
+							String fileName = x.getFileName().toString();
+							String retVal = dbTablesMap.get(fileName.toLowerCase());
+							if (retVal == null){
+								out.println("SKIPPED - table "+x+" does not exists!");
+							} else{
+								map.put(retVal, fileName);
+							}
+						},
+						LinkedHashMap::putAll
+				));
 			if (tables.size() != 0){
 				// apply a procedure that ignores indexes and constraints 
 				// to speed up data import
@@ -103,7 +106,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 	public Duration deleteData(){
 		long time = System.currentTimeMillis();
 		List<Callable<?>> tasks = new ArrayList<>(tables.size());
-		for(String table: tables){
+		for(String table: tables.keySet()){
 			tasks.add(() -> {
 				boolean failed = true;
 				try{
@@ -126,11 +129,13 @@ public class MultiTableParallelImport extends SingleTableImport{
 		long time = System.currentTimeMillis();
 		List<Callable<?>> tasks = new ArrayList<>(tables.size());
 		Set<String> tablesWithIdentityColumns = dbFacade.getTablesWithIdentityColumns();
-		for(String table: tables){
+		for(Map.Entry<String,String> entry: tables.entrySet()){
+			String table = entry.getKey();
+			String fileName = entry.getValue();
 			tasks.add(() -> {
 				boolean failed = true;
 				try{
-					importTable(table, tablesWithIdentityColumns.contains(table));
+					importTable(table, fileName, tablesWithIdentityColumns.contains(table));
 					out.println("SUCCESS: Imported data to "+table+" in "+Duration.ofMillis(System.currentTimeMillis()-time));
 					failed = false;
 				} finally{
