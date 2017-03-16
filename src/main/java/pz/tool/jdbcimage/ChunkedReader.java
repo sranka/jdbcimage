@@ -93,14 +93,19 @@ public class ChunkedReader extends Reader{
 	}
 	
 	public String readAsString(){
-		if (chunks == null){
+		if (finished){
 			return "";
 		} else{
 			StringBuffer buffer = new StringBuffer((int)totalLength);
-			while(chunks.hasNext()){
-				char[] next = chunks.next();
-				buffer.append(next);
-			}
+			for(;;){
+				if (this.currentChunk!=null) buffer.append(this.currentChunk);
+				if (chunks.hasNext()){
+					this.currentChunk = chunks.next();
+				} else{
+					break;
+				}
+			};
+			finished = true;
 			return buffer.toString();
 		}
 	}
