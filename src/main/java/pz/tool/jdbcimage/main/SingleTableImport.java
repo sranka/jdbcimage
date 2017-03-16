@@ -22,7 +22,7 @@ public class SingleTableImport extends MainToolBase{
 	public void run() throws SQLException, IOException{
 		out.println("Importing from: "+new File(tool_builddir, tool_table));
 		out.println("Reset time: "+ truncateTable(tool_table));
-		out.println("Import time: "+ importTable(tool_table, tool_table, dbFacade.getTablesWithIdentityColumns().contains(tool_table)));
+		out.println("Import time: "+ importTable(tool_table, tool_table, dbFacade.getTablesWithIdentityColumn().get(tool_table)));
 	}
 	
 	public Duration truncateTable(String tableName) throws SQLException {
@@ -49,10 +49,10 @@ public class SingleTableImport extends MainToolBase{
 	 * Imports specific tables.
 	 * @param tableName tables name
 	 * @param fileName usually the same table name, might differ in lower/upper case
-	 * @param hasIdentityColumn has identity column
+	 * @param identityInfo identity column information
 	 * @return time spent
 	 */
-	public Duration importTable(String tableName, String fileName, boolean hasIdentityColumn) throws SQLException, IOException{
+	public Duration importTable(String tableName, String fileName, Object identityInfo) throws SQLException, IOException{
 		File file = new File(tool_builddir, fileName);
 		InputStream in = toResultInput(file);
 		KryoResultProducer producer = new KryoResultProducer(in);
@@ -76,10 +76,10 @@ public class SingleTableImport extends MainToolBase{
 				con.rollback(); // no changes
 			}
 			// import data
-			dbFacade.beforeImportTable(con, tableName, hasIdentityColumn);
+			dbFacade.beforeImportTable(con, tableName, identityInfo);
 			ResultProducerRunner runner = new ResultProducerRunner(producer, new DbImportResultConsumer(tableName, con, dbFacade, actualColumns));
 			runner.run();
-			dbFacade.afterImportTable(con, tableName, hasIdentityColumn);
+			dbFacade.afterImportTable(con, tableName, identityInfo);
 
 			return Duration.ofMillis(System.currentTimeMillis() - start);
 		} finally{

@@ -1,19 +1,20 @@
 package pz.tool.jdbcimage.main;
 
-import org.apache.commons.dbcp2.BasicDataSource;
-import pz.tool.jdbcimage.LoggedUtils;
-import pz.tool.jdbcimage.db.SqlExecuteCommand;
-import pz.tool.jdbcimage.db.TableGroupedCommands;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.apache.commons.dbcp2.BasicDataSource;
+
+import pz.tool.jdbcimage.LoggedUtils;
+import pz.tool.jdbcimage.db.SqlExecuteCommand;
+import pz.tool.jdbcimage.db.TableGroupedCommands;
 
 /**
  * DB facade for MSSQL database.
@@ -110,8 +111,8 @@ public class Mssql extends DBFacade {
     }
 
     @Override
-    public void afterImportTable(Connection con, String table, boolean hasIdentityColumn) throws SQLException {
-        if (hasIdentityColumn) {
+    public void afterImportTable(Connection con, String table, Object identityInfo) throws SQLException {
+        if (identityInfo!=null) {
             try (Statement stmt = con.createStatement()) {
                 stmt.execute("SET IDENTITY_INSERT [" + table + "] OFF");
             }
@@ -119,8 +120,8 @@ public class Mssql extends DBFacade {
     }
 
     @Override
-    public void beforeImportTable(Connection con, String table, boolean hasIdentityColumn) throws SQLException {
-        if (hasIdentityColumn) {
+    public void beforeImportTable(Connection con, String table, Object identityInfo) throws SQLException {
+        if (identityInfo!=null) {
             try (Statement stmt = con.createStatement()) {
                 stmt.execute("SET IDENTITY_INSERT [" + table + "] ON");
             }
@@ -130,15 +131,16 @@ public class Mssql extends DBFacade {
     /**
      * Returns tables that have identity columns.
      *
-     * @return set of tables that contain identity columns
+     * @return table to identity column
      */
-    public Set<String> getTablesWithIdentityColumns() {
-        Set<String> retVal = new HashSet<>();
+    public Map<String, Object> getTablesWithIdentityColumn() {
+        Map<String, Object> retVal = new HashMap<>();
         try (Connection con = mainToolBase.getReadOnlyConnection()) {
             try (Statement stmt = con.createStatement()) {
-                try (ResultSet rs = stmt.executeQuery("select name from sys.objects where type = 'U' and OBJECTPROPERTY(object_id, 'TableHasIdentity')=1")) {
+                try (ResultSet rs = stmt.executeQuery(
+                        "select name from sys.objects where type = 'U' and OBJECTPROPERTY(object_id, 'TableHasIdentity')=1")) {
                     while (rs.next()) {
-                        retVal.add(rs.getString(1));
+                        retVal.put(rs.getString(1), Boolean.TRUE);
                     }
                 }
             } finally {

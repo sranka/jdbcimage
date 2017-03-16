@@ -1,17 +1,24 @@
 package pz.tool.jdbcimage.main;
 
-import org.apache.commons.dbcp2.BasicDataSource;
-import pz.tool.jdbcimage.ChunkedReader;
-import pz.tool.jdbcimage.db.SqlExecuteCommand;
-import pz.tool.jdbcimage.db.TableGroupedCommands;
-
 import java.io.Reader;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.apache.commons.dbcp2.BasicDataSource;
+
+import pz.tool.jdbcimage.ChunkedReader;
+import pz.tool.jdbcimage.db.SqlExecuteCommand;
+import pz.tool.jdbcimage.db.TableGroupedCommands;
 
 /**
  * DB facade for PostgreSQL database.
@@ -21,6 +28,8 @@ public class PostgreSQL extends DBFacade {
     public static final String STATE_TABLE_DDL = "CREATE TABLE "+STATE_TABLE_NAME+"( tableName varchar(64),constraintName varchar(64),sql varchar(512))";
     public static final String STATE_TABLE_SQL = "SELECT tableName,constraintName,sql FROM "+STATE_TABLE_NAME+ " order by tableName,constraintName";
     private MainToolBase mainToolBase;
+
+    private static Pattern identifyColumnPattern = Pattern.compile("^.*_([a-zA-z]*)_seq$");
 
     public PostgreSQL(MainToolBase mainToolBase) {
         this.mainToolBase = mainToolBase;
@@ -44,6 +53,74 @@ public class PostgreSQL extends DBFacade {
         }
         return retVal;
     }
+
+    @Override
+    public Map<String, Object> getTablesWithIdentityColumn() {
+        HashMap<String, Object> retVal = new HashMap<>();
+        try (Connection con = mainToolBase.getReadOnlyConnection()) {
+            try (Statement stmt = con.createStatement()) {
+                try (ResultSet rs = stmt.executeQuery(
+                        "WITH fq_objects AS (SELECT c.oid,n.nspname AS nsp,c.relname AS name , \n" +
+                        "                           c.relkind, c.relname AS relation \n" +
+                        "                    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace ),\n" +
+                        "     sequences AS (SELECT oid, nsp, name FROM fq_objects WHERE relkind = 'S'),  \n" +
+                        "     tables    AS (SELECT oid, nsp, name FROM fq_objects WHERE relkind = 'r' )  \n" +
+                        "SELECT\n" +
+                        "       t.name AS tableName, \n" +
+                        "       s.name AS sequence \n" +
+                        "FROM \n" +
+                        "     pg_depend d JOIN sequences s ON s.oid = d.objid  \n" +
+                        "                 JOIN tables t ON t.oid = d.refobjid  \n" +
+                        "WHERE \n" +
+                        "     d.deptype = 'a' and t.nsp='"+currentSchema()+"'"
+                        )){
+                    while(rs.next()){
+                        String tableName = rs.getString(1);
+                        String sequence = rs.getString(2);
+                        // extract column from generated name
+                        Matcher matcher = identifyColumnPattern.matcher(sequence);
+                        if (matcher.matches()){
+                            String columnName = matcher.group(1);
+                            retVal.put(tableName, new IdentityInfo(sequence, columnName));
+                        }
+                    }
+                } finally {
+                    con.rollback();
+                }
+            }
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+
+        return retVal;
+    }
+
+    private static class IdentityInfo{
+        String sequenceName;
+        String columnName;
+
+        IdentityInfo(String sequenceName, String columnName) {
+            this.sequenceName = sequenceName;
+            this.columnName = columnName;
+        }
+    }
+
+    @Override
+    public void afterImportTable(Connection con, String table, Object identityInfo) throws SQLException {
+        if (identityInfo instanceof IdentityInfo) {
+            IdentityInfo info = (IdentityInfo)identityInfo;
+            String sql = "select setval('"+info.sequenceName+"', (select coalesce(max("+info.columnName+")+1,1) from "+table+"))";
+            try (Statement stmt = con.createStatement()) {
+                try (ResultSet rs = stmt.executeQuery(sql)) {
+                    rs.next();
+                    Object val = rs.getLong(1); // read the next value of the sequence
+                    System.out.println("Sequence "+info.sequenceName+" reset to "+val);
+                }
+            }
+        }
+    }
+
+
     @Override
     public String escapeColumnName(String s) {
         return "\""+s+"\"";
@@ -58,20 +135,17 @@ public class PostgreSQL extends DBFacade {
     public void modifyConstraints(boolean enable) throws SQLException {
         final TableGroupedCommands commands = new TableGroupedCommands();
         if (!enable) {
-            // get current schema and create state table
-            String schema;
             boolean createStateTable = false;
             try (Connection con = mainToolBase.getReadOnlyConnection()) {
-                schema = con.getSchema(); // get current schema
-                try(Statement stmt = con.createStatement()){
-                    try{
+                try (Statement stmt = con.createStatement()) {
+                    try {
                         // check table existence
-                        ResultSet rs = stmt.executeQuery("select 1 from "+STATE_TABLE_NAME);
+                        ResultSet rs = stmt.executeQuery("select 1 from " + STATE_TABLE_NAME);
                         rs.close();
-                    } catch(SQLException e){
+                    } catch (SQLException e) {
                         // state table does not exist
                         createStateTable = true;
-                    } finally{
+                    } finally {
                         con.rollback();
                     }
                 }
@@ -98,7 +172,7 @@ public class PostgreSQL extends DBFacade {
                     "  join information_schema.table_constraints C2 on (C.constraint_schema = C2.constraint_schema and C.constraint_name = C2.constraint_name) \n" +
                     "  join information_schema.key_column_usage S on (S.constraint_schema = C.constraint_schema and S.constraint_name = C.constraint_name) \n" +
                     "  join information_schema.constraint_column_usage T on (T.constraint_schema = C.unique_constraint_schema and T.constraint_name = C.unique_constraint_name) \n" +
-                    "  where C.constraint_schema='" + schema + "' order by S.table_name, C.constraint_name";
+                    "  where C.constraint_schema='" + currentSchema()+ "' order by S.table_name, C.constraint_name";
             Map<String,String> constraints = new HashMap<>(); // check for duplicates
             mainToolBase.executeQuery(
                     query,
@@ -216,6 +290,22 @@ public class PostgreSQL extends DBFacade {
         } else{
             // let the implementation handle this
             return reader;
+        }
+    }
+
+    private volatile String cachedSchema = null;
+    private String currentSchema() throws SQLException {
+        if (cachedSchema == null) {
+            // get current schema and create state table
+            String schema;
+            boolean createStateTable = false;
+            try (Connection con = mainToolBase.getReadOnlyConnection()) {
+                schema = con.getSchema(); // get current schema
+            }
+            this.cachedSchema = schema;
+            return schema;
+        } else{
+            return cachedSchema;
         }
     }
 }

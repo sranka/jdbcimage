@@ -128,14 +128,14 @@ public class MultiTableParallelImport extends SingleTableImport{
 	public Duration importData(){
 		long time = System.currentTimeMillis();
 		List<Callable<?>> tasks = new ArrayList<>(tables.size());
-		Set<String> tablesWithIdentityColumns = dbFacade.getTablesWithIdentityColumns();
+		Map<String, ?> tablesWithIdentityColumns = dbFacade.getTablesWithIdentityColumn();
 		for(Map.Entry<String,String> entry: tables.entrySet()){
 			String table = entry.getKey();
 			String fileName = entry.getValue();
 			tasks.add(() -> {
 				boolean failed = true;
 				try{
-					importTable(table, fileName, tablesWithIdentityColumns.contains(table));
+					importTable(table, fileName, tablesWithIdentityColumns.get(table));
 					out.println("SUCCESS: Imported data to "+table+" in "+Duration.ofMillis(System.currentTimeMillis()-time));
 					failed = false;
 				} finally{

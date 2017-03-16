@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -31,14 +32,12 @@ public abstract class DBFacade {
     /**
      * Turns on/off table constraints.
      * @param enable true to enable
-     * @throws SQLException
      */
     public abstract void modifyConstraints(boolean enable) throws SQLException;
 
     /**
      * Turns on/off table indexes.
      * @param enable true to enable
-     * @throws SQLException
      */
     public abstract void modifyIndexes(boolean enable) throws SQLException;
 
@@ -46,18 +45,18 @@ public abstract class DBFacade {
      * Called before rows are inserted into table.
      * @param con connection
      * @param table table name
-     * @param hasIdentityColumn indicates whether the table has identity column
+     * @param identityInfo identity column or null
      */
-    public void afterImportTable(Connection con, String table, boolean hasIdentityColumn) throws SQLException{
+    public void afterImportTable(Connection con, String table, Object identityInfo) throws SQLException{
     }
 
     /**
      * Called before rows are inserted into table.
      * @param con connection
      * @param table table name
-     * @param hasIdentityColumn indicates whether the table has identity column
+     * @param identityColumn identity column or null
      */
-    public void beforeImportTable(Connection con, String table, boolean hasIdentityColumn) throws SQLException{
+    public void beforeImportTable(Connection con, String table, Object identityInfo) throws SQLException{
     }
     /**
      * Gets the SQL DML that truncates the content of a table.
@@ -86,11 +85,11 @@ public abstract class DBFacade {
     }
 
     /**
-     * Returns tables that have identity columns.
-     * @return set of tables that contain identity columns
+     * Returns tables with identity column.
+     * @return table to identity column name
      */
-    public Set<String> getTablesWithIdentityColumns() {
-        return Collections.emptySet();
+    public Map<String, ?> getTablesWithIdentityColumn() {
+        return Collections.emptyMap();
     }
 
     /**
