@@ -200,8 +200,23 @@ public abstract class MainToolBase implements AutoCloseable {
 		out.println("Started - " + new Date(started));
 	}
 
-	protected void setTables(Map<String,String> tables) {
+	protected void setTables(Map<String,String> tables, PrintStream out) {
 		this.tables = tables;
+		// check for duplicated except of case-sensitiveness
+		final boolean[] foundDuplicate = {false};
+		Map<String,String> ignoreCaseMap = new HashMap<>();
+		tables.forEach((key,value) -> {
+			String toPut = key.toLowerCase();
+			String old = ignoreCaseMap.put(toPut, value);
+			if (old!=null){
+				out.println("Two tables with same case-insensitive name: "+old+" and "+ key);
+				foundDuplicate[0] = true;
+			}
+		});
+		if (foundDuplicate[0]){
+			throw new RuntimeException("Found tables with the same case-insensitive name, see the log above. Drop/rename tables so there are no conflicts!");
+		}
+
 	}
 
 	public boolean containsTable(String tableName) {

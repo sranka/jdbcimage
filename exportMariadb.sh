@@ -1,5 +1,5 @@
 #!/bin/bash
-jdbc_url="jdbc:mysql://localhost:3306/pricefx_qa?characterEncoding=utf8&rewriteBatchedStatements=true"
+jdbc_url="jdbc:mysql://localhost:3306/big?characterEncoding=utf8&rewriteBatchedStatements=true"
 jdbc_user=root
 jdbc_password=root
 tool_builddir=target/exportMariadb

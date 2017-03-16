@@ -12,12 +12,13 @@ import java.util.stream.Collectors;
 public class MultiTableParallelExport extends SingleTableExport{
 	
 	public void run(){
-		// setup tables to export
-		setTables(getUserTables().stream().collect(Collectors.toMap(Function.identity(), Function.identity())));
-
 		// print platform concurrency, just FYI
 		out.println("Concurrency: "+ concurrency);
-		
+
+		// setup tables to export
+		setTables(getUserTables().stream().collect(Collectors.toMap(Function.identity(), Function.identity())), out);
+
+
 		// runs export in parallel
 		out.println("Exporting table files to: "+new File(tool_builddir));
 		run(tables.entrySet().stream().map(x -> getExportTask(x.getKey(), x.getValue())).collect(Collectors.toList()));
