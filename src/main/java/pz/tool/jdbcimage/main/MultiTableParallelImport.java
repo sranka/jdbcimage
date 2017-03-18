@@ -141,8 +141,9 @@ public class MultiTableParallelImport extends SingleTableImport{
 			tasks.add(() -> {
 				boolean failed = true;
 				try{
-					importTable(table, fileName, tablesWithIdentityColumns.get(table));
-					out.println("SUCCESS: Imported data to "+table+" in "+Duration.ofMillis(System.currentTimeMillis()-time));
+					long start = System.currentTimeMillis();
+					long rows = importTable(table, fileName, tablesWithIdentityColumns.get(table));
+					out.println("SUCCESS: Imported data to "+table+" - "+rows+" rows in "+Duration.ofMillis(System.currentTimeMillis()-start));
 					failed = false;
 				} finally{
 					if (failed){

@@ -22,6 +22,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 	// initialized in onStart
 	private ResultSetInfo info;
 	private int columnCount;
+	private long processedRows = -1;
 	
 	public KryoResultSetConsumer(OutputStream out) {
 		super();
@@ -32,6 +33,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 	@Override
 	public void onStart(ResultSetInfo info){
 		this.info = info;
+		this.processedRows = 0;
 		columnCount = info.columns.length;
 		kryo.writeObject(out, "1.0"); // 1.0 version of the serialization
 		kryo.writeObject(out, info); // write header
@@ -123,6 +125,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 						throw new IllegalStateException("Unable to serialize SQL type: "+info.types[i]+", Object: "+rs.getObject(i+1));
 				}
 			}
+			processedRows++;
 		} catch(SQLException e){
 			//Unable to recover from any error
 			throw new RuntimeException(e);
@@ -130,10 +133,12 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 	}
 
 	@Override
-	public void onFinish() {
+	public long onFinish() {
 		// end of rows
 		out.writeBoolean(false);
 		// flush buffer
 		out.flush();
+
+		return processedRows;
 	}
 }

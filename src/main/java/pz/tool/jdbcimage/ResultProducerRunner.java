@@ -16,7 +16,7 @@ public class ResultProducerRunner {
 		this.consumer = consumer;
 	}
 
-	public void run(){
+	public long run(){
 		started = System.currentTimeMillis();
 		try{
 			// read header (version)
@@ -26,7 +26,7 @@ public class ResultProducerRunner {
 				consumer.accept(token);
 			}
 			// read item
-			consumer.onFinish();
+			return consumer.onFinish();
 		} catch (Exception e){
 			consumer.onFailure(e);
 			throw new RuntimeException(e);

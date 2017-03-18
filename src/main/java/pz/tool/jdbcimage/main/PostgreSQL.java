@@ -272,8 +272,8 @@ public class PostgreSQL extends DBFacade {
             case Types.LONGNVARCHAR: return Types.LONGVARCHAR;
             // postgresql does not support BLOBs and CLOBs in the JDBC driver
             case Types.BLOB: return Types.VARBINARY;
-            case Types.CLOB: return Types.LONGNVARCHAR;
-            case Types.NCLOB: return Types.LONGNVARCHAR;
+            case Types.CLOB: return Types.LONGVARCHAR;
+            case Types.NCLOB: return Types.LONGVARCHAR;
         }
         return sqlType;
     }

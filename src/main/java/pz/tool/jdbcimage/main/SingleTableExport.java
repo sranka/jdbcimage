@@ -17,11 +17,14 @@ import java.time.Duration;
 public class SingleTableExport extends MainToolBase{
 
 	public void run() throws SQLException, IOException{
-		out.println("Processing time: "+ exportTable(tool_table,tool_table));
+		long time = System.currentTimeMillis();
+		long rows = exportTable(tool_table, tool_table);
+		out.println("Rows exported: "+ rows);
+		out.println("Processing time: "+ Duration.ofMillis(System.currentTimeMillis() - time));
 		out.println("Saved to: "+new File(tool_builddir, tool_table));
 	}
 	
-	public Duration exportTable(String tableName, String fileName) throws SQLException, IOException{
+	public long exportTable(String tableName, String fileName) throws SQLException, IOException{
 		File file = new File(tool_builddir, fileName);
 		OutputStream out = toResultOutput(file);
 		KryoResultSetConsumer serializer = new KryoResultSetConsumer(out);
@@ -33,13 +36,13 @@ public class SingleTableExport extends MainToolBase{
 			runner = new QueryRunner(con, getSelectStatement(tableName, con), serializer);
 			runner.run();
 			failed = false;
-			return runner.getDuration();
+			return runner.getProcessedRows();
 		} finally{
 			LoggedUtils.close(con);
 			// close the file
 			LoggedUtils.close(out);
 			// delete the output if it failed or zero rows read
-			if (failed || ((runner.rows == 0) && isIgnoreEmptyTables())) {
+			if (failed || ((runner.getProcessedRows() == 0) && isIgnoreEmptyTables())) {
 				if (!file.delete()){
 					LoggedUtils.ignore("Unable to delete "+file,null);
 				}

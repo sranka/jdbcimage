@@ -22,7 +22,9 @@ public class SingleTableImport extends MainToolBase{
 	public void run() throws SQLException, IOException{
 		out.println("Importing from: "+new File(tool_builddir, tool_table));
 		out.println("Reset time: "+ truncateTable(tool_table));
-		out.println("Import time: "+ importTable(tool_table, tool_table, dbFacade.getTablesWithIdentityColumn().get(tool_table)));
+		long time = System.currentTimeMillis();
+		out.println("Imported rows: "+ importTable(tool_table, tool_table, dbFacade.getTablesWithIdentityColumn().get(tool_table)));
+		out.println("Import time: "+ Duration.ofMillis(System.currentTimeMillis()-time));
 	}
 	
 	public Duration truncateTable(String tableName) throws SQLException {
@@ -52,7 +54,7 @@ public class SingleTableImport extends MainToolBase{
 	 * @param identityInfo identity column information
 	 * @return time spent
 	 */
-	public Duration importTable(String tableName, String fileName, Object identityInfo) throws SQLException, IOException{
+	public long importTable(String tableName, String fileName, Object identityInfo) throws SQLException, IOException{
 		File file = new File(tool_builddir, fileName);
 		InputStream in = toResultInput(file);
 		KryoResultProducer producer = new KryoResultProducer(in);
@@ -61,8 +63,7 @@ public class SingleTableImport extends MainToolBase{
 
 		try{
 			// detect actual columns, ignore case
-			long start = System.currentTimeMillis();
-			Map<String, String> actualColumns = new HashMap<>(); 
+			Map<String, String> actualColumns = new HashMap<>();
 			try(Statement detect = con.createStatement()){
 				try(ResultSet rs = detect.executeQuery("SELECT * FROM "+tableName+" WHERE 0=1")){
 					ResultSetMetaData metaData = rs.getMetaData();
@@ -78,10 +79,10 @@ public class SingleTableImport extends MainToolBase{
 			// import data
 			dbFacade.beforeImportTable(con, tableName, identityInfo);
 			ResultProducerRunner runner = new ResultProducerRunner(producer, new DbImportResultConsumer(tableName, con, dbFacade, actualColumns));
-			runner.run();
+			long rows = runner.run();
 			dbFacade.afterImportTable(con, tableName, identityInfo);
 
-			return Duration.ofMillis(System.currentTimeMillis() - start);
+			return rows;
 		} finally{
 			LoggedUtils.close(con);
 			LoggedUtils.close(in);

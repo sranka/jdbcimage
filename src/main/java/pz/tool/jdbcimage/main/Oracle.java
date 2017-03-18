@@ -79,18 +79,55 @@ public class Oracle extends DBFacade {
 
     @Override
     public void modifyConstraints(boolean enable) throws SQLException {
+        // enable/disable triggers
+        TableGroupedCommands triggerCommands = new TableGroupedCommands();
+        mainToolBase.executeQuery(
+                "SELECT TABLE_OWNER,TABLE_NAME,TRIGGER_NAME FROM user_triggers WHERE STATUS='"+(enable?"DISABLED":"ENABLED")+"'",
+                row -> {
+                    try {
+                        String owner = row.getString(1);
+                        String tableName = row.getString(2);
+                        String triggerName = row.getString(3);
+                        if (mainToolBase.containsTable(tableName)) {
+                            String desc;
+                            if (enable) {
+                                desc = "Enable trigger " + triggerName + " on table " + tableName;
+                            } else {
+                                desc = "Disable trigger " + triggerName + " on table " + tableName;
+                            }
+                            String sql = "ALTER TRIGGER "+owner+"."+triggerName+" "+(enable?"ENABLE":"DISABLE");
+                            triggerCommands.add(tableName, desc, sql);
+                            return null;
+                        } else {
+                            return null;
+                        }
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        );
+        mainToolBase.run(triggerCommands.tableGroups
+                .stream()
+                .map(x -> SqlExecuteCommand.toSqlExecuteTask(
+                        mainToolBase.getWriteConnectionSupplier(),
+                        mainToolBase.out,
+                        x.toArray(new SqlExecuteCommand[x.size()]))
+                )
+                .collect(Collectors.toList()));
+
+        // enable/disable constraints
+        TableGroupedCommands constraintCommands = new TableGroupedCommands();
         String[] conditions;
         if (enable) {
-            // on enable: enable foreign indexes after other types
-            conditions = new String[]{"CONSTRAINT_TYPE<>'R'", "CONSTRAINT_TYPE='R'"};
+            // on enable: foreign keys last
+            conditions = new String[]{"CONSTRAINT_TYPE<>'P' and CONSTRAINT_TYPE<>'R'", "CONSTRAINT_TYPE='R'"};
         } else {
-            // on disable: disable foreign indexes first
-            conditions = new String[]{"CONSTRAINT_TYPE='R'", "CONSTRAINT_TYPE<>'R'"};
+            // on disable: disable foreign keys first
+            conditions = new String[]{"CONSTRAINT_TYPE='R'", "CONSTRAINT_TYPE<>'P' and CONSTRAINT_TYPE<>'R'"};
         }
-        TableGroupedCommands commands = new TableGroupedCommands();
         for (int i = 0; i < 2; i++) {
             mainToolBase.executeQuery(
-                    "SELECT OWNER,TABLE_NAME,CONSTRAINT_NAME FROM user_constraints WHERE " + conditions[i] + " order by TABLE_NAME",
+                    "SELECT OWNER,TABLE_NAME,CONSTRAINT_NAME FROM user_constraints WHERE " + conditions[i] + " and STATUS='"+(enable?"DISABLED":"ENABLED")+"' order by TABLE_NAME",
                     row -> {
                         try {
                             String owner = row.getString(1);
@@ -101,12 +138,12 @@ public class Oracle extends DBFacade {
                                     String desc = "Enable constraint " + constraint + " on table " + tableName;
                                     String sql = "ALTER TABLE " + owner + "." + tableName
                                             + " MODIFY CONSTRAINT " + constraint + " ENABLE";
-                                    commands.add(tableName, desc, sql);
+                                    constraintCommands.add(tableName, desc, sql);
                                 } else {
                                     String desc = "Disable constraint " + constraint + " on table " + tableName;
                                     String sql = "ALTER TABLE " + owner + "." + tableName
                                             + " MODIFY CONSTRAINT " + constraint + " DISABLE";
-                                    commands.add(tableName, desc, sql);
+                                    constraintCommands.add(tableName, desc, sql);
                                 }
                                 return null;
                             } else {
@@ -117,15 +154,15 @@ public class Oracle extends DBFacade {
                         }
                     }
             );
-            mainToolBase.run(commands.tableGroups
-                    .stream()
-                    .map(x -> SqlExecuteCommand.toSqlExecuteTask(
-                            mainToolBase.getWriteConnectionSupplier(),
-                            mainToolBase.out,
-                            x.toArray(new SqlExecuteCommand[x.size()]))
-                    )
-                    .collect(Collectors.toList()));
         }
+        mainToolBase.run(constraintCommands.tableGroups
+                .stream()
+                .map(x -> SqlExecuteCommand.toSqlExecuteTask(
+                        mainToolBase.getWriteConnectionSupplier(),
+                        mainToolBase.out,
+                        x.toArray(new SqlExecuteCommand[x.size()]))
+                )
+                .collect(Collectors.toList()));
     }
 
     @Override

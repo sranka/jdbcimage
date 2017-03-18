@@ -102,8 +102,9 @@ public class TableFileDump extends MainToolBase{
 				}
 
                 @Override
-                public void onFinish() {
+                public long onFinish() {
                     target.println("Records processed - "+rows);
+                    return rows;
                 }
             });
 			runner.run();

@@ -1,5 +1,9 @@
 #!/bin/bash
-OPTS=-Xmx256m
+if [[ "$heap_size" == "" ]]; then
+  OPTS=-Xmx256m
+else
+  OPTS=-Xmx$heap_size
+fi
 OPTS="$OPTS -Djdbc_url=$jdbc_url"
 OPTS="$OPTS -Djdbc_user=$jdbc_user"
 OPTS="$OPTS -Djdbc_password=$jdbc_password"

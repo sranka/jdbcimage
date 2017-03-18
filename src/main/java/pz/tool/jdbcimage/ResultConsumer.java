@@ -23,8 +23,10 @@ public interface ResultConsumer<T> extends Consumer<T>{
 	}
 	/**
 	 * Called upon finish of the processing.
+	 * @return number of processed rows, -1 if unknown
 	 */
-	default void onFinish(){
+	default long onFinish(){
+		return -1;
 	}
 	/**
 	 * Called upon processing failure.

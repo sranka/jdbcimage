@@ -28,10 +28,10 @@ public class QueryRunner implements Runnable{
     }
 
     // time stamps
-    public long started;
-    public long finished;
+    private long started;
+    private long finished;
     // rows processed
-    public long rows = 0;
+    private long rows = 0;
 
     public void run(){
         started = System.currentTimeMillis();
@@ -66,5 +66,8 @@ public class QueryRunner implements Runnable{
     }
     public Duration getDuration(){
         return Duration.ofMillis(finished - started);
+    }
+    public long getProcessedRows(){
+        return rows;
     }
 }

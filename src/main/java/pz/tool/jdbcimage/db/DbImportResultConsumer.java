@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class DbImportResultConsumer implements ResultConsumer<RowData>{
     private static final Log log = LogFactory.getLog(DbImportResultConsumer.class);
-    public static int BATCH_SIZE = 1000;
+    public static int BATCH_SIZE = Integer.valueOf(System.getProperty("batch.size","100"));
 
     private String tableName;
     private Connection con;
@@ -31,6 +31,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 
     // state
     int batchPosition; // current batch position
+    long processedRows = -1;
 
     /**
      * Creates database importer.
@@ -55,6 +56,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
         }
         // initialize batch position
         batchPosition = 0;
+        processedRows = 0;
 
         this.info = info;
         String[] columns = info.columns;
@@ -203,6 +205,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                 con.commit();
                 batchPosition = 0;
             }
+            processedRows++;
         } catch (SQLException e) {
             LoggedUtils.ignore("Unable to rollback!", e);
             throw new RuntimeException(e);
@@ -211,8 +214,9 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
 
 
     @Override
-    public void onFinish() {
+    public long onFinish() {
         closeStatement();
+        return processedRows;
     }
 
     @Override
