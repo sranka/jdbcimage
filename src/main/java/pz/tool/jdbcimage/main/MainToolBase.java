@@ -34,9 +34,18 @@ public abstract class MainToolBase implements AutoCloseable {
 	public boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes", "false"));
 	public String tool_builddir = System.getProperty("tool_builddir", "target/export");
 	public String zipFile = null;
-	public int tool_concurrency = Integer.valueOf(System.getProperty("tool_concurrency", "-1"));
 	// let you connect profiling tools
 	public boolean tool_waitOnStartup = Boolean.valueOf(System.getProperty("tool_waitOnStartup", "false"));
+	public int tool_concurrency;
+
+	{
+		String prop = System.getProperty("tool_concurrency");
+		if (prop == null || prop.length() == 0){
+			tool_concurrency = -1;
+		} else{
+			tool_concurrency = Integer.valueOf(prop);
+		}
+	}
 
 	/**
 	 * Setups zip file from command line arguments supplied.
