@@ -30,8 +30,8 @@ public class MultiTableParallelExport extends SingleTableExport{
 			boolean failed = true;
 			try{
 				long start = System.currentTimeMillis();
-				exportTable(tableName, fileName);
-				out.println("SUCCESS: Exported table "+tableName + " - " + Duration.ofMillis(System.currentTimeMillis()-start));
+				long rows = exportTable(tableName, fileName);
+				out.println("SUCCESS: Exported table "+tableName + " - "+rows+" rows in " + Duration.ofMillis(System.currentTimeMillis()-start));
 				failed = false;
 			} finally {
 				if (failed){
