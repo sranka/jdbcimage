@@ -11,7 +11,7 @@ Quickly exports/imports all schema tables using JDBC and Kryo. Supports Oracle, 
 3. Run the script with a zip file as the only argument
    * ./export.sh -Djdbc_url=jdbc:mariadb://localhost:3306/qa -Djdbc_user=root -Djdbc_password=root image.zip
       * See more examples in [exportMariadb.sh](exportMariadb.sh), [exportPostgres.sh](exportPostgres.sh), [exportMssql.sh](exportMssql.sh) and [exportOracle.sh](exportOracle.sh)
-   * ./import.sh -Djdbc_url=jdbc:mariadb://localhost:3306/qa -Djdbc_user=root -Djdbc_password=root image.zip
+   * ./import.sh -Djdbc_url=jdbc:postgresql://localhost:5432/qa -Djdbc_user=me -Djdbc_password=pwd image.zip
       * See more examples in [importMariadb.sh](importMariadb.sh), [importPostgres.sh](importPostgres.sh), [importMssql.sh](importMssql.sh) and [importOracle.sh](importOracle.sh)
    * ./dumpFile.sh image.zip
       * lists the tables contained in the file, see next item
