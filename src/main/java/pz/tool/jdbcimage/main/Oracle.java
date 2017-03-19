@@ -34,7 +34,7 @@ public class Oracle extends DBFacade {
     }
 
     @Override
-    public List<String> getUserTables(Connection con) throws SQLException {
+    public List<String> getDbUserTables(Connection con) throws SQLException {
         // return tables that are not materialized views as well
         // exclude materialized views
         Map<String,Boolean> toExclude = new HashMap<>();

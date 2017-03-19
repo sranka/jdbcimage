@@ -32,7 +32,7 @@ public class Mssql extends DBFacade {
     }
 
     @Override
-    public List<String> getUserTables(Connection con) throws SQLException {
+    public List<String> getDbUserTables(Connection con) throws SQLException {
         List<String> retVal = new ArrayList<>();
         try(ResultSet tables = con.getMetaData().getTables(con.getCatalog(), "dbo", "%", new String[]{"TABLE"})){
             while(tables.next()){

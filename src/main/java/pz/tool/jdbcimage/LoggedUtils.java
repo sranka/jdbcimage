@@ -22,6 +22,13 @@ public class LoggedUtils {
 	}
 
 	/**
+	 * Logs info message
+	 * @param message info
+	 */
+	public static void info(String message){
+		log.info(message);
+	}
+	/**
 	 * Ignores the exception with message supplied.
 	 * @param ignoreMessage message to display
 	 * @param e exception to log

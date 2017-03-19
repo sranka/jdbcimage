@@ -17,15 +17,19 @@ import java.time.Duration;
 public class SingleTableExport extends MainToolBase{
 
 	public void run() throws SQLException, IOException{
+		File file = new File(tool_table);
+		if (tool_table.contains("/")){
+			tool_table = tool_table.substring(tool_table.lastIndexOf("/")+1);
+		}
+
 		long time = System.currentTimeMillis();
-		long rows = exportTable(tool_table, tool_table);
+		long rows = exportTable(tool_table, file);
 		out.println("Rows exported: "+ rows);
 		out.println("Processing time: "+ Duration.ofMillis(System.currentTimeMillis() - time));
-		out.println("Saved to: "+new File(tool_builddir, tool_table));
+		out.println("Saved to: "+file);
 	}
 	
-	public long exportTable(String tableName, String fileName) throws SQLException, IOException{
-		File file = new File(tool_builddir, fileName);
+	public long exportTable(String tableName, File file) throws SQLException, IOException{
 		OutputStream out = toResultOutput(file);
 		KryoResultSetConsumer serializer = new KryoResultSetConsumer(out);
 		boolean failed = true;
@@ -93,6 +97,9 @@ public class SingleTableExport extends MainToolBase{
 	}
 	
 	public static void main(String... args) throws Exception{
+		//noinspection UnusedAssignment
+		args = setupSystemProperties(args);
+
 		try(SingleTableExport tool = new SingleTableExport()){tool.run();}
 	}
 }

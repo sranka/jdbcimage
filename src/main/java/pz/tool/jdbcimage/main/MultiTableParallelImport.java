@@ -41,7 +41,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 			dbTables.forEach(x -> dbTablesMap.put(x.toLowerCase(),x));
 			Map<String, String> conflictingFiles = new HashMap<>();
 			// collect tables to import (ignore tables that do not exist)
-			setTables(Files.list(Paths.get(tool_builddir))
+			setTables(Files.list(Paths.get(getBuildDirectory().toString()))
 				.filter(x -> {
 					File f = x.toFile();
 					return f.isFile() && !f.getName().contains(".");
@@ -142,7 +142,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 				boolean failed = true;
 				try{
 					long start = System.currentTimeMillis();
-					long rows = importTable(table, fileName, tablesWithIdentityColumns.get(table));
+					long rows = importTable(table, new File(getBuildDirectory(), fileName), tablesWithIdentityColumns.get(table));
 					out.println("SUCCESS: Imported data to "+table+" - "+rows+" rows in "+Duration.ofMillis(System.currentTimeMillis()-start));
 					failed = false;
 				} finally{
@@ -158,6 +158,9 @@ public class MultiTableParallelImport extends SingleTableImport{
 	}
 
 	public static void main(String... args) throws Exception{
+		//noinspection UnusedAssignment
+		args = setupSystemProperties(args);
+
 		try(MultiTableParallelImport tool = new MultiTableParallelImport()){
 			tool.setupZipFile(args);
 			tool.run();

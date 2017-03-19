@@ -13,6 +13,7 @@ OPTS="$OPTS -Dtool_concurrency=$tool_concurrency"
 OPTS="$OPTS -Dtool_ignoreEmptyTables=false"
 OPTS="$OPTS -Dtool_waitOnStartup=false"
 OPTS="$OPTS -Dbatch.size=100"
+OPTS="$OPTS -Dignored_tables=schemaversion"
 
 if [ -z "$1" ] ; then mkdir -p $tool_builddir ; fi
-java $OPTS -classpath "target/jdbc-image-tools.jar:$JDBC_CLASSPATH" pz.tool.jdbcimage.main.MultiTableParallelImport $1
+java $OPTS -classpath "target/jdbc-image-tools.jar:$JDBC_CLASSPATH:lib/*" pz.tool.jdbcimage.main.MultiTableParallelImport $*

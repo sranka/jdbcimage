@@ -1,10 +1,13 @@
 package pz.tool.jdbcimage.main;
 
-import org.apache.commons.dbcp2.BasicDataSource;
-import pz.tool.jdbcimage.LoggedUtils;
-
-import javax.sql.DataSource;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -12,13 +15,34 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.zip.*;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
+import javax.sql.DataSource;
+
+import org.apache.commons.dbcp2.BasicDataSource;
+
+import pz.tool.jdbcimage.LoggedUtils;
 
 public abstract class MainToolBase implements AutoCloseable {
 	//////////////////////
@@ -28,17 +52,19 @@ public abstract class MainToolBase implements AutoCloseable {
 	public String jdbc_user = System.getProperty("jdbc_user", "hpem");
 	public String jdbc_password = System.getProperty("jdbc_password", "changeit");
 	// single export tools
-	public String tool_table = System.getProperty("tool_table", "ry_syncMeta");
+	public String tool_table = System.getProperty("tool_table", null);
 	// multi export/import tools
 	public boolean tool_ignoreEmptyTables = Boolean.valueOf(System.getProperty("tool_ignoreEmptyTables", "false"));
 	public boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes", "false"));
-	public String tool_builddir = System.getProperty("tool_builddir", "target/export");
+	private String tool_builddir = System.getProperty("tool_builddir");
 	public String zipFile = null;
 	// let you connect profiling tools
 	public boolean tool_waitOnStartup = Boolean.valueOf(System.getProperty("tool_waitOnStartup", "false"));
 	public int tool_concurrency;
 
+
 	{
+		// concurrency
 		String prop = System.getProperty("tool_concurrency");
 		if (prop == null || prop.length() == 0){
 			tool_concurrency = -1;
@@ -57,15 +83,30 @@ public abstract class MainToolBase implements AutoCloseable {
 			if (!args[0].endsWith(".zip")) {
 				throw new IllegalArgumentException("zip file expected, but: " + args[0]);
 			}
-			tool_builddir = new File(
-					tool_builddir,
-					String.valueOf(System.currentTimeMillis())).toString();
-			if (!new File(tool_builddir).mkdirs()) {
+			buildDirectory = new File(
+					getBuildDirectory(),
+					String.valueOf(System.currentTimeMillis()));
+			tool_builddir = buildDirectory.toString();
+			if (!buildDirectory.mkdirs()) {
 				LoggedUtils.ignore("Unable to create directory " + tool_builddir, null);
 			}
 			zipFile = args[0];
 		}
 	}
+
+	private File buildDirectory = null;
+	public File getBuildDirectory(){
+		if (buildDirectory == null){
+			if (tool_builddir == null || tool_builddir.trim().isEmpty()){
+				buildDirectory = new File(System.getProperty("java.io.tmpdir", "target")+"/tmp_jdbctool");
+			} else{
+				buildDirectory = new File(tool_builddir);
+			}
+		}
+		return buildDirectory;
+	}
+
+
 
 	/**
 	 * Zips files in the build directory to a configured zipFile.
@@ -104,8 +145,7 @@ public abstract class MainToolBase implements AutoCloseable {
 	 * Deletes build directory.
 	 */
 	public void deleteBuildDirectory() {
-		File dir = new File(tool_builddir);
-		if (dir.exists()) {
+		if (buildDirectory!=null && buildDirectory.exists()) {
 			long start = System.currentTimeMillis();
 			try {
 				Files.list(Paths.get(tool_builddir))
@@ -115,11 +155,11 @@ public abstract class MainToolBase implements AutoCloseable {
 								LoggedUtils.ignore("Unable to delete " + f, null);
 							}
 						});
-				if (!dir.delete()) {
-					LoggedUtils.ignore("Unable to delete " + dir, null);
+				if (!buildDirectory.delete()) {
+					LoggedUtils.ignore("Unable to delete " + buildDirectory, null);
 				}
 			} catch (Exception e) {
-				LoggedUtils.ignore("Unable to delete " + tool_builddir, e);
+				LoggedUtils.ignore("Unable to delete " + buildDirectory, e);
 			}
 			out.println("Delete build directory time - " + Duration.ofMillis(System.currentTimeMillis() - start));
 		}
@@ -136,7 +176,7 @@ public abstract class MainToolBase implements AutoCloseable {
 				byte[] buffer = new byte[4096];
 				ZipEntry nextEntry;
 				while ((nextEntry = zis.getNextEntry()) != null) {
-					try (FileOutputStream fos = new FileOutputStream(new File(tool_builddir, nextEntry.getName()))) {
+					try (FileOutputStream fos = new FileOutputStream(new File(getBuildDirectory(), nextEntry.getName()))) {
 						int count;
 						while ((count = zis.read(buffer)) >= 0) {
 							fos.write(buffer, 0, count);
@@ -207,6 +247,8 @@ public abstract class MainToolBase implements AutoCloseable {
 		concurrency = currentConcurrencyLimit(-1);
 		started = System.currentTimeMillis();
 		out.println("Started - " + new Date(started));
+		out.println("Database URL: "+jdbc_url);
+		out.println("Database user: "+jdbc_user);
 	}
 
 	protected void setTables(Map<String,String> tables, PrintStream out) {
@@ -484,5 +526,22 @@ public abstract class MainToolBase implements AutoCloseable {
 			}
 			return retVal;
 		}
+	}
+
+	/**
+	 * Setup java system properties from all starting arguments having syntax -Dproperty=value
+	 */
+	public static String[] setupSystemProperties(String... args){
+		if (args == null) args = new String[0];
+		ArrayList<String> retVal = new ArrayList<>(args.length);
+		int index;
+		for(String s: args){
+			if (s.startsWith("-D") && (index=s.indexOf('=',2)) > 0){
+				System.setProperty(s.substring(2,index),s.substring(index+1));
+			} else{
+				retVal.add(s);
+			}
+		}
+		return retVal.toArray(new String[retVal.size()]);
 	}
 }

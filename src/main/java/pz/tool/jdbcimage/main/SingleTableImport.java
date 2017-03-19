@@ -20,10 +20,15 @@ import java.util.Map;
 public class SingleTableImport extends MainToolBase{
 
 	public void run() throws SQLException, IOException{
-		out.println("Importing from: "+new File(tool_builddir, tool_table));
+		File file = new File(tool_table);
+		if (tool_table.contains("/")){
+			tool_table = tool_table.substring(tool_table.lastIndexOf("/")+1);
+		}
+
+		out.println("Importing from: "+ file);
 		out.println("Reset time: "+ truncateTable(tool_table));
 		long time = System.currentTimeMillis();
-		out.println("Imported rows: "+ importTable(tool_table, tool_table, dbFacade.getTablesWithIdentityColumn().get(tool_table)));
+		out.println("Imported rows: "+ importTable(tool_table, file, dbFacade.getTablesWithIdentityColumn().get(tool_table)));
 		out.println("Import time: "+ Duration.ofMillis(System.currentTimeMillis()-time));
 	}
 	
@@ -50,12 +55,11 @@ public class SingleTableImport extends MainToolBase{
 	/**
 	 * Imports specific tables.
 	 * @param tableName tables name
-	 * @param fileName usually the same table name, might differ in lower/upper case
+	 * @param file usually the same table name, might differ in lower/upper case
 	 * @param identityInfo identity column information
 	 * @return time spent
 	 */
-	public long importTable(String tableName, String fileName, Object identityInfo) throws SQLException, IOException{
-		File file = new File(tool_builddir, fileName);
+	public long importTable(String tableName, File file, Object identityInfo) throws SQLException, IOException{
 		InputStream in = toResultInput(file);
 		KryoResultProducer producer = new KryoResultProducer(in);
 
@@ -90,7 +94,20 @@ public class SingleTableImport extends MainToolBase{
 	}
 	
 	public static void main(String... args) throws Exception{
-		try(SingleTableImport tool = new SingleTableImport()){tool.run();}
+		//noinspection UnusedAssignment
+		args = setupSystemProperties(args);
+
+		try(SingleTableImport tool = new SingleTableImport()){
+			if (tool.tool_table == null || tool.tool_table.length() == 0) {
+				if (args.length == 0 ||  args[0].length() == 0) {
+					throw new IllegalArgumentException("Expected table file as an argument, but no or empty argument supplied!");
+				} else{
+					tool.tool_table = args[0];
+				}
+			}
+
+			tool.run();
+		}
 	}
 
 }

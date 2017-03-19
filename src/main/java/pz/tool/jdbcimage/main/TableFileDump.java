@@ -10,11 +10,10 @@ import java.util.HashMap;
 /**
  * Perform dump of a specific table file.
  * @author zavora
- *
  */
 public class TableFileDump extends MainToolBase{
 	// dump file
-	public String tool_in_file = System.getProperty("tool_in_file","target/exportMssql/rs_report_def_bundles");
+	public String tool_in_file = System.getProperty("tool_in_file",null);
 	public String tool_out_file = System.getProperty("tool_out_file",null);
 	public boolean skipData = Boolean.getBoolean("tool_skip_data");
 
@@ -141,7 +140,17 @@ public class TableFileDump extends MainToolBase{
 	}
 	
 	public static void main(String... args) throws Exception{
+		//noinspection UnusedAssignment
+		args = setupSystemProperties(args);
+
 		try(TableFileDump tool = new TableFileDump()){
+			if (tool.tool_in_file == null || tool.tool_in_file.length()==0) {
+				if (args.length == 0 || args[0].length() == 0) {
+					throw new IllegalArgumentException("Expected file as an argument, but no or empty argument supplied!");
+				} else{
+					tool.tool_in_file = args[0];
+				}
+			}
 			tool.run();
 		} catch(IllegalArgumentException e){
 			System.out.println("FAILED: "+e.getMessage());

@@ -1,13 +1,13 @@
 package pz.tool.jdbcimage.main;
 
-import org.apache.commons.dbcp2.BasicDataSource;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.apache.commons.dbcp2.BasicDataSource;
 
 /**
  * DB facade for MariaDB.
@@ -26,7 +26,7 @@ public class MariaDB extends DBFacade {
     }
 
     @Override
-    public List<String> getUserTables(Connection con) throws SQLException {
+    public List<String> getDbUserTables(Connection con) throws SQLException {
         List<String> retVal = new ArrayList<>();
         try(ResultSet tables = con.getMetaData().getTables(con.getCatalog(), con.getSchema(), "%", new String[]{"TABLE"})){
             while(tables.next()) {

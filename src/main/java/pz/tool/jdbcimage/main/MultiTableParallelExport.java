@@ -20,7 +20,7 @@ public class MultiTableParallelExport extends SingleTableExport{
 
 
 		// runs export in parallel
-		out.println("Exporting table files to: "+new File(tool_builddir));
+		out.println("Exporting table files to: "+ getBuildDirectory());
 		run(tables.entrySet().stream().map(x -> getExportTask(x.getKey(), x.getValue())).collect(Collectors.toList()));
 		zip();
 	}
@@ -30,7 +30,7 @@ public class MultiTableParallelExport extends SingleTableExport{
 			boolean failed = true;
 			try{
 				long start = System.currentTimeMillis();
-				long rows = exportTable(tableName, fileName);
+				long rows = exportTable(tableName, new File(getBuildDirectory(), fileName));
 				out.println("SUCCESS: Exported table "+tableName + " - "+rows+" rows in " + Duration.ofMillis(System.currentTimeMillis()-start));
 				failed = false;
 			} finally {
@@ -44,6 +44,9 @@ public class MultiTableParallelExport extends SingleTableExport{
 	}
     
 	public static void main(String... args) throws Exception{
+		//noinspection UnusedAssignment
+		args = setupSystemProperties(args);
+
 		try(MultiTableParallelExport tool = new MultiTableParallelExport()){
 			tool.setupZipFile(args);
 			tool.run();

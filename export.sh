@@ -11,6 +11,7 @@ OPTS="$OPTS -Dtool_builddir=$tool_builddir"
 # OPTS="$OPTS -Dtool_concurrency=7"
 OPTS="$OPTS -Dtool_ignoreEmptyTables=false"
 OPTS="$OPTS -Dtool_waitOnStartup=false"
+OPTS="$OPTS -Dignored_tables=schemaversion"
 
 if [ -z "$1" ] ; then mkdir -p $tool_builddir ; fi
-java $OPTS -classpath "target/jdbc-image-tools.jar:$JDBC_CLASSPATH" pz.tool.jdbcimage.main.MultiTableParallelExport $1
+java $OPTS -classpath "target/jdbc-image-tools.jar:$JDBC_CLASSPATH:lib/*" pz.tool.jdbcimage.main.MultiTableParallelExport $*

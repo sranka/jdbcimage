@@ -41,14 +41,17 @@ public class PostgreSQL extends DBFacade {
     }
 
     @Override
-    public List<String> getUserTables(Connection con) throws SQLException {
+    public boolean isTableIgnored(String tableName) {
+        return STATE_TABLE_NAME.equalsIgnoreCase(tableName) || super.isTableIgnored(tableName);
+    }
+
+    @Override
+    public List<String> getDbUserTables(Connection con) throws SQLException {
         List<String> retVal = new ArrayList<>();
         try(ResultSet tables = con.getMetaData().getTables(con.getCatalog(), con.getSchema(), "%", new String[]{"TABLE"})){
             while(tables.next()){
                 String tableName = tables.getString(3);
-                if (!STATE_TABLE_NAME.equalsIgnoreCase(tableName)) {
-                    retVal.add(tableName);
-                }
+                retVal.add(tableName);
             }
         }
         return retVal;

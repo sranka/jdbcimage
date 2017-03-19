@@ -10,14 +10,10 @@ Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases.
    * jdbc_user
    * jdbc_password
 3. Run the script with a zip file as the only argument
-   * ./exportPostgres.sh image.zip
-   * ./exportMariadb.sh image.zip
-   * ./exportMssql.sh image.zip
-   * ./exportOracle.sh image.zip
-   * ./importMssql.sh image.zip
-   * ./importOracle.sh image.zip
-   * ./importPostgres.sh image.zip
-   * ./importMariadb.sh image.zip
+   * ./export.sh -Djdbc_url=jdbc:mariadb://localhost:3306/qa -Djdbc_user=root -Djdbc_password=root image.zip
+      * See more examples in ./exportMariadb.sh, ./exportPostgres.sh, ./exportMssql.sh and ./exportOracle.sh
+   * ./import.sh -Djdbc_url=jdbc:mariadb://localhost:3306/qa -Djdbc_user=root -Djdbc_password=root image.zip
+      * See more examples in ./importMariadb.sh, ./importPostgres.sh, ./importMssql.sh and ./importOracle.sh
    * ./dumpFile.sh image.zip
       * lists the tables contained in the file, see next item
    * ./dumpFile.sh image.zip#passwd
@@ -45,7 +41,15 @@ key constraints, see src/pz/tool/jdbcimage/main/&lt;DatabaseType&gt;.java for mo
 1. Streams of data are used for both export and import to have the lowest memory footprint, typically 256M of heap 
 memory is good enough. BLOB, CLOBs and lengthty columns still might require more heap memory depending on data 
 and JDBC driver in use, so you also might have to increase java heapsize and/or lower batch size used during 
-data import, there are parameters in the scripts to do so. 
+data import, there are parameters in the scripts to do so.
+1. The scripts accept several properties as arguments supplied as -Dproperty=value
+   * -Djdbc_url=jdbc:mariadb://localhost:3306/qa - JDBC connection string 
+   * -Djdbc_user=user 
+   * -Djdbc_password=password 
+   * -Dignored_tables=a,b,c - used to ignore specific tables during import and export 
+   * -Dtool_concurrency=7 - can be used to limit execution threads
+   * -Dtool_builddir - build directory used during import export to save/serve table files
+   * -Dbatch.size=100 - how many rows to wrap into a batch during table import
 
 ## Missing pieces
 * tests, review, better organization of shell scripts, error handling of invalid args
