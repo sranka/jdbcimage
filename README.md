@@ -1,7 +1,7 @@
 # jdbc-image-tool
-Quickly exports/imports all schema tables using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases, typically a zip file is exported from one database type and then imported to another supported database, possibly  of a different type.
+Quickly exports/imports user schema's tables to/from a binary file using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases. Typically, a zip file is exported from one database to be imported to another database, possibly  of a different type. The target database must have the tables defined, so that the data can be imported. The tool ignores missing tables and columns.
 
-## Overview
+## Quick Start
 1. Build the project using maven
    * mvn install
 2. Modify the associated import/export script with your database connection parameters
@@ -12,6 +12,7 @@ Quickly exports/imports all schema tables using JDBC and Kryo. Supports Oracle, 
    * ./export.sh -Djdbc_url=jdbc:mariadb://localhost:3306/qa -Djdbc_user=root -Djdbc_password=root image.zip
       * See more examples in [exportMariadb.sh](exportMariadb.sh), [exportPostgres.sh](exportPostgres.sh), [exportMssql.sh](exportMssql.sh) and [exportOracle.sh](exportOracle.sh)
    * ./import.sh -Djdbc_url=jdbc:postgresql://localhost:5432/qa -Djdbc_user=me -Djdbc_password=pwd image.zip
+      * BEWARE: !!!import deletes data from existing tables!!!
       * See more examples in [importMariadb.sh](importMariadb.sh), [importPostgres.sh](importPostgres.sh), [importMssql.sh](importMssql.sh) and [importOracle.sh](importOracle.sh)
    * ./dumpFile.sh image.zip
       * lists the tables contained in the file, see next item
@@ -52,4 +53,4 @@ data import, there are parameters in the scripts to do so.
 
 ## Missing pieces
 * tests, review, better organization of shell scripts, error handling of invalid args
-* docker support to have a simple packacking of a reusable tool with examples
+* docker support to have a simple packacking of a reusable tool that can be operated with simple examples
