@@ -59,7 +59,7 @@ Once the data are imported, it might be necessary to execute additional SQL comm
   * -Dlisteners=OracleRestartGlobalSequence -DOracleRestartGlobalSequence.sequenceName=pricefxseq
      * this helps to restart database sequence that is used in Oracle to set up identity values in a *id* column in all tables
      * the sequence name is set using -DOracleRestartGlobalSequence.sequenceName property
-     * after all the data are imported, the sequence is dropped and created with the value that is one more than a max value of all imported id values, see [the code](src/main/java/pz/tool/jdbcimage/jdbcimage/main/listener/OracleRestartGlobalSequenceListener.java) for more details.
+     * after all the data are imported, the sequence is dropped and created with the value that is one more than a max value of all imported id values, see [the code](src/main/java/pz/tool/jdbcimage/main/listener/OracleRestartGlobalSequenceListener.java) for more details.
   * more can be added using a custom implementation
 
 ## Missing pieces
