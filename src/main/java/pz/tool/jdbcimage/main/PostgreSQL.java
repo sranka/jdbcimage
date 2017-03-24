@@ -27,18 +27,8 @@ public class PostgreSQL extends DBFacade {
     public static final String STATE_TABLE_NAME = "jdbcimage_create_constraints";
     public static final String STATE_TABLE_DDL = "CREATE TABLE "+STATE_TABLE_NAME+"( tableName varchar(64),constraintName varchar(64),sql varchar(512))";
     public static final String STATE_TABLE_SQL = "SELECT tableName,constraintName,sql FROM "+STATE_TABLE_NAME+ " order by tableName,constraintName";
-    private MainToolBase mainToolBase;
 
     private static Pattern identifyColumnPattern = Pattern.compile("^.*_([a-zA-z]*)_seq$");
-
-    public PostgreSQL(MainToolBase mainToolBase) {
-        setToolBase(mainToolBase);
-    }
-
-    @Override
-    public void setToolBase(MainToolBase mainToolBase) {
-        this.mainToolBase = mainToolBase;
-    }
 
     @Override
     public void setupDataSource(BasicDataSource bds) {

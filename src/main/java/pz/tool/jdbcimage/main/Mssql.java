@@ -21,17 +21,6 @@ import pz.tool.jdbcimage.db.TableGroupedCommands;
  */
 @SuppressWarnings({"WeakerAccess", "SqlNoDataSourceInspection", "SqlDialectInspection"})
 public class Mssql extends DBFacade {
-    private MainToolBase mainToolBase;
-
-    public Mssql(MainToolBase mainToolBase) {
-        setToolBase(mainToolBase);
-    }
-
-    @Override
-    public void setToolBase(MainToolBase mainToolBase) {
-        this.mainToolBase = mainToolBase;
-    }
-
     @Override
     public void setupDataSource(BasicDataSource bds) {
         bds.setDefaultTransactionIsolation(Connection.TRANSACTION_NONE);

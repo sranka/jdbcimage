@@ -13,17 +13,6 @@ import org.apache.commons.dbcp2.BasicDataSource;
  * DB facade for MariaDB.
  */
 public class MariaDB extends DBFacade {
-    private MainToolBase mainToolBase;
-
-    public MariaDB(MainToolBase mainToolBase) {
-        setToolBase(mainToolBase);
-    }
-
-    @Override
-    public void setToolBase(MainToolBase mainToolBase) {
-        this.mainToolBase = mainToolBase;
-    }
-
     @Override
     public void setupDataSource(BasicDataSource bds) {
         bds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);

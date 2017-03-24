@@ -4,6 +4,7 @@ import java.io.Reader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,22 @@ import pz.tool.jdbcimage.LoggedUtils;
 public abstract class DBFacade implements DBFacadeListener{
     public static String IGNORED_TABLES = System.getProperty("ignored_tables","");
 
+    protected MainToolBase mainToolBase;
     protected List<String> ignoredTables;
+
+    public List<DBFacadeListener> listeners = new ArrayList<>();
+
+    @Override
+    public void setToolBase(MainToolBase mainToolBase) {
+        this.mainToolBase = mainToolBase;
+    }
+
+    public void addListeners(List<DBFacadeListener> listeners){
+        for(DBFacadeListener l : listeners){
+            l.setToolBase(mainToolBase);
+            if (!this.listeners.contains(l)) this.listeners.add(l);
+        }
+    }
 
     /**
      * Checks whether the database table is ignored for import/export.
@@ -82,23 +98,6 @@ public abstract class DBFacade implements DBFacadeListener{
     public abstract void modifyIndexes(boolean enable) throws SQLException;
 
     /**
-     * Called before rows are inserted into table.
-     * @param con connection
-     * @param table table name
-     * @param tableInfo table metadata
-     */
-    public void afterImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException{
-    }
-
-    /**
-     * Called before rows are inserted into table.
-     * @param con connection
-     * @param table table name
-     * @param tableInfo tabel information
-     */
-    public void beforeImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException{
-    }
-    /**
      * Gets the SQL DML that truncates the content of a table.
      * @param tableName table
      * @return command to execute
@@ -124,17 +123,6 @@ public abstract class DBFacade implements DBFacadeListener{
         return s;
     }
 
-    /**
-     * Informs about a started import.
-     */
-    public void importStarted(){
-    }
-
-    /**
-     * Informs about a started import.
-     */
-    public void importFinished(){
-    }
     /**
      * Gets table information.
      * @return never null, but possibly empty table info
@@ -174,6 +162,7 @@ public abstract class DBFacade implements DBFacadeListener{
     public static class TableInfo{
         private String tableName;
         private Map<String, Object> data;
+        private Map<String, String> tableColumns;
 
         public TableInfo(String tableName) {
             this.tableName = tableName;
@@ -195,6 +184,31 @@ public abstract class DBFacade implements DBFacadeListener{
         }
         public Object get(String key){
             return data == null?null:data.get(key);
+        }
+
+        public Map<String, String> getTableColumns() {
+            return tableColumns;
+        }
+
+        public void setTableColumns(Map<String, String> tableColumns) {
+            this.tableColumns = tableColumns;
+        }
+    }
+
+    public void importStarted(){
+        listeners.forEach(DBFacadeListener::importStarted);
+    }
+    public void importFinished(){
+        listeners.forEach(DBFacadeListener::importFinished);
+    }
+    public void beforeImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException{
+        for (DBFacadeListener l: listeners) {
+            l.beforeImportTable(con, table, tableInfo);
+        }
+    }
+    public void afterImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException{
+        for (DBFacadeListener l: listeners) {
+            l.afterImportTable(con, table, tableInfo);
         }
     }
 }

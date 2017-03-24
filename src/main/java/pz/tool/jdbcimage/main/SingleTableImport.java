@@ -83,6 +83,7 @@ public class SingleTableImport extends MainToolBase{
 				con.rollback(); // no changes
 			}
 			// import data
+			tableInfo.setTableColumns(actualColumns);
 			dbFacade.beforeImportTable(con, tableName, tableInfo);
 			ResultProducerRunner runner = new ResultProducerRunner(producer, new DbImportResultConsumer(tableName, con, dbFacade, actualColumns));
 			long rows = runner.run();

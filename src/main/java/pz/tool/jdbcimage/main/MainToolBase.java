@@ -57,6 +57,7 @@ public abstract class MainToolBase implements AutoCloseable {
 	public boolean tool_ignoreEmptyTables = Boolean.valueOf(System.getProperty("tool_ignoreEmptyTables", "false"));
 	public boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes", "false"));
 	private String tool_builddir = System.getProperty("tool_builddir");
+	private String tool_listeners = System.getProperty("listeners");
 	public String zipFile = null;
 	// let you connect profiling tools
 	public boolean tool_waitOnStartup = Boolean.valueOf(System.getProperty("tool_waitOnStartup", "false"));
@@ -316,13 +317,13 @@ public abstract class MainToolBase implements AutoCloseable {
 		);
 		for(Predicate<String> matcher: matchers){
 			if (matcher.test("oracle")) {
-				dbFacade = new Oracle(this);
+				dbFacade = new Oracle();
 			} else if (matcher.test("sqlserver")){
-				dbFacade = new Mssql(this);
+				dbFacade = new Mssql();
 			} else if (matcher.test("postgresql")) {
-				dbFacade = new PostgreSQL(this);
+				dbFacade = new PostgreSQL();
 			} else if (matcher.test("mysql") || matcher.test("mariadb")) {
-				dbFacade = new MariaDB(this);
+				dbFacade = new MariaDB();
 			}
 			if (dbFacade !=null) break;
 		}
@@ -330,6 +331,9 @@ public abstract class MainToolBase implements AutoCloseable {
 			throw new IllegalArgumentException("Unsupported database type: " + jdbc_url);
 		}
 
+		dbFacade.setToolBase(this);
+		dbFacade.addListeners(DBFacadeListener.getInstances(tool_listeners));
+		LoggedUtils.info("Tool listeners: "+dbFacade.listeners);
 		dbFacade.setupDataSource(bds);
 		dataSource = bds;
 	}
