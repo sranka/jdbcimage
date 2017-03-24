@@ -1,14 +1,14 @@
 # jdbc-image-tool
-Quickly exports/imports user schema's tables to/from a binary file using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases. Typically, a zip file is exported from one database to be imported to another database, possibly  of a different type. The target database must have the tables defined, so that the data can be imported. The tool ignores missing tables and columns.
+Quickly exports/imports user schema's tables to/from a binary file using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases. Typically, a zip file is exported from one database to be imported to another database, possibly  of a different type and vendor. The target database must have the tables defined, so that the data can be imported. The tool ignores missing tables and columns.
 
 ## Quick Start
 1. Build the project using maven
    * mvn install
-2. Modify the associated import/export script with your database connection parameters
-   * jdbc_url
-   * jdbc_user
-   * jdbc_password
-3. Run the script with a zip file as the only argument
+2. Know JDBC connection settings to your database
+   * *jdbc_url* - such as _jdbc:mariadb://localhost:3306/qa_, _jdbc:postgresql://localhost:5432/inttests?currentSchema=qa_, _jdbc:oracle:thin:@localhost:1521:XE_ 
+   * *jdbc_user* - root, postgress, system  
+   * *jdbc_password* 
+3. Run export or import a zip file as the only argument
    * ./export.sh -Djdbc_url=jdbc:mariadb://localhost:3306/qa -Djdbc_user=root -Djdbc_password=root image.zip
       * See more examples in [exportMariadb.sh](exportMariadb.sh), [exportPostgres.sh](exportPostgres.sh), [exportMssql.sh](exportMssql.sh) and [exportOracle.sh](exportOracle.sh)
    * ./import.sh -Djdbc_url=jdbc:postgresql://localhost:5432/qa -Djdbc_user=me -Djdbc_password=pwd image.zip
