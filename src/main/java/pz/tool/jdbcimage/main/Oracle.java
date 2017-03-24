@@ -19,6 +19,11 @@ public class Oracle extends DBFacade {
     private MainToolBase mainToolBase;
 
     public Oracle(MainToolBase mainToolBase) {
+        setToolBase(mainToolBase);
+    }
+
+    @Override
+    public void setToolBase(MainToolBase mainToolBase) {
         this.mainToolBase = mainToolBase;
     }
 

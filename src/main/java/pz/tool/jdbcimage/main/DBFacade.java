@@ -20,7 +20,7 @@ import pz.tool.jdbcimage.LoggedUtils;
  *
  * @author zavora
  */
-public abstract class DBFacade {
+public abstract class DBFacade implements DBFacadeListener{
     public static String IGNORED_TABLES = System.getProperty("ignored_tables","");
 
     protected List<String> ignoredTables;

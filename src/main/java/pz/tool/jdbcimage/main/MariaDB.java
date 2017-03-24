@@ -16,6 +16,11 @@ public class MariaDB extends DBFacade {
     private MainToolBase mainToolBase;
 
     public MariaDB(MainToolBase mainToolBase) {
+        setToolBase(mainToolBase);
+    }
+
+    @Override
+    public void setToolBase(MainToolBase mainToolBase) {
         this.mainToolBase = mainToolBase;
     }
 

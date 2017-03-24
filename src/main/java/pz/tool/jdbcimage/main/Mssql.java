@@ -24,6 +24,11 @@ public class Mssql extends DBFacade {
     private MainToolBase mainToolBase;
 
     public Mssql(MainToolBase mainToolBase) {
+        setToolBase(mainToolBase);
+    }
+
+    @Override
+    public void setToolBase(MainToolBase mainToolBase) {
         this.mainToolBase = mainToolBase;
     }
 

@@ -32,6 +32,11 @@ public class PostgreSQL extends DBFacade {
     private static Pattern identifyColumnPattern = Pattern.compile("^.*_([a-zA-z]*)_seq$");
 
     public PostgreSQL(MainToolBase mainToolBase) {
+        setToolBase(mainToolBase);
+    }
+
+    @Override
+    public void setToolBase(MainToolBase mainToolBase) {
         this.mainToolBase = mainToolBase;
     }
 
