@@ -32,7 +32,7 @@ per exported/imported table.
 with the same case-insensitive name.
 1. Concurrent execution requires an extra setup/teardown instructions during data import. 
 These vary between database types, but they always include disabling/enabling foreign 
-key constraints, see [DatabaseType.java](src/pz/tool/jdbcimage/main/DatabaseType.java) for more details.
+key constraints, see database classes defined in the [main package](src/main/java/pz/tool/jdbcimage/jdbcimage/main/) for more details.
    * All triggers are disabled on Oracle before data import and then enabled after data import.
    * Oracle sequences, when used, are out of scope and usually have to be reset manually after data import.
    * All foreign key constraints are dropped by the tool on Postgress before importing the data, but a table jdbcimage_create_constraints is created with rows that are used to recreate them after data import.  
@@ -50,6 +50,17 @@ data import, there are parameters in the scripts to do so.
    * -Dtool_concurrency=7 - can be used to limit execution threads
    * -Dtool_builddir - build directory used during import export to save/serve table files
    * -Dbatch.size=100 - how many rows to wrap into a batch during table import
+
+## Initializing the database after import
+Once the data are imported, it might be necessary to execute additional SQL commands, this is realized using *-Dlisteners=* property/argument of the import tool.
+  * -Dlisteners=Dummy
+     * only prints out what a listener reacts upon during import
+     * more listeners can be specifed as a comma separated list, such as  -Dlisteners=Dummy,Dummy
+  * -Dlisteners=OracleRestartGlobalSequence -DOracleRestartGlobalSequence.sequenceName=pricefxseq
+     * this helps to restart database sequence that is used in Oracle to set up identity values in a *id* column in all tables
+     * the sequence name is set using -DOracleRestartGlobalSequence.sequenceName property
+     * after all the data are imported, the sequence is dropped and created with the value that is one more than a max value of all imported id values, see [the code](src/main/java/pz/tool/jdbcimage/jdbcimage/main/listener/OracleRestartGlobalSequenceListener.java) for more details.
+  * more can be added using a custom implementation
 
 ## Missing pieces
 * tests, review, better organization of shell scripts, error handling of invalid args
