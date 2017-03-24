@@ -61,6 +61,9 @@ public abstract class MainToolBase implements AutoCloseable {
 	// let you connect profiling tools
 	public boolean tool_waitOnStartup = Boolean.valueOf(System.getProperty("tool_waitOnStartup", "false"));
 	public int tool_concurrency;
+	// internal
+	public boolean requireZipArgument = Boolean.valueOf(System.getProperty("requireZipArgument", "true"));
+
 
 
 	{
@@ -91,6 +94,8 @@ public abstract class MainToolBase implements AutoCloseable {
 				LoggedUtils.ignore("Unable to create directory " + tool_builddir, null);
 			}
 			zipFile = args[0];
+		} else if (requireZipArgument){
+			throw new IllegalArgumentException("zip file is expected as a first argument");
 		}
 	}
 

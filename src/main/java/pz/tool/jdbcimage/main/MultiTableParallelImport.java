@@ -69,6 +69,8 @@ public class MultiTableParallelImport extends SingleTableImport{
 				// to speed up data import
 
 				long time;
+				// 0. import started
+				dbFacade.importStarted();
 				// 1. disable constraints
 				time = System.currentTimeMillis();
 				dbFacade.modifyConstraints(false);
@@ -97,6 +99,8 @@ public class MultiTableParallelImport extends SingleTableImport{
 				time = System.currentTimeMillis();
 				dbFacade.modifyConstraints(true);
 				durations.enableConstraints  = Duration.ofMillis(System.currentTimeMillis() - time);
+				// 7. finished
+				dbFacade.importFinished();
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -134,7 +138,6 @@ public class MultiTableParallelImport extends SingleTableImport{
 	public Duration importData(){
 		long time = System.currentTimeMillis();
 		List<Callable<?>> tasks = new ArrayList<>(tables.size());
-		Map<String, ?> tablesWithIdentityColumns = dbFacade.getTablesWithIdentityColumn();
 		for(Map.Entry<String,String> entry: tables.entrySet()){
 			String table = entry.getKey();
 			String fileName = entry.getValue();
@@ -142,7 +145,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 				boolean failed = true;
 				try{
 					long start = System.currentTimeMillis();
-					long rows = importTable(table, new File(getBuildDirectory(), fileName), tablesWithIdentityColumns.get(table));
+					long rows = importTable(table, new File(getBuildDirectory(), fileName), dbFacade.getTableInfo(table));
 					out.println("SUCCESS: Imported data to "+table+" - "+rows+" rows in "+Duration.ofMillis(System.currentTimeMillis()-start));
 					failed = false;
 				} finally{

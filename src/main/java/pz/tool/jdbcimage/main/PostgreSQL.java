@@ -57,9 +57,10 @@ public class PostgreSQL extends DBFacade {
         return retVal;
     }
 
+    private Map<String, IdentityInfo> allIdentityInfo = null;
     @Override
-    public Map<String, Object> getTablesWithIdentityColumn() {
-        HashMap<String, Object> retVal = new HashMap<>();
+    public void importStarted() {
+        HashMap<String, IdentityInfo> retVal = new HashMap<>();
         try (Connection con = mainToolBase.getReadOnlyConnection()) {
             try (Statement stmt = con.createStatement()) {
                 try (ResultSet rs = stmt.executeQuery(
@@ -95,7 +96,7 @@ public class PostgreSQL extends DBFacade {
             throw new RuntimeException(e);
         }
 
-        return retVal;
+        allIdentityInfo = retVal;
     }
 
     private static class IdentityInfo{
@@ -109,9 +110,18 @@ public class PostgreSQL extends DBFacade {
     }
 
     @Override
-    public void afterImportTable(Connection con, String table, Object identityInfo) throws SQLException {
-        if (identityInfo instanceof IdentityInfo) {
-            IdentityInfo info = (IdentityInfo)identityInfo;
+    public TableInfo getTableInfo(String tableName) {
+        TableInfo retVal = super.getTableInfo(tableName);
+        retVal.put("IdInfo", allIdentityInfo.get(tableName));
+
+        return retVal;
+    }
+
+    @Override
+    public void afterImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException {
+        super.afterImportTable(con, table, tableInfo);
+        IdentityInfo info = (IdentityInfo)tableInfo.get("IdInfo");
+        if (info != null) {
             String sql = "select setval('"+info.sequenceName+"', (select coalesce(max("+info.columnName+")+1,1) from "+table+"))";
             try (Statement stmt = con.createStatement()) {
                 try (ResultSet rs = stmt.executeQuery(sql)) {

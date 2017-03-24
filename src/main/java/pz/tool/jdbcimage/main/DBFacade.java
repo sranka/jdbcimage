@@ -4,7 +4,7 @@ import java.io.Reader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,6 +24,7 @@ public abstract class DBFacade {
     public static String IGNORED_TABLES = System.getProperty("ignored_tables","");
 
     protected List<String> ignoredTables;
+
     /**
      * Checks whether the database table is ignored for import/export.
      * @return ignored?
@@ -84,18 +85,18 @@ public abstract class DBFacade {
      * Called before rows are inserted into table.
      * @param con connection
      * @param table table name
-     * @param identityInfo identity column or null
+     * @param tableInfo table metadata
      */
-    public void afterImportTable(Connection con, String table, Object identityInfo) throws SQLException{
+    public void afterImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException{
     }
 
     /**
      * Called before rows are inserted into table.
      * @param con connection
      * @param table table name
-     * @param identityInfo identity information about the table
+     * @param tableInfo tabel information
      */
-    public void beforeImportTable(Connection con, String table, Object identityInfo) throws SQLException{
+    public void beforeImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException{
     }
     /**
      * Gets the SQL DML that truncates the content of a table.
@@ -124,11 +125,22 @@ public abstract class DBFacade {
     }
 
     /**
-     * Returns tables with identity column.
-     * @return table to identity column name
+     * Informs about a started import.
      */
-    public Map<String, ?> getTablesWithIdentityColumn() {
-        return Collections.emptyMap();
+    public void importStarted(){
+    }
+
+    /**
+     * Informs about a started import.
+     */
+    public void importFinished(){
+    }
+    /**
+     * Gets table information.
+     * @return never null, but possibly empty table info
+     */
+    public TableInfo getTableInfo(String tableName){
+        return new TableInfo(tableName);
     }
 
     /**
@@ -156,5 +168,33 @@ public abstract class DBFacade {
      */
     public Object convertCharacterStreamInput(Reader reader){
         return reader;
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public static class TableInfo{
+        private String tableName;
+        private Map<String, Object> data;
+
+        public TableInfo(String tableName) {
+            this.tableName = tableName;
+        }
+
+        @SuppressWarnings("unused")
+        public String getTableName() {
+            return tableName;
+        }
+
+        public Map<String, Object> getData(){
+            if (data == null){
+                data = new HashMap<>();
+            }
+            return data;
+        }
+        public void put(String key, Object value){
+            getData().put(key, value);
+        }
+        public Object get(String key){
+            return data == null?null:data.get(key);
+        }
     }
 }

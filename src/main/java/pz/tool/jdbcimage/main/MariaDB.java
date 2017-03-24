@@ -61,4 +61,9 @@ public class MariaDB extends DBFacade {
     public boolean canCreateBlobs() {
         return false;
     }
+
+    @Override
+    public void importStarted() {
+        super.importStarted();
+    }
 }

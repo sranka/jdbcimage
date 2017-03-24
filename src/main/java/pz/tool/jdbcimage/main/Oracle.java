@@ -207,4 +207,9 @@ public class Oracle extends DBFacade {
                 )
                 .collect(Collectors.toList()));
     }
+
+    @Override
+    public void importStarted() {
+        super.importStarted();
+    }
 }

@@ -19,6 +19,7 @@ import pz.tool.jdbcimage.db.TableGroupedCommands;
 /**
  * DB facade for MSSQL database.
  */
+@SuppressWarnings({"WeakerAccess", "SqlNoDataSourceInspection", "SqlDialectInspection"})
 public class Mssql extends DBFacade {
     private MainToolBase mainToolBase;
 
@@ -111,8 +112,9 @@ public class Mssql extends DBFacade {
     }
 
     @Override
-    public void afterImportTable(Connection con, String table, Object identityInfo) throws SQLException {
-        if (identityInfo!=null) {
+    public void afterImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException {
+        super.afterImportTable(con, table, tableInfo);
+        if (tableInfo.get("hasId")!=null) {
             try (Statement stmt = con.createStatement()) {
                 stmt.execute("SET IDENTITY_INSERT [" + table + "] OFF");
             }
@@ -120,21 +122,20 @@ public class Mssql extends DBFacade {
     }
 
     @Override
-    public void beforeImportTable(Connection con, String table, Object identityInfo) throws SQLException {
-        if (identityInfo!=null) {
+    public void beforeImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException {
+        super.beforeImportTable(con, table, tableInfo);
+        if (tableInfo.get("hasId")!=null) {
             try (Statement stmt = con.createStatement()) {
                 stmt.execute("SET IDENTITY_INSERT [" + table + "] ON");
             }
         }
     }
 
-    /**
-     * Returns tables that have identity columns.
-     *
-     * @return table to identity column
-     */
-    public Map<String, Object> getTablesWithIdentityColumn() {
-        Map<String, Object> retVal = new HashMap<>();
+    private Map<String, Boolean> hasIdentityColumns = null;
+
+    @Override
+    public void importStarted() {
+        Map<String, Boolean> retVal = new HashMap<>();
         try (Connection con = mainToolBase.getReadOnlyConnection()) {
             try (Statement stmt = con.createStatement()) {
                 try (ResultSet rs = stmt.executeQuery(
@@ -153,6 +154,14 @@ public class Mssql extends DBFacade {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        hasIdentityColumns = retVal;
+    }
+    @Override
+    public TableInfo getTableInfo(String tableName) {
+        TableInfo retVal = super.getTableInfo(tableName);
+        retVal.put("hasId", hasIdentityColumns.get(tableName));
+
         return retVal;
     }
+
 }
