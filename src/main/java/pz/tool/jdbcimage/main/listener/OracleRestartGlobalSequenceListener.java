@@ -19,8 +19,8 @@ import java.util.stream.Stream;
 @SuppressWarnings({"unused", "WeakerAccess"}) // used by reflection
 public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
     protected MainToolBase mainToolBase;
-    protected AtomicLong maxValue;
-    protected String sequenceName = System.getProperty("OracleRestartGlobalSequence.sequenceName", "pricefxseq");
+    protected AtomicLong maxValue; // import of tables can run in parallel
+    protected String sequenceName = System.getProperty("OracleRestartGlobalSequence.sequenceName");
     protected String onFinishSqls = System.getProperty("OracleRestartGlobalSequence.sql",
             "" +
                     "declare\n" +
@@ -45,7 +45,8 @@ public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
 
     @Override
     public void importFinished() {
-        if (onFinishSqls == null) return;
+        if (onFinishSqls == null || onFinishSqls.isEmpty()) return;
+        if (sequenceName == null || sequenceName.isEmpty()) return;
         // update sequence
         final String newValue = String.valueOf(maxValue.longValue()+1);
         try(Connection con = mainToolBase.getWriteConnection()){
