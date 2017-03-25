@@ -4,7 +4,7 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pz.tool</groupId>
-	<artifactId>jdbc-image-tools</artifactId>
+	<artifactId>jdbc-image-tool</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<name>JDBC Image Tool</name>
 	<packaging>jar</packaging>
@@ -43,7 +43,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>2.4</version> <!-- only because of maven warnings -->
 				<configuration>
-					<finalName>jdbc-image-tools</finalName>
+					<finalName>jdbc-image-tool</finalName>
 				</configuration>
 			</plugin>
 			<plugin>

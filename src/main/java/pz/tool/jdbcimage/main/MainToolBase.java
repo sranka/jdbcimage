@@ -48,11 +48,11 @@ public abstract class MainToolBase implements AutoCloseable {
 	//////////////////////
 	// Parameters
 	//////////////////////
-	public String jdbc_url = System.getProperty("jdbc_url", "jdbc:oracle:thin:@localhost:1521:XE");
-	public String jdbc_user = System.getProperty("jdbc_user", "hpem");
-	public String jdbc_password = System.getProperty("jdbc_password", "changeit");
+	public String url = System.getProperty("url");
+	public String user = System.getProperty("user");
+	public String password = System.getProperty("password");
 	// single export tools
-	public String tool_table = System.getProperty("tool_table", null);
+	public String tool_table = System.getProperty("tool_table");
 	// multi export/import tools
 	public boolean tool_ignoreEmptyTables = Boolean.valueOf(System.getProperty("tool_ignoreEmptyTables", "false"));
 	public boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes", "false"));
@@ -253,8 +253,8 @@ public abstract class MainToolBase implements AutoCloseable {
 		concurrency = currentConcurrencyLimit(-1);
 		started = System.currentTimeMillis();
 		out.println("Started - " + new Date(started));
-		out.println("Database URL: "+jdbc_url);
-		out.println("Database user: "+jdbc_user);
+		if (url!=null && url.length()>0) out.println("Database URL: "+url);
+		if (user!=null && user.length()>0) out.println("Database user: "+user);
 	}
 
 	protected void setTables(Map<String,String> tables, PrintStream out) {
@@ -305,15 +305,15 @@ public abstract class MainToolBase implements AutoCloseable {
 
 	protected void initDataSource() {
 		BasicDataSource bds = new BasicDataSource();
-		bds.setUrl(jdbc_url);
-		bds.setUsername(jdbc_user);
-		bds.setPassword(jdbc_password);
+		bds.setUrl(url);
+		bds.setUsername(user);
+		bds.setPassword(password);
 		bds.setDefaultAutoCommit(false);
 
 		// isolate database specific instructions
 		List<Predicate<String>> matchers = Arrays.asList(
-				dbtype -> jdbc_url.startsWith("jdbc:"+dbtype),
-				dbtype -> jdbc_url.contains(":"+dbtype+":")
+				dbtype -> url.startsWith("jdbc:"+dbtype),
+				dbtype -> url.contains(":"+dbtype+":")
 		);
 		for(Predicate<String> matcher: matchers){
 			if (matcher.test("oracle")) {
@@ -328,7 +328,7 @@ public abstract class MainToolBase implements AutoCloseable {
 			if (dbFacade !=null) break;
 		}
 		if (dbFacade == null){
-			throw new IllegalArgumentException("Unsupported database type: " + jdbc_url);
+			throw new IllegalArgumentException("Unsupported database type: " + url);
 		}
 
 		dbFacade.setToolBase(this);
@@ -377,18 +377,25 @@ public abstract class MainToolBase implements AutoCloseable {
 						}
 						zis.close();
 						// re-read to offer names
-						out.println("Following files are available in the image: ");
+						out.println("Run dump with the following argument to dump a specific table: ");
 						zis = new ZipInputStream(new FileInputStream(f));
+						List<String> entries = new ArrayList<String>();
 						while ((entry = zis.getNextEntry()) != null) {
-							out.print(" ");
-							out.print(f);
-							out.print("#");
-							out.println(entry.getName());
+							entries.add(entry.getName());
 							zis.closeEntry();
 						}
+						final File file = f;
+						entries.stream().sorted().forEach( x -> {
+								out.print(" ");
+								out.print(file);
+								out.print("#");
+								out.println(x);
+						});
 						out.println();
+						if (!zipFile.isEmpty()){
+							throw new IllegalArgumentException("No file named '"+zipFile+"' found in: " + f);
+						}
 						zis.close();
-						throw new IllegalArgumentException("Specify a valid file inside the image zip!");
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}
@@ -537,16 +544,13 @@ public abstract class MainToolBase implements AutoCloseable {
 		}
 	}
 
-	/**
-	 * Setup java system properties from all starting arguments having syntax -Dproperty=value
-	 */
 	public static String[] setupSystemProperties(String... args){
 		if (args == null) args = new String[0];
 		ArrayList<String> retVal = new ArrayList<>(args.length);
 		int index;
 		for(String s: args){
-			if (s.startsWith("-D") && (index=s.indexOf('=',2)) > 0){
-				System.setProperty(s.substring(2,index),s.substring(index+1));
+			if (s.startsWith("-") && (index=s.indexOf('=',1)) > 0){
+				System.setProperty(s.substring(1,index),s.substring(index+1));
 			} else{
 				retVal.add(s);
 			}
