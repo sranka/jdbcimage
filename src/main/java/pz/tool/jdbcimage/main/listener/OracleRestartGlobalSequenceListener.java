@@ -36,6 +36,12 @@ public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
     @Override
     public void setToolBase(MainToolBase mainToolBase) {
         this.mainToolBase = mainToolBase;
+        if (onFinishSqls == null || onFinishSqls.isEmpty()) {
+            throw new RuntimeException("Specify the sequence name using parameter OracleRestartGlobalSequence.sequenceName!");
+        }
+        if (sequenceName == null || sequenceName.isEmpty()){
+            throw new RuntimeException("Parameter OracleRestartGlobalSequence.sql is empty!");
+        }
     }
 
     @Override
