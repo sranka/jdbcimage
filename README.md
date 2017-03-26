@@ -1,26 +1,32 @@
 # jdbc-image-tool
-Quickly exports/imports user schema's tables to/from a binary file using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases. Typically, a zip file is exported from one database to be imported to another database, possibly  of a different type and vendor. The target database must have the tables defined, so that the data can be imported. The tool ignores missing tables and columns.
+Quickly exports/imports user schema's tables to/from a binary file using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases. Typically, a zip file is exported from one database to be imported to another database, possibly  of a different type and vendor. The target database must already have tables created, so that the data can be imported in there. The tool ignores missing tables and columns when importin the data.
 
 ## Quick Start 
 1. Build the project using maven
    * mvn install
    * chmod a+x bin/jdbcimage.sh
 2. Know JDBC connection settings to your database
-   * *url* - such as _jdbc:mariadb://localhost:3306/qa_, _jdbc:postgresql://localhost:5432/inttests?currentSchema=qa_, _jdbc:oracle:thin:@localhost:1521:XE_ 
-   * *user* - root, postgress, system  
+   * *url* - JDBC connection URL 
+   * *user* - database user 
    * *password* 
-3. Run export or import a zip file as the only argument
-   * bin/jdbcimage.sh export -url=jdbc:mariadb://localhost:3306/qa -user=root -password=root image.zip
-      * See more examples in [exportMariadb.sh](exportMariadb.sh), [exportPostgres.sh](exportPostgres.sh), [exportMssql.sh](exportMssql.sh) and [exportOracle.sh](exportOracle.sh)
-   * bin/jdbcimage.sh import -url=jdbc:postgresql://localhost:5432/qa -user=me -password=pwd image.zip
-      * BEWARE: !!!import deletes data from existing tables!!!
-      * See more examples in [importMariadb.sh](importMariadb.sh), [importPostgres.sh](importPostgres.sh), [importMssql.sh](importMssql.sh) and [importOracle.sh](importOracle.sh)
+3. Export to a zip file
+   * bin/jdbcimage.sh export -url=jdbc:mariadb://localhost:3306/qa -user=root -password=root mysql.zip
+   * bin/jdbcimage.sh export -url=jdbc:postgresql://localhost:5432/inttests?currentSchema=qa -user=postgres -password=postres postgres.zip
+   * bin/jdbcimage.sh export -url=jdbc:oracle:thin:@localhost:1521:XE -user=system -password=changeit oracle.zip
+   * bin/jdbcimage.sh export -url=jdbc:sqlserver://localhost:1433;databaseName=XE -user=sa -password=changeit sqlserver.zip
+4. Import from a zip file
+   * BEWARE: !!!import deletes data from all tables contained in the imported zip file!!!
+   * bin/jdbcimage.sh import -url=jdbc:mariadb://localhost:3306/qa -user=root -ignored_tables=schemaversion -password=root -ignored_tables=SCHEMAVERSION postgres.zip
+   * bin/jdbcimage.sh import -url=jdbc:postgresql://localhost:5432/inttests?currentSchema=qa -user=postgres -password=postres -ignored_tables=schemaversion mysql.zip
+   * bin/jdbcimage.sh -Xmx1024m import -url=jdbc:oracle:thin:@localhost:1521:XE -user=system -password=changeit -ignored_tables=SCHEMAVERSION mysql.zip
+   * bin/jdbcimage.sh import -url=jdbc:sqlserver://localhost:1433;databaseName=XE -user=sa -password=changeit -ignored_tables=SCHEMAVERSION mysql.zip
+5. Take a look at table data in a zip file
    * bin/jdbcimage.sh dump image.zip
-      * lists the tables contained in the file, see next item
+      * prints out tables contained in the file, see next item
    * bin/jdbcimage.sh dump image.zip#passwd
-      * dumps metadata and contents of _passwd_ table stored inside image.zip
+      * prints out metadata and contents of _passwd_ table stored inside image.zip
    * bin/jdbcimage.sh dumpHeader image.zip#passwd
-      * dumps columns, their types and stored row count of _passwd_ table stored inside image.zip
+      * prints out columns, their types and stored row count of _passwd_ table stored inside image.zip
 
 ## How it works
 The key principles are:

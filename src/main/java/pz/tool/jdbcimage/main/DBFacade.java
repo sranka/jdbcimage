@@ -4,10 +4,11 @@ import java.io.Reader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,7 +26,7 @@ public abstract class DBFacade implements DBFacadeListener{
     public static String IGNORED_TABLES = System.getProperty("ignored_tables","");
 
     protected MainToolBase mainToolBase;
-    protected List<String> ignoredTables;
+    protected List<Predicate<String>> ignoredTables;
 
     public List<DBFacadeListener> listeners = new ArrayList<>();
 
@@ -51,11 +52,19 @@ public abstract class DBFacade implements DBFacadeListener{
             ignoredTables = Stream.of(
                     IGNORED_TABLES.split(","))
                     .filter(x -> x!=null && x.trim().length()>0)
-                    .map(String::toLowerCase)
+                    .map(x -> {
+                        Pattern pattern = Pattern.compile(x);
+                        return (Predicate<String>) s -> pattern.matcher(s).matches();
+                    })
                     .collect(Collectors.toList());
 
         }
-        return ignoredTables.contains(tableName.toLowerCase());
+        for (Predicate<String> check : ignoredTables) {
+            if (check.test(tableName)){
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
