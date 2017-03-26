@@ -400,6 +400,7 @@ public abstract class MainToolBase implements AutoCloseable {
 						throw new RuntimeException(e);
 					}
 				}
+				return null; // only dump zip file contents
 			}
 			throw new IllegalArgumentException("File not found: " + f);
 		}
