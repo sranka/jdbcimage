@@ -14,4 +14,4 @@ OPTS="$OPTS -Dtool_waitOnStartup=false"
 OPTS="$OPTS -Dignored_tables=schemaversion"
 
 if [ -z "$1" ] ; then mkdir -p $tool_builddir ; fi
-java $OPTS -classpath "target/jdbc-image-tools.jar:$JDBC_CLASSPATH:lib/*" pz.tool.jdbcimage.main.MultiTableParallelExport $*
+java $OPTS -classpath "target/jdbc-image-tool.jar:$JDBC_CLASSPATH:lib/*" pz.tool.jdbcimage.main.MultiTableParallelExport $*

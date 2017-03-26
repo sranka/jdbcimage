@@ -4,22 +4,23 @@ Quickly exports/imports user schema's tables to/from a binary file using JDBC an
 ## Quick Start 
 1. Build the project using maven
    * mvn install
+   * chmod a+x bin/jdbcimage.sh
 2. Know JDBC connection settings to your database
-   * *jdbc_url* - such as _jdbc:mariadb://localhost:3306/qa_, _jdbc:postgresql://localhost:5432/inttests?currentSchema=qa_, _jdbc:oracle:thin:@localhost:1521:XE_ 
-   * *jdbc_user* - root, postgress, system  
-   * *jdbc_password* 
+   * *url* - such as _jdbc:mariadb://localhost:3306/qa_, _jdbc:postgresql://localhost:5432/inttests?currentSchema=qa_, _jdbc:oracle:thin:@localhost:1521:XE_ 
+   * *user* - root, postgress, system  
+   * *password* 
 3. Run export or import a zip file as the only argument
-   * ./export.sh -Djdbc_url=jdbc:mariadb://localhost:3306/qa -Djdbc_user=root -Djdbc_password=root image.zip
+   * bin/jdbcimage.sh export -url=jdbc:mariadb://localhost:3306/qa -user=root -password=root image.zip
       * See more examples in [exportMariadb.sh](exportMariadb.sh), [exportPostgres.sh](exportPostgres.sh), [exportMssql.sh](exportMssql.sh) and [exportOracle.sh](exportOracle.sh)
-   * ./import.sh -Djdbc_url=jdbc:postgresql://localhost:5432/qa -Djdbc_user=me -Djdbc_password=pwd image.zip
+   * bin/jdbcimage.sh import -url=jdbc:postgresql://localhost:5432/qa -user=me -password=pwd image.zip
       * BEWARE: !!!import deletes data from existing tables!!!
       * See more examples in [importMariadb.sh](importMariadb.sh), [importPostgres.sh](importPostgres.sh), [importMssql.sh](importMssql.sh) and [importOracle.sh](importOracle.sh)
-   * ./dumpFile.sh image.zip
+   * bin/jdbcimage.sh dump image.zip
       * lists the tables contained in the file, see next item
-   * ./dumpFile.sh image.zip#passwd
+   * bin/jdbcimage.sh dump image.zip#passwd
       * dumps metadata and contents of _passwd_ table stored inside image.zip
-   * ./dumpFileHeader.sh image.zip#passwd
-      * dumps metadata of _passwd_ table stored inside image.zip
+   * bin/jdbcimage.sh dumpHeader image.zip#passwd
+      * dumps columns, their types and stored row count of _passwd_ table stored inside image.zip
 
 ## How it works
 The key principles are:
@@ -41,27 +42,28 @@ key constraints, see database classes defined in the [main package](src/main/jav
 memory is good enough. BLOB, CLOBs and lengthty columns still might require more heap memory depending on data 
 and JDBC driver in use, so you also might have to increase java heap memory and/or lower batch size used during 
 data import, there are parameters in the scripts to do so.
-1. The result files and zipped and binary encoded using [KRYO](https://github.com/EsotericSoftware/kryo) to be small. The files can be dumped using [dumpFile.sh](dumpFile.sh) and [dumpFileHeader.sh](dumpFileHeader.sh). Each file contains a header that described the columns and their types, so that the image can be transferrable between database types.
-1. The scripts accept several properties as arguments supplied as -Dproperty=value
-   * -Djdbc_url=jdbc:mariadb://localhost:3306/qa - JDBC connection string 
-   * -Djdbc_user=user 
-   * -Djdbc_password=password 
-   * -Dignored_tables=a,b,c - used to ignore specific tables during import and export 
-   * -Dtool_concurrency=7 - can be used to limit execution threads
-   * -Dtool_builddir - build directory used during import export to save/serve table files
-   * -Dbatch.size=100 - how many rows to wrap into a batch during table import
+1. The result files and binary encoded using Kryo qnd zipped to be small. The files can be the easily dumped with information about table columns and their types.
+1. The scripts accept several properties as arguments supplied as -property=value
+   * -url=jdbc:mariadb://localhost:3306/qa - JDBC connection string 
+   * -user=user 
+   * -password=password 
+   * -ignored_tables=a,b,c - used to ignore specific tables during import and export 
+   * -tool_concurrency=7 - can be used to limit execution threads
+   * -tool_builddir=/tmp/a - build directory used during import export to save/serve table files
+   * -batch.size=100 - how many rows to wrap into a batch during table import
 
 ## Initializing the database after import
 Once the data are imported, it might be necessary to execute additional SQL commands, this is realized using *-Dlisteners=* property/argument of the import tool.
-  * -Dlisteners=Dummy
+  * -listeners=Dummy
      * only prints out what a listener reacts upon during import
-     * more listeners can be specifed as a comma separated list, such as  -Dlisteners=Dummy,Dummy
-  * -Dlisteners=OracleRestartGlobalSequence -DOracleRestartGlobalSequence.sequenceName=pricefxseq
+     * more listeners can be specifed as a comma separated list, such as  -listeners=Dummy,Dummy
+  * -listeners=OracleRestartGlobalSequence -OracleRestartGlobalSequence.sequenceName=pricefxseq
      * this helps to restart database sequence that is used in Oracle to set up identity values in a *id* column in all tables
-     * the sequence name is set using -DOracleRestartGlobalSequence.sequenceName property
+     * the sequence name is set using -OracleRestartGlobalSequence.sequenceName property
      * after all the data are imported, the sequence is dropped and created with the value that is one more than a max value of all imported id values, see [the code](src/main/java/pz/tool/jdbcimage/main/listener/OracleRestartGlobalSequenceListener.java) for more details.
   * more can be added using a custom implementation
 
 ## Missing pieces
 * tests, review, better organization of shell scripts, error handling of invalid args
 * docker support to have a simple packacking of a reusable tool that can be operated with simple examples
+* code refactoring to make the it easier to read

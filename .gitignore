@@ -8,5 +8,6 @@ target
 atlassian-ide-plugin.xml
 *.iml
 *.log
+*.zip
 .java-version
 sonar-project.properties

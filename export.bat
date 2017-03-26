@@ -10,4 +10,4 @@ set OPTS=%OPTS% "-Dtool_ignoreEmptyTables=false"
 set OPTS=%OPTS% "-Dtool_waitOnStartup=false"
 
 IF [%1] == [] mkdir %tool_builddir%
-java %OPTS% -classpath target/jdbc-image-tools.jar;%JDBC_CLASSPATH% pz.tool.jdbcimage.main.MultiTableParallelExport %1
+java %OPTS% -classpath target/jdbc-image-tool.jar;%JDBC_CLASSPATH% pz.tool.jdbcimage.main.MultiTableParallelExport %1

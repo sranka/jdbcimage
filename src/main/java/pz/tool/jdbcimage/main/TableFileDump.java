@@ -26,6 +26,7 @@ public class TableFileDump extends MainToolBase{
 		File inFile = new File(tool_in_file);
 		out.println("Input file: "+inFile);
 		InputStream in = toResultInput(inFile);
+		if (in == null) return; // zip on input
 		PrintStream target;
 		if (tool_out_file != null && tool_out_file.length()>0){
 			File outFile = new File(tool_out_file);
