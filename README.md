@@ -4,29 +4,29 @@ Quickly exports/imports user schema's tables to/from a binary file using JDBC an
 ## Quick Start 
 1. Build the project using maven
    * mvn install
-   * chmod a+x bin/jdbcimage.sh
+   * chmod a+x bin/jdbcimage
    * if you using oracle database, copy JDBC drivers to the lib directory 
 2. Know JDBC connection settings to your database
    * *url* - JDBC connection URL 
    * *user* - database user 
    * *password* 
 3. Export to a zip file
-   * bin/jdbcimage.sh export -url=jdbc:mariadb://localhost:3306/qa -user=root -password=root mysql.zip
-   * bin/jdbcimage.sh export -url=jdbc:postgresql://localhost:5432/inttests?currentSchema=qa -user=postgres -password=postres postgres.zip
-   * bin/jdbcimage.sh export -url=jdbc:oracle:thin:@localhost:1521:XE -user=system -password=changeit oracle.zip
-   * bin/jdbcimage.sh export -url=jdbc:sqlserver://localhost:1433;databaseName=XE -user=sa -password=changeit sqlserver.zip
+   * bin/jdbcimage export -url=jdbc:mariadb://localhost:3306/qa -user=root -password=root mysql.zip
+   * bin/jdbcimage export -url=jdbc:postgresql://localhost:5432/inttests?currentSchema=qa -user=postgres -password=postres postgres.zip
+   * bin/jdbcimage export -url=jdbc:oracle:thin:@localhost:1521:XE -user=system -password=changeit oracle.zip
+   * bin/jdbcimage export -url=jdbc:sqlserver://localhost:1433;databaseName=XE -user=sa -password=changeit sqlserver.zip
 4. Import from a zip file
    * BEWARE: !!!import deletes data from all tables contained in the imported zip file!!!
-   * bin/jdbcimage.sh import -url=jdbc:mariadb://localhost:3306/qa -user=root -ignored_tables=schemaversion -password=root -ignored_tables=SCHEMAVERSION postgres.zip
-   * bin/jdbcimage.sh import -url=jdbc:postgresql://localhost:5432/inttests?currentSchema=qa -user=postgres -password=postres -ignored_tables=schemaversion mysql.zip
-   * bin/jdbcimage.sh -Xmx1024m import -url=jdbc:oracle:thin:@localhost:1521:XE -user=system -password=changeit -ignored_tables=SCHEMAVERSION mysql.zip
-   * bin/jdbcimage.sh import -url=jdbc:sqlserver://localhost:1433;databaseName=XE -user=sa -password=changeit -ignored_tables=SCHEMAVERSION mysql.zip
+   * bin/jdbcimage import -url=jdbc:mariadb://localhost:3306/qa -user=root -ignored_tables=schemaversion -password=root -ignored_tables=SCHEMAVERSION postgres.zip
+   * bin/jdbcimage import -url=jdbc:postgresql://localhost:5432/inttests?currentSchema=qa -user=postgres -password=postres -ignored_tables=schemaversion mysql.zip
+   * bin/jdbcimage -Xmx1024m import -url=jdbc:oracle:thin:@localhost:1521:XE -user=system -password=changeit -ignored_tables=SCHEMAVERSION mysql.zip
+   * bin/jdbcimage import -url=jdbc:sqlserver://localhost:1433;databaseName=XE -user=sa -password=changeit -ignored_tables=SCHEMAVERSION mysql.zip
 5. Take a look at table data in a zip file
-   * bin/jdbcimage.sh dump image.zip
+   * bin/jdbcimage dump image.zip
       * prints out tables contained in the file, see next item
-   * bin/jdbcimage.sh dump image.zip#passwd
+   * bin/jdbcimage dump image.zip#passwd
       * prints out metadata and contents of _passwd_ table stored inside image.zip
-   * bin/jdbcimage.sh dumpHeader image.zip#passwd
+   * bin/jdbcimage dumpHeader image.zip#passwd
       * prints out columns, their types and stored row count of _passwd_ table stored inside image.zip
 
 ## How it works
