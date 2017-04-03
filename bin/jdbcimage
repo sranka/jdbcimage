@@ -13,5 +13,18 @@ if [[ $JAVA_OPTS != *"-Xmx"* ]] ; then
    fi
 fi
 
+#resolve INSTALLDIR, since $0 can be a symlink
+PRG="$0"
+while [ -h "$PRG" ] ; do
+  ls=`ls -ld "$PRG"`
+  link=`expr "$ls" : '.*-> \(.*\)$'`
+  if expr "$link" : '/.*' > /dev/null; then
+    PRG="$link"
+  else
+    PRG=`dirname "$PRG"`/"$link"
+  fi
+done
+INSTALLDIR=`dirname "$PRG"`
+
 echo "Starting Java with:$JAVA_OPTS"
-java $JAVA_OPTS $OPTS -classpath "`dirname $0`/../target/jdbc-image-tool.jar:`dirname $0`/../lib/*" pz.tool.jdbcimage.main.JdbcImageMain $*
+java $JAVA_OPTS $OPTS -classpath "$INSTALLDIR/../target/jdbc-image-tool.jar:$INSTALLDIR/../lib/*" pz.tool.jdbcimage.main.JdbcImageMain $*
