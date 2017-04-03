@@ -5,6 +5,7 @@ Quickly exports/imports user schema's tables to/from a binary file using JDBC an
 1. Build the project using maven
    * mvn install
    * chmod a+x bin/jdbcimage.sh
+   * if you using oracle database, copy JDBC drivers to the lib directory 
 2. Know JDBC connection settings to your database
    * *url* - JDBC connection URL 
    * *user* - database user 
