@@ -55,7 +55,9 @@ public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
         if (sequenceName == null || sequenceName.isEmpty()) return;
         // update sequence
         final String newValue = String.valueOf(maxValue.longValue()+1);
-        try(Connection con = mainToolBase.getWriteConnection()){
+        Connection con = null;
+        try{
+            con = mainToolBase.getWriteConnection();
             try (Statement stmt = con.createStatement()) {
                 Stream.of(onFinishSqls.split("\n/"))
                         .map(String::trim)
@@ -70,8 +72,12 @@ public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
                             }
                         });
             }
+            con.commit();
         } catch (SQLException e) {
+            if (con!=null) try{con.rollback();}catch(Exception ignored) { LoggedUtils.ignore("Cannot rollback",ignored);}
             throw new RuntimeException(e);
+        } finally{
+            if (con!=null) try{con.close();} catch(Exception ignored) { LoggedUtils.ignore("Cannot close",ignored);}
         }
     }
 

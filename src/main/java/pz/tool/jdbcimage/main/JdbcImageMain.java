@@ -21,6 +21,8 @@ public class JdbcImageMain {
             } else if ("dumpHeader".equals(restArgs)){
                 System.setProperty("tool_skip_data","true");
                 TableFileDump.main(restArgs);
+            } else if ("exec".equals(action)){
+                ExecTool.main(restArgs);
             }else{
                 System.out.println("Unknown action: "+action);
                 action = null;

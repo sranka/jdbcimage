@@ -8,14 +8,14 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 
 /**
- * Perform dump of a specific table file.
+ * Performs dump of a specific table file.
  * @author zavora
  */
 public class TableFileDump extends MainToolBase{
 	// dump file
-	public String tool_in_file = System.getProperty("tool_in_file",null);
-	public String tool_out_file = System.getProperty("tool_out_file",null);
-	public boolean skipData = Boolean.getBoolean("tool_skip_data");
+	private String tool_in_file = System.getProperty("tool_in_file",null);
+    private String tool_out_file = System.getProperty("tool_out_file",null);
+    private boolean skipData = Boolean.getBoolean("tool_skip_data");
 
 	@Override
 	protected void initDataSource() {
@@ -135,7 +135,7 @@ public class TableFileDump extends MainToolBase{
 		}
 	}
 	
-	public static String getTypeName(int jdbcType){
+	private static String getTypeName(int jdbcType){
 		String val = jdbcTypeToName.get(jdbcType);
 		return val == null? String.valueOf(jdbcType):val;
 	}
