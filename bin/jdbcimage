@@ -26,5 +26,5 @@ while [ -h "$PRG" ] ; do
 done
 INSTALLDIR=`dirname "$PRG"`
 
-"Starting Java with:$JAVA_OPTS"
+echo "Starting Java with: $JAVA_OPTS"
 java $JAVA_OPTS -classpath "$INSTALLDIR/../target/jdbc-image-tool.jar:$INSTALLDIR/../lib/*" pz.tool.jdbcimage.main.JdbcImageMain "$@"
