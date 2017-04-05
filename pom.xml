@@ -3,9 +3,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>pz.tool</groupId>
-	<artifactId>jdbc-image-tool</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<groupId>com.github.sranka</groupId>
+	<artifactId>jdbcimage</artifactId>
+	<version>0.5</version>
 	<name>JDBC Image Tool</name>
 	<packaging>jar</packaging>
 
@@ -43,7 +43,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>2.4</version> <!-- only because of maven warnings -->
 				<configuration>
-					<finalName>jdbc-image-tool</finalName>
+					<finalName>jdbcimage</finalName>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -76,6 +76,26 @@
 						<goals>
 							<goal>shade</goal>
 						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>src/main/assembly/assembly.xml</descriptor>
+							</descriptors>
+							<encoding>UTF-8</encoding>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

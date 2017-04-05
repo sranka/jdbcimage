@@ -1,12 +1,15 @@
-# jdbc-image-tool
+# jdbcimage tool
 Quickly exports/imports user schema's tables to/from a binary file using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases. Typically, a zip file is exported from one database to be imported to another database, possibly  of a different type and vendor. The target database must already have tables created, so that the data can be imported in there. The tool ignores missing tables and columns when importin the data.
 
 ## Quick Start 
 1. Build the project using maven
    * mvn install
-   * chmod a+x bin/jdbcimage
-   * add bin to your PATH, or create a soft link of bin/jdbcimage to a directory that is already in your PATH 
-   * if you using oracle database, copy its JDBC drivers to the lib directory 
+   * use the jdbcimage${version}.zip or jdbcimage${version}.zip
+   * alternatively
+      * chmod a+x jdbcimage
+      * create a soft link to jdbcimage in a directory that is already in your PATH, such as:
+        <code>ln -s "\`pwd\`/jdbcimage" "$HOME/.local/bin/jdbcimage"</code>
+   * if you are using oracle database, copy its JDBC drivers to the lib directory 
 2. Know JDBC connection settings to your database
    * *url* - JDBC connection URL 
    * *user* - database user 
@@ -33,10 +36,6 @@ Quickly exports/imports user schema's tables to/from a binary file using JDBC an
    * jdbcimage exec -url="$DBURL" -user="$DBUSER" -password="$DBPASSWORD" -sql="select * from Users"
    * jdbcimage exec -url="$DBURL" -user="$DBUSER" -password="$DBPASSWORD" -sql="update Users set emailLocale='en' where emailLocale is null"
    * echo "select * from Users" | jdbcimage exec -url="$DBURL" -user="$DBUSER" -password="$DBPASSWORD"
- 
-   
-      
-   
 
 ## How it works
 The key principles are:
