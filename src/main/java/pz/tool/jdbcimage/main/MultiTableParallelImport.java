@@ -36,9 +36,9 @@ public class MultiTableParallelImport extends SingleTableImport{
 		} else{
 			Stream.of(Step.class.getEnumConstants()).forEach(x -> enabledSteps.put(x, false));
 			Stream.of(steps.split(",")).map(String::trim).filter(x -> x.length()>0).forEach(x -> {
-				if (x.startsWith("!")){
+				if (x.startsWith("not-")){
 					Stream.of(Step.class.getEnumConstants()).forEach(s -> enabledSteps.put(s, true));
-					enabledSteps.put(Step.valueOf(x.substring(1)), Boolean.FALSE);
+					enabledSteps.put(Step.valueOf(x.substring("not-".length())), Boolean.FALSE);
 				} else {
 					enabledSteps.put(Step.valueOf(x), Boolean.TRUE);
 				}
