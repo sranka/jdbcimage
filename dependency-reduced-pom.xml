@@ -4,7 +4,7 @@
   <groupId>com.github.sranka</groupId>
   <artifactId>jdbcimage</artifactId>
   <name>JDBC Image Tool</name>
-  <version>0.5</version>
+  <version>0.6-SNAPSHOT</version>
   <build>
     <plugins>
       <plugin>

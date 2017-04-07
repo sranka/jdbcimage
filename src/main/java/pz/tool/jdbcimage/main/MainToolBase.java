@@ -55,7 +55,6 @@ public abstract class MainToolBase implements AutoCloseable {
 	public String tool_table = System.getProperty("tool_table");
 	// multi export/import tools
 	public boolean tool_ignoreEmptyTables = Boolean.valueOf(System.getProperty("tool_ignoreEmptyTables", "false"));
-	public boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes", "false"));
 	private String tool_builddir = System.getProperty("tool_builddir");
 	private String tool_listeners = System.getProperty("listeners");
 	public String zipFile = null;
@@ -379,7 +378,7 @@ public abstract class MainToolBase implements AutoCloseable {
 						// re-read to offer names
 						out.println("Run dump with the following argument to dump a specific table: ");
 						zis = new ZipInputStream(new FileInputStream(f));
-						List<String> entries = new ArrayList<String>();
+						List<String> entries = new ArrayList<>();
 						while ((entry = zis.getNextEntry()) != null) {
 							entries.add(entry.getName());
 							zis.closeEntry();

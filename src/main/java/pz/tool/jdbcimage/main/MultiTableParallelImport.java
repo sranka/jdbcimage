@@ -8,12 +8,39 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 /**
  * DB import that runs in multiple threads.
  */
 public class MultiTableParallelImport extends SingleTableImport{
-	
+	private boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes", "false"));
+
+	private enum Step{
+		importStarted,
+		disableConstraints,
+		disableIndexes,
+		deleteData,
+		importData,
+		enableIndexes,
+		enableConstraints,
+		importFinished
+	}
+	private EnumMap<Step, Boolean> enabledSteps = new EnumMap<>(Step.class);
+
+	public MultiTableParallelImport(String steps){
+		super();
+		if (steps == null){
+			// enable
+			Stream.of(Step.class.getEnumConstants()).forEach(x -> enabledSteps.put(x, true));
+		} else{
+			Stream.of(Step.class.getEnumConstants()).forEach(x -> enabledSteps.put(x, false));
+			Stream.of(steps.split(",")).map(String::trim).filter(x -> x.length()>0).forEach(x -> {
+				enabledSteps.put(Step.valueOf(x), Boolean.TRUE);
+			});
+		}
+	}
+
 	/**
 	 * Durations to print out at the end.
 	 */
@@ -25,7 +52,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 		Duration deleteData = null;
 		Duration importData = null;
 	}
-	
+
 	/**
 	 * Main execution point.
 	 */
@@ -70,37 +97,37 @@ public class MultiTableParallelImport extends SingleTableImport{
 
 				long time;
 				// 0. import started
-				dbFacade.importStarted();
+				if (enabledSteps.get(Step.importStarted)) dbFacade.importStarted();
 				// 1. disable constraints
 				time = System.currentTimeMillis();
-				dbFacade.modifyConstraints(false);
+				if (enabledSteps.get(Step.disableConstraints)) dbFacade.modifyConstraints(false);
 				durations.disableConstraints = Duration.ofMillis(System.currentTimeMillis() - time);
 				// 2. make indexes unusable skipped
-				if (tool_disableIndexes){
+				if (enabledSteps.get(Step.disableIndexes) && tool_disableIndexes){
 					time = System.currentTimeMillis();
 					dbFacade.modifyIndexes(false);
 					durations.disableIndexes = Duration.ofMillis(System.currentTimeMillis() - time);
 				}
 				// 3. delete data
 				time = System.currentTimeMillis();
-				deleteData();
+				if (enabledSteps.get(Step.deleteData)) deleteData();
 				durations.deleteData = Duration.ofMillis(System.currentTimeMillis() - time);
 				// 4. do import
 				time = System.currentTimeMillis();
-				importData();
+				if (enabledSteps.get(Step.importData)) importData();
 				durations.importData = Duration.ofMillis(System.currentTimeMillis() - time);
 				// 5. rebuild indexes
-				if (tool_disableIndexes){
+				if (enabledSteps.get(Step.enableIndexes) && tool_disableIndexes){
 					time = System.currentTimeMillis();
 					dbFacade.modifyIndexes(true);
 					durations.enableIndexes = Duration.ofMillis(System.currentTimeMillis() - time);
 				}
 				// 6. enable constraints
 				time = System.currentTimeMillis();
-				dbFacade.modifyConstraints(true);
+				if (enabledSteps.get(Step.enableConstraints)) dbFacade.modifyConstraints(true);
 				durations.enableConstraints  = Duration.ofMillis(System.currentTimeMillis() - time);
 				// 7. finished
-				dbFacade.importFinished();
+				if (enabledSteps.get(Step.importFinished)) dbFacade.importFinished();
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -164,7 +191,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 		//noinspection UnusedAssignment
 		args = setupSystemProperties(args);
 
-		try(MultiTableParallelImport tool = new MultiTableParallelImport()){
+		try(MultiTableParallelImport tool = new MultiTableParallelImport(System.getProperty("steps"))){
 			tool.setupZipFile(args);
 			tool.run();
 		} 
