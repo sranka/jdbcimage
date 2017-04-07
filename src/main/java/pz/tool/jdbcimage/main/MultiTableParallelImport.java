@@ -36,7 +36,12 @@ public class MultiTableParallelImport extends SingleTableImport{
 		} else{
 			Stream.of(Step.class.getEnumConstants()).forEach(x -> enabledSteps.put(x, false));
 			Stream.of(steps.split(",")).map(String::trim).filter(x -> x.length()>0).forEach(x -> {
-				enabledSteps.put(Step.valueOf(x), Boolean.TRUE);
+				if (x.startsWith("!")){
+					Stream.of(Step.class.getEnumConstants()).forEach(s -> enabledSteps.put(s, true));
+					enabledSteps.put(Step.valueOf(x.substring(1)), Boolean.FALSE);
+				} else {
+					enabledSteps.put(Step.valueOf(x), Boolean.TRUE);
+				}
 			});
 		}
 	}
@@ -140,7 +145,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 		out.println("Enable constraints time: "+ durations.enableConstraints);
 	}
 	
-	public Duration deleteData(){
+	private Duration deleteData(){
 		long time = System.currentTimeMillis();
 		List<Callable<?>> tasks = new ArrayList<>(tables.size());
 		for(String table: tables.keySet()){
@@ -162,7 +167,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 		return Duration.ofMillis(System.currentTimeMillis()-time);
 	}
 
-	public Duration importData(){
+	private Duration importData(){
 		long time = System.currentTimeMillis();
 		List<Callable<?>> tasks = new ArrayList<>(tables.size());
 		for(Map.Entry<String,String> entry: tables.entrySet()){
