@@ -1,5 +1,8 @@
 # jdbcimage tool
-Quickly exports/imports user schema's tables to/from a binary file using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases. Typically, a zip file is exported from one database to be imported to another database, possibly  of a different type and vendor. The target database must already have tables created, so that the data can be imported in there. The tool ignores missing tables and columns when importin the data.
+Quickly exports/imports user schema's tables to/from a binary file using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases. 
+Typically, a zip file is exported from one database to be imported to another database, possibly of a different type and vendor. 
+The target database must already have schema (tables) created, the data are imported into an existing schema. 
+The tool ignores missing tables and columns when importing the data.
 
 ## Quick Start 
 1. Build the project using maven
