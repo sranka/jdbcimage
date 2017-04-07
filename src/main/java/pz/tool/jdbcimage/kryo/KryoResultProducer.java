@@ -100,6 +100,7 @@ public class KryoResultProducer implements ResultProducer{
 					break;
 				case Types.VARBINARY:
 				case Types.LONGVARBINARY:
+					// TODO BLOBs are not always required, depends on target database schema
 				case Types.BLOB:
 					val = KryoInputStreamSerializer.INSTANCE.deserializeBlobData(in, row.info.connection);
 					break;

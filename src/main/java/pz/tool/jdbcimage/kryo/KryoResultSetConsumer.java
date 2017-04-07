@@ -6,6 +6,7 @@ import com.esotericsoftware.kryo.io.Output;
 import pz.tool.jdbcimage.ResultConsumer;
 import pz.tool.jdbcimage.ResultSetInfo;
 
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.sql.*;
@@ -104,6 +105,10 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 						break;
 					case Types.VARBINARY:
 					case Types.LONGVARBINARY:
+						InputStream binaryStream = rs.getBinaryStream(i + 1);
+						if (rs.wasNull()) binaryStream = null;
+						kryo.writeObjectOrNull(out, binaryStream, KryoInputStreamSerializer.INSTANCE);
+						break;
 					case Types.BLOB:
 						Blob blob = rs.getBlob(i+1);
 						if (rs.wasNull()) blob = null;
