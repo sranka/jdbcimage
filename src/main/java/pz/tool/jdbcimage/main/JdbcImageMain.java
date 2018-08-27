@@ -1,9 +1,8 @@
 package pz.tool.jdbcimage.main;
 
 public class JdbcImageMain {
-    public static void help(){
-        // TODO
-        System.out.println("TODO provide help message");
+    private static void help(){
+        System.out.println("See documentation at https://github.com/sranka/jdbc-image-tool");
     }
     public static void main(String... args)  throws Exception{
         args = MainToolBase.setupSystemProperties(args);
@@ -19,7 +18,7 @@ public class JdbcImageMain {
                     MultiTableParallelExport.main(restArgs);
                 } else if ("dump".equals(action)) {
                     TableFileDump.main(restArgs);
-                } else if ("dumpHeader".equals(restArgs)) {
+                } else if ("dumpHeader".equals(action)) {
                     System.setProperty("tool_skip_data", "true");
                     TableFileDump.main(restArgs);
                 } else if ("exec".equals(action)) {

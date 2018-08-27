@@ -57,7 +57,7 @@ key constraints, see database classes defined in the [main package](src/main/jav
    * All foreign key constraints are dropped by the tool on Postgress before importing the data, but a table jdbcimage_create_constraints is created with rows that are used to recreate them after data import.  
    * Identity column sequences are reset to the lowest value after data import on Postgres.
 1. Streams of data are used for both export and import to have the lowest memory footprint, typically 256M of heap 
-memory is good enough. BLOB, CLOBs and lengthty columns still might require more heap memory depending on data 
+memory is good enough. BLOB, CLOBs and lengthy columns still might require more heap memory depending on data
 and JDBC driver in use, so you also might have to increase java heap memory and/or lower batch size used during 
 data import, there are parameters in the scripts to do so.
 1. The result files and binary encoded using Kryo qnd zipped to be small. The files can be the easily dumped with information about table columns and their types.
@@ -71,10 +71,10 @@ data import, there are parameters in the scripts to do so.
    * -batch.size=100 - how many rows to wrap into a batch during table import
 
 ## Initializing the database after import
-Once the data are imported, it might be necessary to execute additional SQL commands, this is realized using *-Dlisteners=* property/argument of the import tool.
+Once the data is imported, it might be necessary to execute additional SQL commands, this is realized using *-Dlisteners=* property/argument of the import tool.
   * -listeners=Dummy
      * only prints out what a listener reacts upon during import
-     * more listeners can be specifed as a comma separated list, such as  -listeners=Dummy,Dummy
+     * more listeners can be specified as a comma separated list, such as  -listeners=Dummy,Dummy
   * -listeners=OracleRestartGlobalSequence -OracleRestartGlobalSequence.sequenceName=pricefxseq
      * this helps to restart database sequence that is used in Oracle to set up identity values in a *id* column in all tables
      * the sequence name is set using -OracleRestartGlobalSequence.sequenceName property
@@ -83,5 +83,3 @@ Once the data are imported, it might be necessary to execute additional SQL comm
 
 ## Missing pieces
 * tests, review, better organization of shell scripts, error handling of invalid args
-* docker support to have a simple packacking of a reusable tool that can be operated with simple examples
-* code refactoring to make the it easier to read
