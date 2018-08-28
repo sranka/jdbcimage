@@ -60,7 +60,7 @@ key constraints, see database classes defined in the [main package](src/main/jav
 memory is good enough. BLOB, CLOBs and lengthy columns still might require more heap memory depending on data
 and JDBC driver in use, so you also might have to increase java heap memory and/or lower batch size used during 
 data import, there are parameters in the scripts to do so.
-1. The result files and binary encoded using Kryo qnd zipped to be small. The files can be the easily dumped with information about table columns and their types.
+1. The result files are binary encoded using Kryo and zipped to be small on file system.
 1. The scripts accept several properties as arguments supplied as -property=value
    * -url=jdbc:mariadb://localhost:3306/qa - JDBC connection string 
    * -user=user 
