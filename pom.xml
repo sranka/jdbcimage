@@ -6,8 +6,10 @@
 	<groupId>com.github.sranka</groupId>
 	<artifactId>jdbcimage</artifactId>
 	<version>0.8-SNAPSHOT</version>
+    <packaging>jar</packaging>
 	<name>JDBC Image Tool</name>
-	<packaging>jar</packaging>
+    <description>Quickly exports/imports tables to/from a binary file using JDBC and Kryo.</description>
+    <url>https://github.com/sranka/jdbc-image-tool</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

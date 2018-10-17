@@ -5,6 +5,8 @@
   <artifactId>jdbcimage</artifactId>
   <name>JDBC Image Tool</name>
   <version>0.8-SNAPSHOT</version>
+  <description>Quickly exports/imports tables to/from a binary file using JDBC and Kryo.</description>
+  <url>https://github.com/sranka/jdbc-image-tool</url>
   <licenses>
     <license>
       <name>MIT License</name>
@@ -27,19 +29,6 @@
           <source>${version.jdk}</source>
           <target>${version.jdk}</target>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-        <version>1.16</version>
-        <executions>
-          <execution>
-            <id>download-licenses</id>
-            <goals>
-              <goal>download-licenses</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
