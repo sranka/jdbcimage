@@ -5,6 +5,12 @@
   <artifactId>jdbcimage</artifactId>
   <name>JDBC Image Tool</name>
   <version>0.8-SNAPSHOT</version>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://github.com/sranka/jdbc-image-tool</url>
+    </license>
+  </licenses>
   <build>
     <plugins>
       <plugin>
@@ -21,6 +27,19 @@
           <source>${version.jdk}</source>
           <target>${version.jdk}</target>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>1.16</version>
+        <executions>
+          <execution>
+            <id>download-licenses</id>
+            <goals>
+              <goal>download-licenses</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
