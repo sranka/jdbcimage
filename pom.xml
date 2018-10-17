@@ -95,6 +95,7 @@
 								<descriptor>src/main/assembly/assembly.xml</descriptor>
 							</descriptors>
 							<encoding>UTF-8</encoding>
+							<tarLongFileMode>posix</tarLongFileMode>
 						</configuration>
 					</execution>
 				</executions>
