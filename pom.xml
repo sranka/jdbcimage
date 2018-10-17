@@ -14,6 +14,13 @@
 		<version.jdk>1.8</version.jdk>
 	</properties>
 
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://github.com/sranka/jdbc-image-tool</url>
+		</license>
+	</licenses>
+
 	<dependencies>
 		<!-- serialization -->
 		<dependency>
