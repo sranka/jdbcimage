@@ -1,7 +1,6 @@
 Feel free add/replace/delete JDBC drivers herein depending on your needs.
 
-Selected JDBC driver binaries are also part of this distribution.
-They have the following licenses.
+JDBC driver binaries are redistributed herein with the following licenses.
 
 ===========================================================================
 https://mariadb.com/kb/en/library/about-mariadb-connector-j/
