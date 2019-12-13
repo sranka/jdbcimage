@@ -206,4 +206,11 @@ public class Oracle extends DBFacade {
     public void importStarted() {
         super.importStarted();
     }
+
+    public static class Types {
+
+        public static final int BINARY_DOUBLE = 101;
+
+        private Types() { }
+    }
 }

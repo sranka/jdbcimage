@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import pz.tool.jdbcimage.*;
 import pz.tool.jdbcimage.main.DBFacade;
+import pz.tool.jdbcimage.main.Oracle;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -138,6 +139,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                                 stmt.setBigDecimal(pos, (BigDecimal)value);
                                 break;
                             case Types.DOUBLE:
+                            case Oracle.Types.BINARY_DOUBLE:
                                 stmt.setDouble(pos, (Double)value);
                                 break;
                             case Types.INTEGER:
