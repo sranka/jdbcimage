@@ -42,8 +42,8 @@ The tool ignores missing tables and columns when importing the data.
 
 ## How it works
 The key principles are:
-1. More threads are used speed up data export/import, by default set to the number of (client) 
-machine processors; see tool_concurrency parameter in the scripts.
+1. More threads are used to speed up data export/import, OOTB the count of (client) 
+machine processors are used. See tool_concurrency parameter in the scripts.
 1. The lowest transaction isolation level is used to make database export/import faster. 
 1. Database metadata are used to export/import all user+schema tables to/from a zip file with entries 
 per exported/imported table.
