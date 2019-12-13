@@ -6,6 +6,7 @@ import com.esotericsoftware.kryo.io.Input;
 import pz.tool.jdbcimage.ResultProducer;
 import pz.tool.jdbcimage.ResultSetInfo;
 import pz.tool.jdbcimage.RowData;
+import pz.tool.jdbcimage.main.Oracle;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -85,6 +86,7 @@ public class KryoResultProducer implements ResultProducer{
 					val = kryo.readObjectOrNull(in, BigDecimal.class);
 					break;
 				case Types.DOUBLE:
+				case Oracle.Types.BINARY_DOUBLE:
 					val = kryo.readObjectOrNull(in, Double.class);
 					break;
 				case Types.INTEGER:

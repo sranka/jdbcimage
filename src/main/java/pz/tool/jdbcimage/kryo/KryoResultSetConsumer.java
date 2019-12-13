@@ -5,6 +5,7 @@ import com.esotericsoftware.kryo.io.FastOutput;
 import com.esotericsoftware.kryo.io.Output;
 import pz.tool.jdbcimage.ResultConsumer;
 import pz.tool.jdbcimage.ResultSetInfo;
+import pz.tool.jdbcimage.main.Oracle;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -82,6 +83,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 						kryo.writeObjectOrNull(out, rs.getBigDecimal(i+1), BigDecimal.class);
 						break;
 					case Types.DOUBLE:
+					case Oracle.Types.BINARY_DOUBLE:
 						Double dVal = rs.getDouble(i+1);
 						if (rs.wasNull()) dVal = null;
 						kryo.writeObjectOrNull(out, dVal, Double.class);
