@@ -6,6 +6,7 @@ JDBC driver binaries are redistributed herein with the following licenses.
 https://mariadb.com/kb/en/library/about-mariadb-connector-j/
 ---------------------------------------------------------------------------
 LGPL-2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt
+https://mariadb.com/kb/en/library/mariadb-license/
 ===========================================================================
 https://jdbc.postgresql.org/about/license.html
 ---------------------------------------------------------------------------
