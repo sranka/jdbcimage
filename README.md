@@ -8,12 +8,8 @@ The tool ignores missing tables and columns when importing the data.
 1. Build the project using maven
    * mvn install
    * use the jdbcimage${version}.tar.gz or jdbcimage${version}.zip
-   * alternatively
-      * chmod a+x jdbcimage
-      * create a soft link to jdbcimage in a directory that is already in your PATH, such as:
-        <code>ln -s "\`pwd\`/jdbcimage" "$HOME/.local/bin/jdbcimage"</code>
    * if you are using oracle database, copy its JDBC drivers to the lib directory 
-2. Know JDBC connection settings to your database
+2. Know how to connect to your database
    * *url* - JDBC connection URL 
    * *user* - database user 
    * *password* 
