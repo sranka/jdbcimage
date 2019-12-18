@@ -1,4 +1,4 @@
-Feel free add/replace/delete JDBC drivers herein depending on your needs.
+Feel free to add/replace/delete JDBC drivers herein depending on your needs.
 
 JDBC driver binaries are redistributed herein with the following licenses.
 
