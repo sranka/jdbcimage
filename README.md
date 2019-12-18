@@ -38,8 +38,8 @@ The tool ignores missing tables and columns when importing the data.
 
 ## How it works
 The key principles are:
-1. More threads are used to speed up data export/import, OOTB the count of (client) 
-machine processors are used. See tool_concurrency parameter in the scripts.
+1. More threads are used to speed up data export/import, OOTB all (client) 
+machine processors should be used. See tool_concurrency parameter in the scripts.
 1. The lowest transaction isolation level is used to make database export/import faster. 
 1. Database metadata are used to export/import all user+schema tables to/from a zip file with entries 
 per exported/imported table.
@@ -55,26 +55,26 @@ key constraints, see database classes defined in the [main package](src/main/jav
 1. Streams of data are used for both export and import to have the lowest memory footprint, typically 256M of heap 
 memory is good enough. BLOB, CLOBs and lengthy columns still might require more heap memory depending on data
 and JDBC driver in use, so you also might have to increase java heap memory and/or lower batch size used during 
-data import, there are parameters in the scripts to do so.
+data import. There are parameters in the scripts to do so.
 1. The result files are binary encoded using Kryo and zipped to be small on file system.
-1. The scripts accept several properties as arguments supplied as -property=value
+1. The scripts accept several properties as arguments supplied as -property=value pairs
    * -url=jdbc:mariadb://localhost:3306/qa - JDBC connection string 
    * -user=user 
    * -password=password 
    * -ignored_tables=a,b,c - used to ignore specific tables during import and export 
    * -tool_concurrency=7 - can be used to limit execution threads
-   * -tool_builddir=/tmp/a - build directory used during import export to save/serve table files
+   * -tool_builddir=/tmp/a - build directory used during import/export to save/serve table files
    * -batch.size=100 - how many rows to wrap into a batch during table import
 
 ## Initializing the database after import
 Once the data is imported, it might be necessary to execute additional SQL commands, this is realized using *-Dlisteners=* property/argument of the import tool.
   * -listeners=Dummy
-     * only prints out what a listener reacts upon during import
+     * only prints out how a listener reacts during import
      * more listeners can be specified as a comma separated list, such as  -listeners=Dummy,Dummy
   * -listeners=OracleRestartGlobalSequence -OracleRestartGlobalSequence.sequenceName=pricefxseq
      * this helps to restart database sequence that is used in Oracle to set up identity values in a *id* column in all tables
      * the sequence name is set using -OracleRestartGlobalSequence.sequenceName property
-     * after all the data are imported, the sequence is dropped and created with the value that is one more than a max value of all imported id values, see [the code](src/main/java/pz/tool/jdbcimage/main/listener/OracleRestartGlobalSequenceListener.java) for more details.
+     * after all the data is imported, the sequence is dropped and created with the value that is one more than a max value of all imported id values, see [the code](src/main/java/pz/tool/jdbcimage/main/listener/OracleRestartGlobalSequenceListener.java) for more details.
   * more can be added using a custom implementation
 
 ## Missing pieces
