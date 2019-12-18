@@ -7,7 +7,7 @@ The tool ignores missing tables and columns when importing the data.
 ## Quick Start 
 1. Build the project using maven
    * mvn install
-   * use the jdbcimage${version}.zip or jdbcimage${version}.zip
+   * use the jdbcimage${version}.tar.gz or jdbcimage${version}.zip
    * alternatively
       * chmod a+x jdbcimage
       * create a soft link to jdbcimage in a directory that is already in your PATH, such as:
