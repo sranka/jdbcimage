@@ -23,8 +23,6 @@ import java.sql.Types;
  * @author zavora
  */
 public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
-    // private static Object types
-
     // serialization
     private Kryo kryo;
     private Output out;
@@ -56,8 +54,8 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
             // TYPE mapping taken from https://msdn.microsoft.com/en-us/library/ms378878(v=sql.110).aspx
             for (int i = 0; i < columnCount; i++) {
                 Object val;
-                Class clazz = null;
-                Serializer serializer = null;
+                Class<?> clazz = null;
+                Serializer<?> serializer = null;
 
                 switch (info.types[i]) {
                     case Types.BIGINT:
@@ -141,7 +139,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         val = rs.getObject(i + 1);
                         break;
                 }
-                if (val == null || rs.wasNull()) {
+                if ((val == null || rs.wasNull()) && (serializer != null || clazz != null)) {
                     kryo.writeObjectOrNull(out, null, String.class);
                 } else {
                     if (clazz != null) {
@@ -150,7 +148,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         kryo.writeObjectOrNull(out, val, serializer);
                     } else {
                         throw new IllegalStateException("Unable to serialize SQL type: " + info.types[i]
-                                + ", Class: " + val.getClass().getName()
+                                + ", Class: " + (val == null ? "<unknown>" : val.getClass().getName())
                                 + ", Object: " + val);
                     }
                 }
