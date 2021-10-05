@@ -137,20 +137,17 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         break;
                     default:
                         val = rs.getObject(i + 1);
-                        break;
-                }
-                if ((val == null || rs.wasNull()) && (serializer != null || clazz != null)) {
-                    kryo.writeObjectOrNull(out, null, String.class);
-                } else {
-                    if (clazz != null) {
-                        kryo.writeObjectOrNull(out, val, clazz);
-                    } else if (serializer != null) {
-                        kryo.writeObjectOrNull(out, val, serializer);
-                    } else {
                         throw new IllegalStateException("Unable to serialize SQL type: " + info.types[i]
                                 + ", Class: " + (val == null ? "<unknown>" : val.getClass().getName())
                                 + ", Object: " + val);
-                    }
+                }
+                if (rs.wasNull()) {
+                    val = null;
+                }
+                if (clazz != null) {
+                    kryo.writeObjectOrNull(out, val, clazz);
+                } else if (serializer != null) {
+                    kryo.writeObjectOrNull(out, val, serializer);
                 }
             }
 
