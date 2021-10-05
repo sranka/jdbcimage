@@ -24,8 +24,8 @@ import java.sql.Types;
  */
 public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
     // serialization
-    private Kryo kryo;
-    private Output out;
+    private final Kryo kryo;
+    private final Output out;
 
     // initialized in onStart
     private ResultSetInfo info;
