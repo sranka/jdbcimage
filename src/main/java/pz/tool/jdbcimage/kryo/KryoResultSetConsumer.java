@@ -23,11 +23,9 @@ import java.sql.Types;
  * @author zavora
  */
 public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
-    // private static Object types
-
     // serialization
-    private Kryo kryo;
-    private Output out;
+    private final Kryo kryo;
+    private final Output out;
 
     // initialized in onStart
     private ResultSetInfo info;
@@ -56,8 +54,8 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
             // TYPE mapping taken from https://msdn.microsoft.com/en-us/library/ms378878(v=sql.110).aspx
             for (int i = 0; i < columnCount; i++) {
                 Object val;
-                Class clazz = null;
-                Serializer serializer = null;
+                Class<?> clazz = null;
+                Serializer<?> serializer = null;
 
                 switch (info.types[i]) {
                     case Types.BIGINT:
@@ -139,20 +137,17 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         break;
                     default:
                         val = rs.getObject(i + 1);
-                        break;
-                }
-                if (val == null || rs.wasNull()) {
-                    kryo.writeObjectOrNull(out, null, String.class);
-                } else {
-                    if (clazz != null) {
-                        kryo.writeObjectOrNull(out, val, clazz);
-                    } else if (serializer != null) {
-                        kryo.writeObjectOrNull(out, val, serializer);
-                    } else {
                         throw new IllegalStateException("Unable to serialize SQL type: " + info.types[i]
-                                + ", Class: " + val.getClass().getName()
+                                + ", Class: " + (val == null ? "<unknown>" : val.getClass().getName())
                                 + ", Object: " + val);
-                    }
+                }
+                if (rs.wasNull()) {
+                    val = null;
+                }
+                if (clazz != null) {
+                    kryo.writeObjectOrNull(out, val, clazz);
+                } else if (serializer != null) {
+                    kryo.writeObjectOrNull(out, val, serializer);
                 }
             }
 
