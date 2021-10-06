@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import pz.tool.jdbcimage.*;
 import pz.tool.jdbcimage.main.DBFacade;
+import pz.tool.jdbcimage.main.Mssql;
 import pz.tool.jdbcimage.main.Oracle;
 
 import java.io.InputStream;
@@ -195,7 +196,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                                     throw new IllegalStateException("Unexpected value found for clob: "+value);
                                 }
                                 break;
-                            case -156: // sql_variant on  MSSQL
+                            case Mssql.Types.SQL_VARIANT:
                                 stmt.setObject(pos, value);
                                 break;
                             default:
