@@ -159,8 +159,8 @@ public class Mssql extends DBFacade {
     }
 
     public static class Types {
-
         public static final int SQL_VARIANT = -156;
+        public static final int DATETIMEOFFSET = -155;
 
         private Types() { }
     }

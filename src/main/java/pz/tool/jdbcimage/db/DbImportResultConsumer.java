@@ -120,6 +120,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                                 break;
                             case Types.CHAR:
                             case Types.VARCHAR:
+                            case Mssql.Types.DATETIMEOFFSET:
                                 stmt.setString(pos, (String)value);
                                 break;
                             case Types.NCHAR:

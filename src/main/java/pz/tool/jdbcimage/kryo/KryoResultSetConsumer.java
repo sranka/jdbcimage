@@ -92,6 +92,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         break;
                     case Types.CHAR:
                     case Types.VARCHAR:
+                    case Mssql.Types.DATETIMEOFFSET:
                         val = rs.getString(i + 1);
                         clazz = String.class;
                         break;
