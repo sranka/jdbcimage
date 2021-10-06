@@ -6,6 +6,7 @@ import com.esotericsoftware.kryo.io.Input;
 import pz.tool.jdbcimage.ResultProducer;
 import pz.tool.jdbcimage.ResultSetInfo;
 import pz.tool.jdbcimage.RowData;
+import pz.tool.jdbcimage.main.Mssql;
 import pz.tool.jdbcimage.main.Oracle;
 
 import java.io.InputStream;
@@ -21,9 +22,9 @@ import java.sql.Types;
  */
 public class KryoResultProducer implements ResultProducer{
 	// serialization
-	private Kryo kryo;
-	private Input in;
-	
+	private final Kryo kryo;
+	private final Input in;
+
 	// state
 	private int[] types;
 	private boolean finished = false;
@@ -33,7 +34,7 @@ public class KryoResultProducer implements ResultProducer{
 		this.kryo = KryoSetup.getKryo();
 		this.in = new FastInput(in);
 	}
-	
+
 	@Override
 	public RowData start() {
 		// skip version information
@@ -56,7 +57,12 @@ public class KryoResultProducer implements ResultProducer{
 		// fill in row
 		for(int i=0; i<types.length; i++){
 			Object val;
-			switch(types[i]){
+			int dbType = types[i];
+			if (dbType == Mssql.Types.SQL_VARIANT) {
+				// read a specific type stored within sql_variant
+				dbType = in.readInt();
+			}
+			switch(dbType){
 				case Types.BIGINT:
 					val = kryo.readObjectOrNull(in, Long.class);
 					break;
@@ -106,20 +112,22 @@ public class KryoResultProducer implements ResultProducer{
 				case Types.BLOB:
 					val = KryoInputStreamSerializer.INSTANCE.deserializeBlobData(in, row.info.connection);
 					break;
-				case Types.LONGVARCHAR: 
-				case Types.CLOB: 
+				case Types.LONGVARCHAR:
+				case Types.CLOB:
 					val = KryoReaderSerializer.INSTANCE.deserializeClobData(in, row.info.connection);
 					break;
-				case Types.LONGNVARCHAR: 
-				case Types.NCLOB: 
+				case Types.LONGNVARCHAR:
+				case Types.NCLOB:
 					val = KryoReaderSerializer.INSTANCE.deserializeNClobData(in, row.info.connection);
 					break;
 				default:
-					throw new IllegalStateException("Unable to deserialize object for SQL type: "+types[i]);
+					throw new IllegalStateException("Unable to deserialize object for SQL type: " + types[i]
+							+ (dbType != types[i] ? ("/" + dbType) : "")
+					);
 			}
 			row.values[i] = val;
 		}
-		
+
 		return true;
 	}
 

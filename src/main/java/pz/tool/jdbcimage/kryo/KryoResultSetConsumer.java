@@ -6,6 +6,7 @@ import com.esotericsoftware.kryo.io.FastOutput;
 import com.esotericsoftware.kryo.io.Output;
 import pz.tool.jdbcimage.ResultConsumer;
 import pz.tool.jdbcimage.ResultSetInfo;
+import pz.tool.jdbcimage.main.Mssql;
 import pz.tool.jdbcimage.main.Oracle;
 
 import java.io.OutputStream;
@@ -16,6 +17,7 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.HashMap;
 
 /**
  * Serializes the result set into the supplied output stream.
@@ -23,6 +25,24 @@ import java.sql.Types;
  * @author zavora
  */
 public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
+    // allows serializing sql_variant type, where a specific type information is required
+    private static final HashMap<Class<?>, Integer> SQL_VARIANT_CLASS_TO_TYPE;
+    static {
+        SQL_VARIANT_CLASS_TO_TYPE = new HashMap<>();
+        SQL_VARIANT_CLASS_TO_TYPE.put(Long.class, Types.BIGINT);
+        SQL_VARIANT_CLASS_TO_TYPE.put(String.class, Types.VARCHAR);
+        SQL_VARIANT_CLASS_TO_TYPE.put(byte[].class, Types.BINARY);
+        SQL_VARIANT_CLASS_TO_TYPE.put(Boolean.class, Types.BIT);
+        SQL_VARIANT_CLASS_TO_TYPE.put(Date.class, Types.DATE);
+        SQL_VARIANT_CLASS_TO_TYPE.put(Time.class, Types.TIME);
+        SQL_VARIANT_CLASS_TO_TYPE.put(Timestamp.class, Types.TIMESTAMP);
+        SQL_VARIANT_CLASS_TO_TYPE.put(BigDecimal.class, Types.DECIMAL);
+        SQL_VARIANT_CLASS_TO_TYPE.put(Double.class, Types.DOUBLE);
+        SQL_VARIANT_CLASS_TO_TYPE.put(Integer.class, Types.INTEGER);
+        SQL_VARIANT_CLASS_TO_TYPE.put(Short.class, Types.TINYINT);
+        SQL_VARIANT_CLASS_TO_TYPE.put(Float.class, Types.REAL);
+    }
+
     // serialization
     private final Kryo kryo;
     private final Output out;
@@ -134,6 +154,22 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                     case Types.NCLOB:
                         val = rs.getNClob(i + 1);
                         serializer = KryoClobSerializer.INSTANCE;
+                        break;
+                    case Mssql.Types.SQL_VARIANT:
+                        val = rs.getObject(i + 1);
+                        if (val == null) {
+                            clazz = String.class; // any class is good for serializing null
+                        } else {
+                            // check that the class is supported
+                            clazz = val.getClass();
+                            Integer type = SQL_VARIANT_CLASS_TO_TYPE.get(clazz);
+                            if (type == null ){
+                                throw new IllegalStateException("Unable to serialize sql_variant SQL type: " + info.types[i]
+                                        + ", Class: " + clazz.getName()
+                                        + ", Object: " + val);
+                            }
+                            out.writeInt(type);
+                        }
                         break;
                     default:
                         val = rs.getObject(i + 1);
