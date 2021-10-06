@@ -88,14 +88,14 @@ public class Mssql extends DBFacade {
                     .map(x -> SqlExecuteCommand.toSqlExecuteTask(
                             mainToolBase.getWriteConnectionSupplier(),
                             mainToolBase.out,
-                            x.toArray(new SqlExecuteCommand[x.size()]))
+                            x.toArray(new SqlExecuteCommand[0]))
                     )
                     .collect(Collectors.toList()));
         }
     }
 
     @Override
-    public void modifyIndexes(boolean enable) throws SQLException {
+    public void modifyIndexes(boolean enable) {
         mainToolBase.out.println("Index " + (enable ? "enable" : "disable") + " not supported on MSSQL!");
     }
 
@@ -156,6 +156,13 @@ public class Mssql extends DBFacade {
         retVal.put("hasId", hasIdentityColumns.get(tableName));
 
         return retVal;
+    }
+
+    public static class Types {
+
+        public static final int SQL_VARIANT = -156;
+
+        private Types() { }
     }
 
 }

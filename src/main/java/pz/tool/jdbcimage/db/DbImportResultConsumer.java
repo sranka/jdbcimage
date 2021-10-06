@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import pz.tool.jdbcimage.*;
 import pz.tool.jdbcimage.main.DBFacade;
+import pz.tool.jdbcimage.main.Mssql;
 import pz.tool.jdbcimage.main.Oracle;
 
 import java.io.InputStream;
@@ -17,12 +18,12 @@ import java.util.Map;
  */
 public class DbImportResultConsumer implements ResultConsumer<RowData>{
     private static final Log log = LogFactory.getLog(DbImportResultConsumer.class);
-    public static int BATCH_SIZE = Integer.valueOf(System.getProperty("batch.size","100"));
+    public static int BATCH_SIZE = Integer.parseInt(System.getProperty("batch.size","100"));
 
-    private String tableName;
-    private Connection con;
-    private DBFacade db;
-    private Map<String,String> actualColumns;
+    private final String tableName;
+    private final Connection con;
+    private final DBFacade db;
+    private final Map<String,String> actualColumns;
 
     // initialize in on start
     private PreparedStatement stmt = null;
@@ -194,6 +195,9 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                                 } else{
                                     throw new IllegalStateException("Unexpected value found for clob: "+value);
                                 }
+                                break;
+                            case Mssql.Types.SQL_VARIANT:
+                                stmt.setObject(pos, value);
                                 break;
                             default:
                                 throw new IllegalStateException("Unable to set SQL type: "+type+" for value: "+value);
