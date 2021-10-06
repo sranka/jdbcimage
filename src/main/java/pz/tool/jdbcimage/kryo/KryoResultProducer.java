@@ -76,6 +76,7 @@ public class KryoResultProducer implements ResultProducer{
 				case Types.NCHAR:
 				case Types.VARCHAR:
 				case Types.NVARCHAR:
+				case Mssql.Types.DATETIMEOFFSET:
 					val = kryo.readObjectOrNull(in, String.class);
 					break;
 				case Types.DATE:
