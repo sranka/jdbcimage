@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -179,58 +180,73 @@ public class PostgreSQL extends DBFacade {
                     "  from information_schema.referential_constraints C \n" +
                     "  join information_schema.table_constraints C2 on (C.constraint_schema = C2.constraint_schema and C.constraint_name = C2.constraint_name) \n" +
                     "  join information_schema.key_column_usage S on (S.constraint_schema = C.constraint_schema and S.constraint_name = C.constraint_name) \n" +
-                    "  join information_schema.constraint_column_usage T on (T.constraint_schema = C.unique_constraint_schema and T.constraint_name = C.unique_constraint_name) \n" +
-                    "  where C.constraint_schema='" + currentSchema()+ "' order by S.table_name, C.constraint_name";
-            Map<String,String> constraints = new HashMap<>(); // check for duplicates
+                    "  join information_schema.key_column_usage T on (T.constraint_schema = C.unique_constraint_schema and T.constraint_name = C.unique_constraint_name and S.ordinal_position = T.ordinal_position) \n" +
+                    "  where C.constraint_schema='" + currentSchema()+ "' order by S.table_name, C.constraint_name, S.ordinal_position";
+            Map<String, ForeignKeyConstraint> constraints = new LinkedHashMap<>();
             mainToolBase.executeQuery(
                     query,
                     row -> {
                         try {
                             String constraint = row.getString(1);
                             String tableName = row.getString(2);
-                            if (constraints.put(constraint,constraint)!=null){
-                                throw new UnsupportedOperationException("The implementation does not support foreign key reference groups!" +
-                                        "Unsupported constraint '"+constraint+"' defined on table '"+tableName+"'");
-                            }
                             if (mainToolBase.containsTable(tableName) && !tableName.equals(STATE_TABLE_NAME)) {
-                                // drop commands
-                                String desc = "Drop constraint " + constraint + " on table " + tableName;
-                                String sql = "ALTER TABLE \"" + tableName + "\" DROP CONSTRAINT \"" + constraint + "\"";
-                                commands.add(tableName, desc, sql);
-                                // reconstruct the way of how to create the constraint
                                 String sourceColumn = row.getString(3);
                                 String targetTable = row.getString(4);
                                 String targetColumn = row.getString(5);
-                                String match_option = row.getString(6);
-                                String update_rule = row.getString(7);
-                                String delete_rule = row.getString(8);
-                                boolean is_deferrable = "YES".equals(row.getString(9));
-                                boolean initially_deferred = "YES".equals(row.getString(10));
-                                StringBuilder createSql = new StringBuilder();
-                                createSql.append("ALTER TABLE ").append(tableName);
-                                createSql.append(" ADD CONSTRAINT ").append(constraint);
-                                createSql.append(" FOREIGN KEY (").append(sourceColumn).append(")");
-                                createSql.append(" REFERENCES ").append(targetTable);
-                                createSql.append(" (").append(targetColumn).append(")");
-                                if (!"NONE".equals(match_option)) createSql.append(" MATCH ").append(match_option);
-                                if (!"NO ACTION".equals(update_rule)) createSql.append(" ON UPDATE ").append(update_rule);
-                                if (!"NO ACTION".equals(delete_rule)) createSql.append(" ON DELETE ").append(delete_rule);
-                                if (is_deferrable) createSql.append(" DEFERRABLE");
-                                if (initially_deferred) createSql.append(" INITIALLY DEFERRED");
-                                desc = "Persist DDL for constraint " + constraint + " on table " + tableName;
-                                sql = "INSERT INTO "+STATE_TABLE_NAME+"(tableName,constraintName,sql) " +
-                                        "VALUES('"+tableName+"','"+constraint+"','"+createSql.toString()+"')";
-                                commands.add(tableName, desc, sql);
-                                return null;
-                            } else {
-                                return null;
+
+                                ForeignKeyConstraint data;
+                                if(!constraints.containsKey(constraint)) {
+                                    String match_option = row.getString(6);
+                                    String update_rule = row.getString(7);
+                                    String delete_rule = row.getString(8);
+                                    boolean is_deferrable = "YES".equals(row.getString(9));
+                                    boolean initially_deferred = "YES".equals(row.getString(10));
+                                    data = new ForeignKeyConstraint(constraint, tableName, targetTable, new ArrayList<>(), match_option, update_rule, delete_rule, is_deferrable, initially_deferred);
+                                    constraints.put(constraint, data);
+                                } else {
+                                    data = constraints.get(constraint);
+                                }
+                                data.columns.add(new SourceTargetColumn(sourceColumn, targetColumn));
                             }
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
+                            return null;
+                        } catch (SQLException ex) {
+                            throw new RuntimeException(ex);
                         }
                     }
             );
-        } else{
+            constraints.forEach((constraint, data) -> {
+                String tableName = data.tableName;
+
+                // drop commands
+                String desc = "Drop constraint " + constraint + " on table " + tableName;
+                String sql = "ALTER TABLE \"" + tableName + "\" DROP CONSTRAINT \"" + constraint + "\"";
+                commands.add(tableName, desc, sql);
+                // reconstruct the way of how to create the constraint
+                String targetTable = data.targetTable;
+                String sourceColumns = data.columns.stream().map(c -> c.source).collect(Collectors.joining(","));
+                String targetColumns = data.columns.stream().map(c -> c.target).collect(Collectors.joining(","));
+                String match_option = data.match_option;
+                String update_rule = data.update_rule;
+                String delete_rule = data.delete_rule;
+                boolean is_deferrable = data.is_deferrable;
+                boolean initially_deferred = data.initially_deferred;
+                StringBuilder createSql = new StringBuilder();
+                createSql.append("ALTER TABLE ").append(tableName);
+                createSql.append(" ADD CONSTRAINT ").append(constraint);
+                createSql.append(" FOREIGN KEY (").append(sourceColumns).append(")");
+                createSql.append(" REFERENCES ").append(targetTable);
+                createSql.append(" (").append(targetColumns).append(")");
+                if (!"NONE".equals(match_option)) createSql.append(" MATCH ").append(match_option);
+                if (!"NO ACTION".equals(update_rule)) createSql.append(" ON UPDATE ").append(update_rule);
+                if (!"NO ACTION".equals(delete_rule)) createSql.append(" ON DELETE ").append(delete_rule);
+                if (is_deferrable) createSql.append(" DEFERRABLE");
+                if (initially_deferred) createSql.append(" INITIALLY DEFERRED");
+                desc = "Persist DDL for constraint " + constraint + " on table " + tableName;
+                sql = "INSERT INTO "+STATE_TABLE_NAME+"(tableName,constraintName,sql) " +
+                        "VALUES('"+tableName+"','"+constraint+"','"+createSql.toString()+"')";
+                commands.add(tableName, desc, sql);
+            });
+        } else {
             // read commands from the database and delete them on the fly
             mainToolBase.executeQuery(
                     STATE_TABLE_SQL,
@@ -314,6 +330,40 @@ public class PostgreSQL extends DBFacade {
             return schema;
         } else{
             return cachedSchema;
+        }
+    }
+
+    private static class ForeignKeyConstraint {
+        final String name;
+        final String tableName;
+        final String targetTable;
+        final List<SourceTargetColumn> columns;
+        final String match_option;
+        final String update_rule;
+        final String delete_rule;
+        final boolean is_deferrable;
+        final boolean initially_deferred;
+
+        public ForeignKeyConstraint(String name, String tableName, String targetTable, List<SourceTargetColumn> columns, String match_option, String update_rule, String delete_rule, boolean is_deferrable, boolean initially_deferred) {
+            this.name = name;
+            this.tableName = tableName;
+            this.targetTable = targetTable;
+            this.columns = columns;
+            this.match_option = match_option;
+            this.update_rule = update_rule;
+            this.delete_rule = delete_rule;
+            this.is_deferrable = is_deferrable;
+            this.initially_deferred = initially_deferred;
+        }
+    }
+
+    private static class SourceTargetColumn {
+        final String source;
+        final String target;
+
+        public SourceTargetColumn(String source, String target) {
+            this.source = source;
+            this.target = target;
         }
     }
 }
