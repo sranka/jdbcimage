@@ -12,20 +12,27 @@ public class JdbcImageMain {
             System.arraycopy(args, 1, restArgs,0,args.length-1);
 
             try {
-                if ("import".equals(action)) {
-                    MultiTableParallelImport.main(restArgs);
-                } else if ("export".equals(action)) {
-                    MultiTableParallelExport.main(restArgs);
-                } else if ("dump".equals(action)) {
-                    TableFileDump.main(restArgs);
-                } else if ("dumpHeader".equals(action)) {
-                    System.setProperty("tool_skip_data", "true");
-                    TableFileDump.main(restArgs);
-                } else if ("exec".equals(action)) {
-                    ExecTool.main(restArgs);
-                } else {
-                    System.out.println("Unknown action: " + action);
-                    action = null;
+                switch (action) {
+                    case "import":
+                        MultiTableConcurrentImport.main(restArgs);
+                        break;
+                    case "export":
+                        MultiTableConcurrentExport.main(restArgs);
+                        break;
+                    case "dump":
+                        TableFileDump.main(restArgs);
+                        break;
+                    case "dumpHeader":
+                        System.setProperty("tool_skip_data", "true");
+                        TableFileDump.main(restArgs);
+                        break;
+                    case "exec":
+                        ExecTool.main(restArgs);
+                        break;
+                    default:
+                        System.out.println("Unknown action: " + action);
+                        action = null;
+                        break;
                 }
             } catch (Exception e){
                 e.printStackTrace();

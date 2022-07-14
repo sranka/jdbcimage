@@ -82,7 +82,7 @@ public class Mssql extends DBFacade {
                         }
                     }
             );
-            // there are DEADLOCK problems when running in parallel
+            // there are DEADLOCK problems when running concurrently
             mainToolBase.runSerial(commands.tableGroups
                     .stream()
                     .map(x -> SqlExecuteCommand.toSqlExecuteTask(

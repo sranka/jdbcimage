@@ -13,8 +13,8 @@ import java.util.stream.Stream;
 /**
  * DB import that runs in multiple threads.
  */
-public class MultiTableParallelImport extends SingleTableImport{
-	private boolean tool_disableIndexes = Boolean.valueOf(System.getProperty("tool_disableIndexes", "false"));
+public class MultiTableConcurrentImport extends SingleTableImport{
+	private boolean tool_disableIndexes = Boolean.parseBoolean(System.getProperty("tool_disableIndexes", "false"));
 
 	private enum Step{
 		importStarted,
@@ -28,7 +28,7 @@ public class MultiTableParallelImport extends SingleTableImport{
 	}
 	private EnumMap<Step, Boolean> enabledSteps = new EnumMap<>(Step.class);
 
-	public MultiTableParallelImport(String steps){
+	public MultiTableConcurrentImport(String steps){
 		super();
 		if (steps == null){
 			// enable
@@ -193,10 +193,9 @@ public class MultiTableParallelImport extends SingleTableImport{
 	}
 
 	public static void main(String... args) throws Exception{
-		//noinspection UnusedAssignment
 		args = setupSystemProperties(args);
 
-		try(MultiTableParallelImport tool = new MultiTableParallelImport(System.getProperty("steps"))){
+		try(MultiTableConcurrentImport tool = new MultiTableConcurrentImport(System.getProperty("steps"))){
 			tool.setupZipFile(args);
 			tool.run();
 		} 

@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 /**
  * DB export that runs in multiple threads.
  */
-public class MultiTableParallelExport extends SingleTableExport{
+public class MultiTableConcurrentExport extends SingleTableExport{
 	
 	public void run(){
 		// print platform concurrency, just FYI
@@ -19,7 +19,7 @@ public class MultiTableParallelExport extends SingleTableExport{
 		setTables(getUserTables().stream().collect(Collectors.toMap(Function.identity(), Function.identity())), out);
 
 
-		// runs export in parallel
+		// runs export concurrently
 		out.println("Exporting table files to: "+ getBuildDirectory());
 		run(tables.entrySet().stream().map(x -> getExportTask(x.getKey(), x.getValue())).collect(Collectors.toList()));
 		zip();
@@ -44,10 +44,9 @@ public class MultiTableParallelExport extends SingleTableExport{
 	}
     
 	public static void main(String... args) throws Exception{
-		//noinspection UnusedAssignment
 		args = setupSystemProperties(args);
 
-		try(MultiTableParallelExport tool = new MultiTableParallelExport()){
+		try(MultiTableConcurrentExport tool = new MultiTableConcurrentExport()){
 			tool.setupZipFile(args);
 			tool.run();
 		}

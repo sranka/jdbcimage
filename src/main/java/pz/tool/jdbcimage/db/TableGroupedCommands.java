@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Groups commands by table name so that groups can be run in parallel 
+ * Groups commands by table name so that groups can be run concurrently
  * to avoid database deadlocks.
  */ 
 public class TableGroupedCommands{
