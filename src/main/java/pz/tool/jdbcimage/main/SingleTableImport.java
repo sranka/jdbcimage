@@ -55,8 +55,8 @@ public class SingleTableImport extends MainToolBase{
 	}
 
 	/**
-	 * Imports specific tables.
-	 * @param tableName tables name
+	 * Imports specific table.
+	 * @param tableName tables nam
 	 * @param file usually the same table name, might differ in lower/upper case
 	 * @param tableInfo table information
 	 * @return time spent
@@ -97,7 +97,6 @@ public class SingleTableImport extends MainToolBase{
 	}
 	
 	public static void main(String... args) throws Exception{
-		//noinspection UnusedAssignment
 		args = setupSystemProperties(args);
 
 		try(SingleTableImport tool = new SingleTableImport()){
