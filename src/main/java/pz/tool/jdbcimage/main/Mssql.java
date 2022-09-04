@@ -4,15 +4,13 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 
 import pz.tool.jdbcimage.LoggedUtils;
+import pz.tool.jdbcimage.ResultSetInfo;
 import pz.tool.jdbcimage.db.SqlExecuteCommand;
 import pz.tool.jdbcimage.db.TableGroupedCommands;
 
@@ -29,8 +27,8 @@ public class Mssql extends DBFacade {
     @Override
     public List<String> getDbUserTables(Connection con) throws SQLException {
         List<String> retVal = new ArrayList<>();
-        try(ResultSet tables = con.getMetaData().getTables(con.getCatalog(), "dbo", "%", new String[]{"TABLE"})){
-            while(tables.next()){
+        try (ResultSet tables = con.getMetaData().getTables(con.getCatalog(), "dbo", "%", new String[]{"TABLE"})) {
+            while (tables.next()) {
                 String tableName = tables.getString(3);
                 retVal.add(tableName);
             }
@@ -105,10 +103,24 @@ public class Mssql extends DBFacade {
         return "DELETE FROM " + escapeTableName(tableName);
     }
 
+    private Map<String, Set<String>> tableIdentityColumns = Collections.emptyMap();
+
+    private boolean importsToIdentityColumns(TableInfo tableInfo, ResultSetInfo fileInfo) {
+        Set<String> identityColumns = tableIdentityColumns.get(tableInfo.getTableName());
+        if (identityColumns != null) {
+            Set<String> schemaColumns = tableInfo.getTableColumns().keySet();
+            Set<String> importedColumns = Arrays.stream(fileInfo.columns)
+                    .filter(col -> schemaColumns.contains(col.toLowerCase()))
+                    .collect(Collectors.toSet());
+            return identityColumns.stream().anyMatch(importedColumns::contains);
+        }
+        return false;
+    }
+
     @Override
     public void afterImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException {
         super.afterImportTable(con, table, tableInfo);
-        if (tableInfo.get("hasId")!=null) {
+        if (tableInfo.get("identity_insert_on") != null) {
             try (Statement stmt = con.createStatement()) {
                 stmt.execute("SET IDENTITY_INSERT [" + table + "] OFF");
             }
@@ -116,26 +128,28 @@ public class Mssql extends DBFacade {
     }
 
     @Override
-    public void beforeImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException {
-        super.beforeImportTable(con, table, tableInfo);
-        if (tableInfo.get("hasId")!=null) {
+    public void beforeImportTableData(Connection con, String table, TableInfo tableInfo, ResultSetInfo fileInfo) throws SQLException {
+        super.beforeImportTableData(con, table, tableInfo, fileInfo);
+        if (importsToIdentityColumns(tableInfo, fileInfo)) {
             try (Statement stmt = con.createStatement()) {
                 stmt.execute("SET IDENTITY_INSERT [" + table + "] ON");
             }
+            tableInfo.put("identity_insert_on", true);
         }
     }
 
-    private Map<String, Boolean> hasIdentityColumns = null;
-
     @Override
     public void importStarted() {
-        Map<String, Boolean> retVal = new HashMap<>();
+        Map<String, Set<String>> retVal = new HashMap<>();
         try (Connection con = mainToolBase.getReadOnlyConnection()) {
             try (Statement stmt = con.createStatement()) {
                 try (ResultSet rs = stmt.executeQuery(
-                        "select name from sys.objects where type = 'U' and OBJECTPROPERTY(object_id, 'TableHasIdentity')=1")) {
+                        "SELECT Object_Name(object_id),name FROM sys.columns " +
+                                "WHERE is_identity=1 And Objectproperty(object_id,'IsUserTable')=1")) {
                     while (rs.next()) {
-                        retVal.put(rs.getString(1), Boolean.TRUE);
+                        String table = rs.getString(1);
+                        String col = rs.getString(2).toLowerCase();
+                        retVal.computeIfAbsent(table, k -> new HashSet<>()).add(col);
                     }
                 }
             } finally {
@@ -148,21 +162,15 @@ public class Mssql extends DBFacade {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        hasIdentityColumns = retVal;
-    }
-    @Override
-    public TableInfo getTableInfo(String tableName) {
-        TableInfo retVal = super.getTableInfo(tableName);
-        retVal.put("hasId", hasIdentityColumns.get(tableName));
-
-        return retVal;
+        tableIdentityColumns = retVal;
     }
 
     public static class Types {
         public static final int SQL_VARIANT = -156;
         public static final int DATETIMEOFFSET = -155;
 
-        private Types() { }
+        private Types() {
+        }
     }
 
 }
