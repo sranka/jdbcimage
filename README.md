@@ -20,7 +20,7 @@ The tool ignores missing tables and columns when importing the data.
    * jdbcimage export -url=jdbc:sqlserver://localhost:1433;databaseName=XE -user=sa -password=changeit sqlserver.zip
 4. Import from a zip file
    * BEWARE: !!!import deletes data from all tables contained in the imported zip file!!!
-   * jdbcimage import -url=jdbc:mariadb://localhost:3306/qa -user=root -ignored_tables=schemaversion -password=root -ignored_tables=SCHEMAVERSION postgres.zip
+   * jdbcimage import -url=jdbc:mariadb://localhost:3306/qa -user=root -password=root -ignored_tables=SCHEMAVERSION postgres.zip
    * jdbcimage import -url=jdbc:postgresql://localhost:5432/inttests?currentSchema=qa -user=postgres -password=postres -ignored_tables=schemaversion mysql.zip
    * jdbcimage -Xmx1024m import -url=jdbc:oracle:thin:@localhost:1521:XE -user=system -password=changeit -ignored_tables=SCHEMAVERSION mysql.zip
    * jdbcimage import -url=jdbc:sqlserver://localhost:1433;databaseName=XE -user=sa -password=changeit -ignored_tables=SCHEMAVERSION mysql.zip
