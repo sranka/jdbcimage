@@ -1,5 +1,7 @@
 package pz.tool.jdbcimage.main;
 
+import pz.tool.jdbcimage.ResultSetInfo;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -40,4 +42,6 @@ public interface DBFacadeListener {
     void importFinished();
     void beforeImportTable(Connection con, String table, DBFacade.TableInfo tableInfo) throws SQLException;
     void afterImportTable(Connection con, String table, DBFacade.TableInfo tableInfo) throws SQLException;
+    default void beforeImportTableData(Connection con, String table, DBFacade.TableInfo tableInfo, ResultSetInfo fileInfo) throws SQLException {
+    }
 }

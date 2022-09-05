@@ -12,6 +12,7 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Import pushed data into a database.
@@ -24,6 +25,8 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
     private final Connection con;
     private final DBFacade db;
     private final Map<String,String> actualColumns;
+    private Consumer<ResultSetInfo> notifyOnStartFn = (r) -> {};
+
 
     // initialize in on start
     private PreparedStatement stmt = null;
@@ -50,8 +53,13 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
         this.actualColumns = actualColumns;
     }
 
+    public void setNotifyOnStartFn(Consumer<ResultSetInfo> consumer){
+        this.notifyOnStartFn = consumer;
+    }
+
     @Override
     public void onStart(ResultSetInfo info) {
+        this.notifyOnStartFn.accept(info);
         // set connection to info, so blobs can be serialized without extra resources
         if (this.db.canCreateBlobs()){
             info.connection = con;

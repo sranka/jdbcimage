@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import org.apache.commons.dbcp2.BasicDataSource;
 
 import pz.tool.jdbcimage.LoggedUtils;
+import pz.tool.jdbcimage.ResultSetInfo;
 
 /**
  * Facade that isolates specifics of a particular database
@@ -213,6 +214,11 @@ public abstract class DBFacade implements DBFacadeListener{
     public void beforeImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException{
         for (DBFacadeListener l: listeners) {
             l.beforeImportTable(con, table, tableInfo);
+        }
+    }
+    public void beforeImportTableData(Connection con, String table, TableInfo tableInfo, ResultSetInfo fileInfo) throws SQLException{
+        for (DBFacadeListener l: listeners) {
+            l.beforeImportTableData(con, table, tableInfo, fileInfo);
         }
     }
     public void afterImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException{
