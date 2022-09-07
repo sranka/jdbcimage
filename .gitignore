@@ -5,6 +5,7 @@ target
 .project
 .classpath
 .cache
+.vscode
 atlassian-ide-plugin.xml
 *.iml
 *.log
