@@ -105,7 +105,7 @@ public class Mssql extends DBFacade {
 
     private Map<String, Set<String>> tableIdentityColumns = Collections.emptyMap();
 
-    private boolean importsToIdentityColumns(TableInfo tableInfo, ResultSetInfo fileInfo) {
+    private boolean importsToIdentityColumn(TableInfo tableInfo, ResultSetInfo fileInfo) {
         Set<String> identityColumns = tableIdentityColumns.get(tableInfo.getTableName());
         if (identityColumns != null) {
             Set<String> schemaColumns = tableInfo.getTableColumns().keySet();
@@ -130,7 +130,7 @@ public class Mssql extends DBFacade {
     @Override
     public void beforeImportTableData(Connection con, String table, TableInfo tableInfo, ResultSetInfo fileInfo) throws SQLException {
         super.beforeImportTableData(con, table, tableInfo, fileInfo);
-        if (importsToIdentityColumns(tableInfo, fileInfo)) {
+        if (importsToIdentityColumn(tableInfo, fileInfo)) {
             try (Statement stmt = con.createStatement()) {
                 stmt.execute("SET IDENTITY_INSERT [" + table + "] ON");
             }
