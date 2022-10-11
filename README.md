@@ -1,12 +1,11 @@
-# jdbcimage tool
-Quickly exports/imports user schema's tables to/from a binary file using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases. 
+`jdbcimage` is a tool that quickly exports/imports user schema's tables to/from a binary file using JDBC and Kryo. Supports Oracle, MSSQL, MySQL/MariaDB and PostgreSQL databases. 
 Typically, a zip file is exported from one database to be imported to another database, possibly of a different type and vendor. 
 The target database must already have schema (tables) created, the data are imported into an existing schema. 
 The tool ignores missing tables and columns when importing the data.
 
 ## Quick Start 
 1. Install `jdbcimage` toolBuild the project using maven or 
-   * download the latest [release](https://github.com/sranka/jdbc-image-tool/releases) as `jdbcimage${version}.tar.gz` or `jdbcimage${version}.zip`, or build it from sources
+   * download the latest [release](https://github.com/sranka/jdbcimage/releases) as `jdbcimage${version}.tar.gz` or `jdbcimage${version}.zip`, or build it from sources
       * mvn install, the same files appear in the `target` directory 
    * `tar xvf jdbcimage${version}.tar.gz` or `unzip jdbcimage${version}.zip` in a directory of your choice, 
       * the examples below assume that the directory is in your `PATH` environment variable
@@ -49,7 +48,7 @@ per exported/imported table.
 with the same case-insensitive name.
 1. Concurrent execution requires an extra setup/teardown instructions during data import. 
 These vary between database types, but they always include disabling/enabling foreign 
-key constraints, see database classes defined in the [main package](src/main/java/pz/tool/jdbcimage/jdbcimage/main/) for more details.
+key constraints, see database classes defined in the [main package](https://github.com/sranka/jdbcimage/tree/master/src/main/java/io/github/sranka/jdbcimage/main) for more details.
    * All triggers are disabled on Oracle before data import and then enabled after data import.
    * Oracle sequences, when used, are out of scope and usually have to be reset manually after data import.
    * All foreign key constraints are dropped by the tool on Postgress before importing the data, but a table jdbcimage_create_constraints is created with rows that are used to recreate them after data import.  
@@ -76,7 +75,7 @@ Once the data is imported, it might be necessary to execute additional SQL comma
   * -listeners=OracleRestartGlobalSequence -OracleRestartGlobalSequence.sequenceName=pricefxseq
      * this helps to restart database sequence that is used in Oracle to set up identity values in a *id* column in all tables
      * the sequence name is set using -OracleRestartGlobalSequence.sequenceName property
-     * after all the data is imported, the sequence is dropped and created with the value that is one more than a max value of all imported id values, see [the code](src/main/java/pz/tool/jdbcimage/main/listener/OracleRestartGlobalSequenceListener.java) for more details.
+     * after all the data is imported, the sequence is dropped and created with the value that is one more than a max value of all imported id values, see [the code](src/main/java/io/github/sranka/jdbcimage/main/listener/OracleRestartGlobalSequenceListener.java) for more details.
   * more can be added using a custom implementation
 
 ## Missing pieces
