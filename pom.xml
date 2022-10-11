@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
 	<name>JDBC Image Tool</name>
     <description>Quickly exports/imports tables to/from a binary file using JDBC and Kryo.</description>
-    <url>https://github.com/sranka/jdbc-image-tool</url>
+    <url>https://github.com/sranka/jdbcimagetool</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -19,7 +19,7 @@
 	<licenses>
 		<license>
 			<name>MIT License</name>
-			<url>https://github.com/sranka/jdbc-image-tool</url>
+			<url>https://github.com/sranka/jdbcimage/LICENSE</url>
 		</license>
 	</licenses>
 

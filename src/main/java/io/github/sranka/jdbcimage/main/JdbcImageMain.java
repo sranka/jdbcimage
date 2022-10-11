@@ -2,7 +2,7 @@ package io.github.sranka.jdbcimage.main;
 
 public class JdbcImageMain {
     private static void help(){
-        System.out.println("See documentation at https://github.com/sranka/jdbc-image-tool");
+        System.out.println("See documentation at https://sranka.github.io/jdbcimage");
     }
     public static void main(String... args)  throws Exception{
         args = MainToolBase.setupSystemProperties(args);

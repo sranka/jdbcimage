@@ -5,7 +5,7 @@ The tool ignores missing tables and columns when importing the data.
 
 ## Quick Start 
 1. Install `jdbcimage` toolBuild the project using maven or 
-   * download the latest [release](https://github.com/sranka/jdbc-image-tool/releases) as `jdbcimage${version}.tar.gz` or `jdbcimage${version}.zip`, or build it from sources
+   * download the latest [release](https://github.com/sranka/jdbcimage/releases) as `jdbcimage${version}.tar.gz` or `jdbcimage${version}.zip`, or build it from sources
       * mvn install, the same files appear in the `target` directory 
    * `tar xvf jdbcimage${version}.tar.gz` or `unzip jdbcimage${version}.zip` in a directory of your choice, 
       * the examples below assume that the directory is in your `PATH` environment variable
