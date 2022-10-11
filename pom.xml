@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.sranka</groupId>
 	<artifactId>jdbcimage</artifactId>
-	<version>0.8-SNAPSHOT</version>
+	<version>0.9-SNAPSHOT</version>
     <packaging>jar</packaging>
 	<name>JDBC Image Tool</name>
     <description>Quickly exports/imports tables to/from a binary file using JDBC and Kryo.</description>
