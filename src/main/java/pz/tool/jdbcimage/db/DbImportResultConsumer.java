@@ -22,6 +22,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
     private Connection con;
     private DBFacade db;
     private Map<String,String> actualColumns;
+    private BinaryZerosRemover binaryZerosRemover = new BinaryZerosRemover();
 
     // initialize in on start
     private PreparedStatement stmt = null;
@@ -118,11 +119,11 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                                 break;
                             case Types.CHAR:
                             case Types.VARCHAR:
-                                stmt.setString(pos, (String)value);
+                                stmt.setString(pos, binaryZerosRemover.removeBinaryZeros((String)value));
                                 break;
                             case Types.NCHAR:
                             case Types.NVARCHAR:
-                                stmt.setNString(pos, (String)value);
+                                stmt.setNString(pos, binaryZerosRemover.removeBinaryZeros((String)value));
                                 break;
                             case Types.DATE:
                                 stmt.setDate(pos, (Date)value);
@@ -179,7 +180,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                                     } else if (value instanceof Reader ){
                                         stmt.setCharacterStream(pos, (Reader)value);
                                     } else if (value instanceof CharSequence){
-                                        stmt.setString(pos, value.toString());
+                                        stmt.setString(pos, binaryZerosRemover.removeBinaryZeros(value.toString()));
                                     } else{
                                         throw new IllegalStateException("Unexpected value found for clob: "+value);
                                     }
