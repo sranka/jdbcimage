@@ -110,6 +110,7 @@ public class Mssql extends DBFacade {
             Set<String> schemaColumns = tableInfo.getTableColumns().keySet();
             Set<String> importedColumns = Arrays.stream(fileInfo.columns)
                     .filter(col -> schemaColumns.contains(col.toLowerCase()))
+                    .map(String::toLowerCase)
                     .collect(Collectors.toSet());
             return identityColumns.stream().anyMatch(importedColumns::contains);
         }
