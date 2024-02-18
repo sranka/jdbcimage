@@ -13,3 +13,4 @@ atlassian-ide-plugin.xml
 .java-version
 sonar-project.properties
 dependency-reduced-pom.xml
+.DS_Store
