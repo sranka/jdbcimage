@@ -60,6 +60,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet>{
 						if (rs.wasNull()) bVal = null;
 						kryo.writeObjectOrNull(out, bVal, Boolean.class);
 						break;
+                    case Types.OTHER:
 					case Types.CHAR:
 					case Types.VARCHAR:
 						kryo.writeObjectOrNull(out, rs.getString(i+1), String.class);

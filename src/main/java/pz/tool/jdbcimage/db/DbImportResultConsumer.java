@@ -117,6 +117,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData>{
                             case Types.BIT:
                                 stmt.setBoolean(pos, (Boolean)value);
                                 break;
+                            case Types.OTHER:
                             case Types.CHAR:
                             case Types.VARCHAR:
                                 stmt.setString(pos, binaryZerosRemover.removeBinaryZeros((String)value));

@@ -65,6 +65,7 @@ public class KryoResultProducer implements ResultProducer{
 				case Types.BIT:
 					val = kryo.readObjectOrNull(in, Boolean.class);
 					break;
+                case Types.OTHER:
 				case Types.CHAR:
 				case Types.NCHAR:
 				case Types.VARCHAR:
