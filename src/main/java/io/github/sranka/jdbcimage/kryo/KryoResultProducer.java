@@ -58,7 +58,7 @@ public class KryoResultProducer implements ResultProducer {
 		for(int i=0; i<types.length; i++){
 			Object val;
 			int dbType = types[i];
-			if (dbType == Mssql.Types.SQL_VARIANT) {
+			if (dbType == Mssql.Types.SQL_VARIANT || dbType == Types.OTHER) {
 				// read a specific type stored within sql_variant
 				dbType = in.readInt();
 			}

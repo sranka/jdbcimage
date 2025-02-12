@@ -208,6 +208,14 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
                             case Mssql.Types.SQL_VARIANT:
                                 stmt.setObject(pos, value);
                                 break;
+                            case Types.OTHER:
+                                if (value instanceof String){
+                                    // set string, if it was serialized to string
+                                    // requires stringtype=unspecified in postgres connection string
+                                    stmt.setString(pos, (String)value);
+                                    break;
+                                }
+                                throw new IllegalStateException("Unable to set SQL type: "+type+" for value: "+value);
                             default:
                                 throw new IllegalStateException("Unable to set SQL type: "+type+" for value: "+value);
                         }
