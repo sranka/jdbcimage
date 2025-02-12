@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Duration;
 
 
 /**
@@ -17,9 +16,9 @@ import java.time.Duration;
 public class QueryRunner implements Runnable{
     public static int FETCH_SIZE = 100;
 
-    private Connection con;
-    private String query;
-    private ResultConsumer<ResultSet> consumer;
+    private final Connection con;
+    private final String query;
+    private final ResultConsumer<ResultSet> consumer;
 
     public QueryRunner(Connection con, String query, ResultConsumer<ResultSet> consumer) {
         this.con = con;
@@ -27,14 +26,10 @@ public class QueryRunner implements Runnable{
         this.consumer = consumer;
     }
 
-    // time stamps
-    private long started;
-    private long finished;
     // rows processed
     private long rows = 0;
 
     public void run(){
-        started = System.currentTimeMillis();
         try(Statement stmt = createStatement()){
             stmt.setFetchSize(FETCH_SIZE);
             try(ResultSet rs = executeQuery(stmt)){
@@ -54,7 +49,6 @@ public class QueryRunner implements Runnable{
             } catch (SQLException e) {
                 LoggedUtils.ignore("Unable to rollback!", e);
             }
-            finished = System.currentTimeMillis();
         }
     }
 
@@ -63,9 +57,6 @@ public class QueryRunner implements Runnable{
     }
     protected ResultSet executeQuery(Statement stmt) throws SQLException{
         return stmt.executeQuery(query);
-    }
-    public Duration getDuration(){
-        return Duration.ofMillis(finished - started);
     }
     public long getProcessedRows(){
         return rows;

@@ -23,6 +23,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 /**
  * DB facade for PostgreSQL database.
  */
+@SuppressWarnings("SpellCheckingInspection")
 public class PostgreSQL extends DBFacade {
     public static final String STATE_TABLE_NAME = "jdbcimage_create_constraints";
     public static final String STATE_TABLE_DDL = "CREATE TABLE "+STATE_TABLE_NAME+"( tableName varchar(64),constraintName varchar(64),sql varchar(512))";
@@ -40,6 +41,7 @@ public class PostgreSQL extends DBFacade {
         return STATE_TABLE_NAME.equalsIgnoreCase(tableName) || super.isTableIgnored(tableName);
     }
 
+    @SuppressWarnings("DuplicatedCode")
     @Override
     public List<String> getDbUserTables(Connection con) throws SQLException {
         List<String> retVal = new ArrayList<>();
@@ -143,22 +145,7 @@ public class PostgreSQL extends DBFacade {
     public void modifyConstraints(boolean enable) throws SQLException {
         final TableGroupedCommands commands = new TableGroupedCommands();
         if (!enable) {
-            boolean createStateTable = false;
-            try (Connection con = mainToolBase.getReadOnlyConnection()) {
-                try (Statement stmt = con.createStatement()) {
-                    try {
-                        // check table existence
-                        ResultSet rs = stmt.executeQuery("select 1 from " + STATE_TABLE_NAME);
-                        rs.close();
-                    } catch (SQLException e) {
-                        // state table does not exist
-                        createStateTable = true;
-                    } finally {
-                        con.rollback();
-                    }
-                }
-            }
-            if (createStateTable){
+            if (requiresCreateStateTable()){
                 try (Connection con = mainToolBase.getWriteConnection()) {
                     try(Statement stmt = con.createStatement()){
                         stmt.execute(STATE_TABLE_DDL);
@@ -281,6 +268,25 @@ public class PostgreSQL extends DBFacade {
                 .collect(Collectors.toList()));
     }
 
+    private boolean requiresCreateStateTable() throws SQLException {
+        boolean createStateTable = false;
+        try (Connection con = mainToolBase.getReadOnlyConnection()) {
+            try (Statement stmt = con.createStatement()) {
+                try {
+                    // check table existence
+                    ResultSet rs = stmt.executeQuery("select 1 from " + STATE_TABLE_NAME);
+                    rs.close();
+                } catch (SQLException e) {
+                    // state table does not exist
+                    createStateTable = true;
+                } finally {
+                    con.rollback();
+                }
+            }
+        }
+        return createStateTable;
+    }
+
     @Override
     public void modifyIndexes(boolean enable) {
         mainToolBase.out.println("Index " + (enable ? "enable" : "disable") + " not supported on PostgreSQL!");
@@ -290,7 +296,7 @@ public class PostgreSQL extends DBFacade {
     @Override
     public int toSupportedSqlType(int sqlType) {
         switch (sqlType){
-            // postgresql does not support unicode character types
+            // postgresql does not support Unicode character types
             case Types.NCHAR: return Types.CHAR;
             case Types.NVARCHAR: return Types.VARCHAR;
             case Types.LONGNVARCHAR: return Types.LONGVARCHAR;

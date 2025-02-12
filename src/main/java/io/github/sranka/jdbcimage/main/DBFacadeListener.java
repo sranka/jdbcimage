@@ -6,10 +6,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@SuppressWarnings("SpellCheckingInspection")
 public interface DBFacadeListener {
     static DBFacadeListener getInstance(String className){
         if (!className.contains(".")){
@@ -28,9 +28,8 @@ public interface DBFacadeListener {
         }
 
         return Stream.of(classNames.split(","))
-                .filter(Objects::nonNull)
                 .map(String::trim)
-                .filter(x -> x.length()>0)
+                .filter(x -> !x.isEmpty())
                 .map(DBFacadeListener::getInstance)
                 .collect(Collectors.toList());
     }

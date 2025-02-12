@@ -39,14 +39,6 @@ public class ResultSetInfo {
 			types[i] = meta.getColumnType(i+1);
 		}
 	}
-	
-	/**
-	 * Gets column count.
-	 * @return column count
-	 */
-	public int getColumnCount(){
-		return columns.length;
-	}
 
     @Override
     public String toString() {

@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipEntry;
@@ -43,6 +45,7 @@ import javax.sql.DataSource;
 import io.github.sranka.jdbcimage.LoggedUtils;
 import org.apache.commons.dbcp2.BasicDataSource;
 
+@SuppressWarnings({"IOStreamConstructor", "SpellCheckingInspection"})
 public abstract class MainToolBase implements AutoCloseable {
 	//////////////////////
 	// Parameters
@@ -55,7 +58,7 @@ public abstract class MainToolBase implements AutoCloseable {
 	// multi export/import tools
 	public boolean tool_ignoreEmptyTables = Boolean.parseBoolean(System.getProperty("tool_ignoreEmptyTables", "false"));
 	private String tool_builddir = System.getProperty("tool_builddir");
-	private String tool_listeners = System.getProperty("listeners");
+	private final String tool_listeners = System.getProperty("listeners");
 	public String zipFile = null;
 	// let you connect profiling tools
 	public boolean tool_waitOnStartup = Boolean.parseBoolean(System.getProperty("tool_waitOnStartup", "false"));
@@ -68,7 +71,7 @@ public abstract class MainToolBase implements AutoCloseable {
 	{
 		// concurrency
 		String prop = System.getProperty("tool_concurrency");
-		if (prop == null || prop.length() == 0){
+		if (prop == null || prop.isEmpty()){
 			tool_concurrency = -1;
 		} else{
 			tool_concurrency = Integer.parseInt(prop);
@@ -121,23 +124,24 @@ public abstract class MainToolBase implements AutoCloseable {
 			try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
 				zos.setLevel(ZipOutputStream.STORED);
 				byte[] buffer = new byte[4096];
-				Files.list(Paths.get(tool_builddir))
-						.forEach(x -> {
-							File f = x.toFile();
-							if (f.isFile() && !f.getName().contains(".")) {
-								try (FileInputStream fis = new FileInputStream(f)) {
-									ZipEntry zipEntry = new ZipEntry(f.getName());
-									zos.putNextEntry(zipEntry);
-									int count;
-									while ((count = fis.read(buffer)) >= 0) {
-										zos.write(buffer, 0, count);
-									}
-									zos.closeEntry();
-								} catch (IOException e) {
-									throw new RuntimeException(e);
+				try(Stream<Path> files = Files.list(Paths.get(tool_builddir))){
+					files.forEach(x -> {
+						File f = x.toFile();
+						if (f.isFile() && !f.getName().contains(".")) {
+							try (FileInputStream fis = new FileInputStream(f)) {
+								ZipEntry zipEntry = new ZipEntry(f.getName());
+								zos.putNextEntry(zipEntry);
+								int count;
+								while ((count = fis.read(buffer)) >= 0) {
+									zos.write(buffer, 0, count);
 								}
+								zos.closeEntry();
+							} catch (IOException e) {
+								throw new RuntimeException(e);
 							}
-						});
+						}
+					});
+				}
 				out.println("Zipped to '" + zipFile + "' - " + Duration.ofMillis(System.currentTimeMillis() - start));
 			} catch (IOException e) {
 				throw new RuntimeException(e);
@@ -152,13 +156,14 @@ public abstract class MainToolBase implements AutoCloseable {
 		if (buildDirectory!=null && buildDirectory.exists()) {
 			long start = System.currentTimeMillis();
 			try {
-				Files.list(Paths.get(tool_builddir))
-						.forEach(x -> {
-							File f = x.toFile();
-							if (!f.delete()) {
-								LoggedUtils.ignore("Unable to delete " + f, null);
-							}
-						});
+				try(Stream<Path> files = Files.list(Paths.get(tool_builddir))) {
+					files.forEach(x -> {
+						File f = x.toFile();
+						if (!f.delete()) {
+							LoggedUtils.ignore("Unable to delete " + f, null);
+						}
+					});
+				}
 				if (!buildDirectory.delete()) {
 					LoggedUtils.ignore("Unable to delete " + buildDirectory, null);
 				}
@@ -251,8 +256,8 @@ public abstract class MainToolBase implements AutoCloseable {
 		concurrency = currentConcurrencyLimit(-1);
 		started = System.currentTimeMillis();
 		out.println("Started - " + new Date(started));
-		if (url!=null && url.length()>0) out.println("Database URL: "+url);
-		if (user!=null && user.length()>0) out.println("Database user: "+user);
+		if (url!=null && !url.isEmpty()) out.println("Database URL: "+url);
+		if (user!=null && !user.isEmpty()) out.println("Database user: "+user);
 	}
 
 	protected void setTables(Map<String,String> tables, PrintStream out) {

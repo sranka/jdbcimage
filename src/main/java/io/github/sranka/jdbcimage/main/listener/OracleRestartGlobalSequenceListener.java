@@ -16,13 +16,12 @@ import java.util.stream.Stream;
 /**
  * Restarts global sequence out of maximum value of "id" column on all imported tables after data import.
  */
-@SuppressWarnings({"unused", "WeakerAccess"}) // used by reflection
+@SuppressWarnings({"unused", "WeakerAccess", "SpellCheckingInspection"}) // used by reflection
 public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
     protected MainToolBase mainToolBase;
     protected AtomicLong maxValue; // import of tables can run in parallel
     protected String sequenceName = System.getProperty("OracleRestartGlobalSequence.sequenceName");
     protected String onFinishSqls = System.getProperty("OracleRestartGlobalSequence.sql",
-            "" +
                     "declare\n" +
                     "  seq_notexist exception;\n" +
                     "  pragma exception_init (seq_notexist , -2289);\n" +
@@ -61,7 +60,7 @@ public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
             try (Statement stmt = con.createStatement()) {
                 Stream.of(onFinishSqls.split("\n/"))
                         .map(String::trim)
-                        .filter(x -> x.length()>0)
+                        .filter(x -> !x.isEmpty())
                         .forEach(x -> {
                             String toExecute = x.replace("$1", sequenceName).replace("$2",newValue);
                             LoggedUtils.info("OracleRestartGlobalSequenceListener.execute: "+toExecute);

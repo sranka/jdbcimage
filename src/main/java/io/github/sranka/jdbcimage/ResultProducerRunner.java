@@ -1,14 +1,12 @@
 package io.github.sranka.jdbcimage;
 
-import java.time.Duration;
-
 /**
  * Transfers data from producer to consumer.
  * @author zavora
  */
 public class ResultProducerRunner {
-	private ResultProducer producer;
-	private ResultConsumer<RowData> consumer;
+	private final ResultProducer producer;
+	private final ResultConsumer<RowData> consumer;
 
 	public ResultProducerRunner(ResultProducer producer, ResultConsumer<RowData> consumer) {
 		super();
@@ -17,7 +15,6 @@ public class ResultProducerRunner {
 	}
 
 	public long run(){
-		started = System.currentTimeMillis();
 		try{
 			// read header (version)
 			RowData token = producer.start();
@@ -32,15 +29,6 @@ public class ResultProducerRunner {
 			throw new RuntimeException(e);
 		} finally{
 			producer.close();
-			finished = System.currentTimeMillis();
 		}
-	}
-
-	// time stamps
-	public long started;
-	public long finished;
-
-	public Duration getDuration(){
-		return Duration.ofMillis(finished - started);
 	}
 }

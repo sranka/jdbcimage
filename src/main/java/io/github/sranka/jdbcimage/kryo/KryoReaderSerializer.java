@@ -39,8 +39,8 @@ public class KryoReaderSerializer extends Serializer<Reader>{
 			return con.createNClob();
 		}
 	}
-	private static ClobSupplier CLOB_SUPPLIER = new ClobSupplier();
-	private static ClobSupplier NCLOB_SUPPLIER = new NClobSupplier();
+	private static final ClobSupplier CLOB_SUPPLIER = new ClobSupplier();
+	private static final ClobSupplier NCLOB_SUPPLIER = new NClobSupplier();
 
 	public Object deserializeClobData(Input in, Connection connection){
 		return deserializeClobData(in, connection, CLOB_SUPPLIER);

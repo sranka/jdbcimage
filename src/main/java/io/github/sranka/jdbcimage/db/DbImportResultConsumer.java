@@ -103,6 +103,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
         }
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     @Override
     public void accept(RowData t) {
         if (stmt == null) return; // nothing to do

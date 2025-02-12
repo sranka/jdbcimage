@@ -14,8 +14,8 @@ import java.util.HashMap;
 public class TableFileDump extends MainToolBase{
 	// dump file
 	private String tool_in_file = System.getProperty("tool_in_file",null);
-    private String tool_out_file = System.getProperty("tool_out_file",null);
-    private boolean skipData = Boolean.getBoolean("tool_skip_data");
+    private final String tool_out_file = System.getProperty("tool_out_file",null);
+    private final boolean skipData = Boolean.getBoolean("tool_skip_data");
 
 	@Override
 	protected void initDataSource() {
@@ -28,7 +28,7 @@ public class TableFileDump extends MainToolBase{
 		InputStream in = toResultInput(inFile);
 		if (in == null) return; // zip on input
 		PrintStream target;
-		if (tool_out_file != null && tool_out_file.length()>0){
+		if (tool_out_file != null && !tool_out_file.isEmpty()){
 			File outFile = new File(tool_out_file);
 			out.println("Output file: "+outFile);
 			FileOutputStream _target = new FileOutputStream(outFile);
@@ -122,7 +122,7 @@ public class TableFileDump extends MainToolBase{
 	//////////////////////////
 	// java Types to String
 	//////////////////////////
-	private static HashMap<Integer,String> jdbcTypeToName;
+	private static final HashMap<Integer,String> jdbcTypeToName;
 	static{
 		jdbcTypeToName = new HashMap<>();
 		try{
@@ -144,8 +144,8 @@ public class TableFileDump extends MainToolBase{
 		args = setupSystemProperties(args);
 
 		try(TableFileDump tool = new TableFileDump()){
-			if (tool.tool_in_file == null || tool.tool_in_file.length()==0) {
-				if (args.length == 0 || args[0].length() == 0) {
+			if (tool.tool_in_file == null || tool.tool_in_file.isEmpty()) {
+				if (args.length == 0 || args[0].isEmpty()) {
 					throw new IllegalArgumentException("Expected file as an argument, but no or empty argument supplied!");
 				} else{
 					tool.tool_in_file = args[0];

@@ -19,7 +19,7 @@ import io.github.sranka.jdbcimage.ResultSetInfo;
 
 /**
  * Facade that isolates specifics of a particular database
- * in regards to operations used by import/export.
+ * with regard to operations used by import/export.
  *
  * @author zavora
  */

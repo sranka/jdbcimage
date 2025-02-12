@@ -19,6 +19,7 @@ public class MariaDB extends DBFacade {
         bds.setConnectionInitSqls(Collections.singletonList("SET FOREIGN_KEY_CHECKS = 0"));
     }
 
+    @SuppressWarnings("DuplicatedCode")
     @Override
     public List<String> getDbUserTables(Connection con) throws SQLException {
         List<String> retVal = new ArrayList<>();

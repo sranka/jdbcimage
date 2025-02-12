@@ -91,10 +91,8 @@ public class Oracle extends DBFacade {
                             }
                             String sql = "ALTER TRIGGER "+owner+"."+triggerName+" "+(enable?"ENABLE":"DISABLE");
                             triggerCommands.add(tableName, desc, sql);
-                            return null;
-                        } else {
-                            return null;
                         }
+                        return null;
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
@@ -128,21 +126,20 @@ public class Oracle extends DBFacade {
                             String tableName = row.getString(2);
                             String constraint = row.getString(3);
                             if (mainToolBase.containsTable(tableName)) {
+                                String desc;
+                                String sql;
                                 if (enable) {
-                                    String desc = "Enable constraint " + constraint + " on table " + tableName;
-                                    String sql = "ALTER TABLE " + owner + "." + tableName
+                                    desc = "Enable constraint " + constraint + " on table " + tableName;
+                                    sql = "ALTER TABLE " + owner + "." + tableName
                                             + " MODIFY CONSTRAINT " + constraint + " ENABLE";
-                                    constraintCommands.add(tableName, desc, sql);
                                 } else {
-                                    String desc = "Disable constraint " + constraint + " on table " + tableName;
-                                    String sql = "ALTER TABLE " + owner + "." + tableName
+                                    desc = "Disable constraint " + constraint + " on table " + tableName;
+                                    sql = "ALTER TABLE " + owner + "." + tableName
                                             + " MODIFY CONSTRAINT " + constraint + " DISABLE";
-                                    constraintCommands.add(tableName, desc, sql);
                                 }
-                                return null;
-                            } else {
-                                return null;
+                                constraintCommands.add(tableName, desc, sql);
                             }
+                            return null;
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
@@ -171,22 +168,21 @@ public class Oracle extends DBFacade {
                         String tableName = row.getString(2);
                         String index = row.getString(3);
                         if (mainToolBase.containsTable(tableName)) {
+                            String desc;
+                            String sql;
                             if (enable) {
-                                String desc = "Rebuild index " + index + " on table " + tableName;
-                                String sql = "ALTER INDEX " + owner + "." + index
+                                desc = "Rebuild index " + index + " on table " + tableName;
+                                sql = "ALTER INDEX " + owner + "." + index
                                         // SHOULD BE "REBUILD ONLINE" ... but it works only on Enterprise Edition on oracle
                                         + " REBUILD";
-                                commands.add(tableName, desc, sql);
                             } else {
-                                String desc = "Disable index " + index + " on table " + tableName;
-                                String sql = "ALTER INDEX " + owner + "." + index
+                                desc = "Disable index " + index + " on table " + tableName;
+                                sql = "ALTER INDEX " + owner + "." + index
                                         + " UNUSABLE";
-                                commands.add(tableName, desc, sql);
                             }
-                            return null;
-                        } else {
-                            return null;
+                            commands.add(tableName, desc, sql);
                         }
+                        return null;
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }

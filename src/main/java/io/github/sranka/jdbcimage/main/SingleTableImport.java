@@ -109,8 +109,8 @@ public class SingleTableImport extends MainToolBase{
 		args = setupSystemProperties(args);
 
 		try(SingleTableImport tool = new SingleTableImport()){
-			if (tool.tool_table == null || tool.tool_table.length() == 0) {
-				if (args.length == 0 ||  args[0].length() == 0) {
+			if (tool.tool_table == null || tool.tool_table.isEmpty()) {
+				if (args.length == 0 || args[0].isEmpty()) {
 					throw new IllegalArgumentException("Expected table file as an argument, but no or empty argument supplied!");
 				} else{
 					tool.tool_table = args[0];

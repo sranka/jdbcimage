@@ -61,19 +61,18 @@ public class Mssql extends DBFacade {
                             String tableName = row.getString(1);
                             String constraint = row.getString(2);
                             if (mainToolBase.containsTable(tableName)) {
+                                String desc;
+                                String sql;
                                 if (enable) {
-                                    String desc = "Enable constraint " + constraint + " on table " + tableName;
-                                    String sql = "ALTER TABLE [" + tableName + "] CHECK CONSTRAINT [" + constraint + "]";
-                                    commands.add(tableName, desc, sql);
+                                    desc = "Enable constraint " + constraint + " on table " + tableName;
+                                    sql = "ALTER TABLE [" + tableName + "] CHECK CONSTRAINT [" + constraint + "]";
                                 } else {
-                                    String desc = "Disable constraint " + constraint + " on table " + tableName;
-                                    String sql = "ALTER TABLE [" + tableName + "] NOCHECK CONSTRAINT [" + constraint + "]";
-                                    commands.add(tableName, desc, sql);
+                                    desc = "Disable constraint " + constraint + " on table " + tableName;
+                                    sql = "ALTER TABLE [" + tableName + "] NOCHECK CONSTRAINT [" + constraint + "]";
                                 }
-                                return null;
-                            } else {
-                                return null;
+                                commands.add(tableName, desc, sql);
                             }
+                            return null;
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
@@ -109,8 +108,8 @@ public class Mssql extends DBFacade {
         if (identityColumns != null) {
             Set<String> schemaColumns = tableInfo.getTableColumns().keySet();
             Set<String> importedColumns = Arrays.stream(fileInfo.columns)
-                    .filter(col -> schemaColumns.contains(col.toLowerCase()))
                     .map(String::toLowerCase)
+                    .filter(schemaColumns::contains)
                     .collect(Collectors.toSet());
             return identityColumns.stream().anyMatch(importedColumns::contains);
         }
@@ -165,6 +164,7 @@ public class Mssql extends DBFacade {
         tableIdentityColumns = retVal;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     public static class Types {
         public static final int SQL_VARIANT = -156;
         public static final int DATETIMEOFFSET = -155;

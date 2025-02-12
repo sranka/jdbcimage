@@ -56,7 +56,7 @@ public class SingleTableExport extends MainToolBase{
 	
 	public String getSelectStatement(String tableName, Connection con) throws SQLException{
 		// get column names, VARBINARY and BLOBs must be last to avoid
-		// ORA-24816: Expanded non LONG bind data supplied
+		// ORA-24816: Expanded non-LONG bind data supplied
 		StringBuilder columns = new StringBuilder();
 		boolean hasId = false;
 		try(Statement stmt = con.createStatement()){

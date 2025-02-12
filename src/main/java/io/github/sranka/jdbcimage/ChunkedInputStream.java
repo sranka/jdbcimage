@@ -9,6 +9,7 @@ import java.util.List;
  * Implementation of an input stream that operates over chunks by byte[]. 
  * @author zavora
  */
+@SuppressWarnings("DuplicatedCode")
 public class ChunkedInputStream extends InputStream{
 	private static final byte[] EMPTY_CHUNK = new byte[0];
 	private Iterator<byte[]> chunks;

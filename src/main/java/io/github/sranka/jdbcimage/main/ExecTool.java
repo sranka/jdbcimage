@@ -28,7 +28,7 @@ public class ExecTool extends MainToolBase{
             try (Statement stmt = con.createStatement()) {
                 Stream.of(sql.split("\n/"))
                         .map(String::trim)
-                        .filter(x -> x.length()>0)
+                        .filter(x -> !x.isEmpty())
                         .forEach(x -> {
                             out.println("================================");
                             out.println(x);

@@ -5,7 +5,6 @@ import io.github.sranka.jdbcimage.main.DBFacadeListener;
 import io.github.sranka.jdbcimage.main.MainToolBase;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 @SuppressWarnings("unused") // used via reflection
 public class DummyListener implements DBFacadeListener {
