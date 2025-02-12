@@ -210,7 +210,6 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
                                 break;
                             case Types.OTHER:
                                 if (value instanceof String){
-                                    // set string, if it was serialized to string
                                     // requires stringtype=unspecified in postgres connection string
                                     stmt.setString(pos, (String)value);
                                     break;

@@ -16,13 +16,14 @@ The tool ignores missing tables and columns when importing the data.
    * *password* 
 3. Export to a zip file
    * jdbcimage export -url=jdbc:mariadb://localhost:3306/qa -user=root -password=root mysql.zip
-   * jdbcimage export -url=jdbc:postgresql://localhost:5432/inttests?currentSchema=qa -user=postgres -password=postres postgres.zip
+   * jdbcimage export -url=jdbc:postgresql://localhost:5432/inttests?stringtype=unspecified&currentSchema=qa -user=postgres -password=postres postgres.zip
    * jdbcimage export -url=jdbc:oracle:thin:@localhost:1521:XE -user=system -password=changeit oracle.zip
    * jdbcimage export -url=jdbc:sqlserver://localhost:1433;databaseName=XE -user=sa -password=changeit sqlserver.zip
 4. Import from a zip file
    * BEWARE: !!!import deletes data from all tables contained in the imported zip file!!!
    * jdbcimage import -url=jdbc:mariadb://localhost:3306/qa -user=root -password=root -ignored_tables=SCHEMAVERSION postgres.zip
    * jdbcimage import -url=jdbc:postgresql://localhost:5432/inttests?stringtype=unspecified&currentSchema=qa -user=postgres -password=postres -ignored_tables=schemaversion mysql.zip
+      * `stringtype=unspecified` is required in the connection string in order to import data that map to JDBC OTHER type, such as json or jsonb  
    * jdbcimage -Xmx1024m import -url=jdbc:oracle:thin:@localhost:1521:XE -user=system -password=changeit -ignored_tables=SCHEMAVERSION mysql.zip
    * jdbcimage import -url=jdbc:sqlserver://localhost:1433;databaseName=XE -user=sa -password=changeit -ignored_tables=SCHEMAVERSION mysql.zip
 5. Take a look at table data in a zip file
