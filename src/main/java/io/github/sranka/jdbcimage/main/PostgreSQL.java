@@ -286,6 +286,7 @@ public class PostgreSQL extends DBFacade {
         mainToolBase.out.println("Index " + (enable ? "enable" : "disable") + " not supported on PostgreSQL!");
     }
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     @Override
     public int toSupportedSqlType(int sqlType) {
         switch (sqlType){
@@ -299,6 +300,14 @@ public class PostgreSQL extends DBFacade {
             case Types.NCLOB: return Types.LONGVARCHAR;
         }
         return sqlType;
+    }
+
+    public Object toSupportedValue(Object value){
+        // postgres doesn't support storing NULL (\0x00) characters in text fields
+        if (value instanceof String){
+            return ((String)value).replace("\u0000", "");
+        }
+        return value;
     }
 
     @Override

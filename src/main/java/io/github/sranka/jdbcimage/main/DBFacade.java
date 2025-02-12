@@ -151,6 +151,15 @@ public abstract class DBFacade implements DBFacadeListener{
         return sqlType;
     }
     /**
+     * Converts the requested value to a DB-supported value.
+     * @param sqlType SQL type defined in {@link java.sql.Types java.sql.Types}
+     * @param value value to process
+     * @return supported value
+     */
+    public Object toSupportedValue(int sqlType, Object value) {
+        return value;
+    }
+    /**
      * Checks whether the database instance can create and use BLOB, CLOB and NCLOB instances.
      *
      * @return can create blobs?
