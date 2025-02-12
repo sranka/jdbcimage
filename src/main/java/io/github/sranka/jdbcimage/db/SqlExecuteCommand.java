@@ -10,9 +10,9 @@ import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 /**
- * Described SQL Command to execute. 
+ * Described SQL Command to execute.
  */
-public class SqlExecuteCommand{
+public class SqlExecuteCommand {
     public String description;
     public String sql;
 
@@ -21,24 +21,24 @@ public class SqlExecuteCommand{
         this.sql = sql;
     }
 
-    public static Callable<Void> toSqlExecuteTask(Supplier<Connection> connectionSupplier, PrintStream out, SqlExecuteCommand... commands){
+    public static Callable<Void> toSqlExecuteTask(Supplier<Connection> connectionSupplier, PrintStream out, SqlExecuteCommand... commands) {
         return () -> {
-            try(Connection con = connectionSupplier.get()){
+            try (Connection con = connectionSupplier.get()) {
                 boolean failed = true;
                 SqlExecuteCommand last = null;
-                try(Statement stmt = con.createStatement()){
-                    for(SqlExecuteCommand cmd: commands){
+                try (Statement stmt = con.createStatement()) {
+                    for (SqlExecuteCommand cmd : commands) {
                         last = cmd;
                         stmt.execute(last.sql);
-                        if (out!=null) out.println("SUCCESS: "+last.description);
+                        if (out != null) out.println("SUCCESS: " + last.description);
                     }
                     failed = false;
-                } finally{
+                } finally {
                     try {
                         if (failed) {
-                            if (last!=null && out!=null) out.println("FAILURE: "+last.description);
+                            if (last != null && out != null) out.println("FAILURE: " + last.description);
                             con.rollback(); // nothing to commit
-                        } else{
+                        } else {
                             con.commit();
                         }
                     } catch (SQLException e) {

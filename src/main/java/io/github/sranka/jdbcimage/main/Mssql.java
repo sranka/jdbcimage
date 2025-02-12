@@ -1,23 +1,32 @@
 package io.github.sranka.jdbcimage.main;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import io.github.sranka.jdbcimage.LoggedUtils;
 import io.github.sranka.jdbcimage.ResultSetInfo;
 import io.github.sranka.jdbcimage.db.SqlExecuteCommand;
 import io.github.sranka.jdbcimage.db.TableGroupedCommands;
 import org.apache.commons.dbcp2.BasicDataSource;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * DB facade for MSSQL database.
  */
 @SuppressWarnings({"WeakerAccess", "SqlNoDataSourceInspection", "SqlDialectInspection"})
 public class Mssql extends DBFacade {
+    private Map<String, Set<String>> tableIdentityColumns = Collections.emptyMap();
+
     @Override
     public void setupDataSource(BasicDataSource bds) {
         bds.setDefaultTransactionIsolation(Connection.TRANSACTION_NONE);
@@ -61,19 +70,18 @@ public class Mssql extends DBFacade {
                             String tableName = row.getString(1);
                             String constraint = row.getString(2);
                             if (mainToolBase.containsTable(tableName)) {
+                                String desc;
+                                String sql;
                                 if (enable) {
-                                    String desc = "Enable constraint " + constraint + " on table " + tableName;
-                                    String sql = "ALTER TABLE [" + tableName + "] CHECK CONSTRAINT [" + constraint + "]";
-                                    commands.add(tableName, desc, sql);
+                                    desc = "Enable constraint " + constraint + " on table " + tableName;
+                                    sql = "ALTER TABLE [" + tableName + "] CHECK CONSTRAINT [" + constraint + "]";
                                 } else {
-                                    String desc = "Disable constraint " + constraint + " on table " + tableName;
-                                    String sql = "ALTER TABLE [" + tableName + "] NOCHECK CONSTRAINT [" + constraint + "]";
-                                    commands.add(tableName, desc, sql);
+                                    desc = "Disable constraint " + constraint + " on table " + tableName;
+                                    sql = "ALTER TABLE [" + tableName + "] NOCHECK CONSTRAINT [" + constraint + "]";
                                 }
-                                return null;
-                            } else {
-                                return null;
+                                commands.add(tableName, desc, sql);
                             }
+                            return null;
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
@@ -102,15 +110,13 @@ public class Mssql extends DBFacade {
         return "DELETE FROM " + escapeTableName(tableName);
     }
 
-    private Map<String, Set<String>> tableIdentityColumns = Collections.emptyMap();
-
     private boolean importsToIdentityColumn(TableInfo tableInfo, ResultSetInfo fileInfo) {
         Set<String> identityColumns = tableIdentityColumns.get(tableInfo.getTableName());
         if (identityColumns != null) {
             Set<String> schemaColumns = tableInfo.getTableColumns().keySet();
             Set<String> importedColumns = Arrays.stream(fileInfo.columns)
-                    .filter(col -> schemaColumns.contains(col.toLowerCase()))
                     .map(String::toLowerCase)
+                    .filter(schemaColumns::contains)
                     .collect(Collectors.toSet());
             return identityColumns.stream().anyMatch(importedColumns::contains);
         }
@@ -165,6 +171,7 @@ public class Mssql extends DBFacade {
         tableIdentityColumns = retVal;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     public static class Types {
         public static final int SQL_VARIANT = -156;
         public static final int DATETIMEOFFSET = -155;

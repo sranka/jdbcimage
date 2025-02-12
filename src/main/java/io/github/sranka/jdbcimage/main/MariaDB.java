@@ -1,13 +1,13 @@
 package io.github.sranka.jdbcimage.main;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.apache.commons.dbcp2.BasicDataSource;
 
 /**
  * DB facade for MariaDB.
@@ -19,11 +19,12 @@ public class MariaDB extends DBFacade {
         bds.setConnectionInitSqls(Collections.singletonList("SET FOREIGN_KEY_CHECKS = 0"));
     }
 
+    @SuppressWarnings("DuplicatedCode")
     @Override
     public List<String> getDbUserTables(Connection con) throws SQLException {
         List<String> retVal = new ArrayList<>();
-        try(ResultSet tables = con.getMetaData().getTables(con.getCatalog(), con.getSchema(), "%", new String[]{"TABLE"})){
-            while(tables.next()) {
+        try (ResultSet tables = con.getMetaData().getTables(con.getCatalog(), con.getSchema(), "%", new String[]{"TABLE"})) {
+            while (tables.next()) {
                 String tableName = tables.getString(3);
                 retVal.add(tableName);
             }
@@ -33,12 +34,12 @@ public class MariaDB extends DBFacade {
 
     @Override
     public String escapeColumnName(String s) {
-        return "`"+s+"`";
+        return "`" + s + "`";
     }
 
     @Override
     public String escapeTableName(String s) {
-        return "`"+s+"`";
+        return "`" + s + "`";
     }
 
     @Override

@@ -5,7 +5,6 @@ import io.github.sranka.jdbcimage.main.DBFacadeListener;
 import io.github.sranka.jdbcimage.main.MainToolBase;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 @SuppressWarnings("unused") // used via reflection
 public class DummyListener implements DBFacadeListener {
@@ -27,7 +26,7 @@ public class DummyListener implements DBFacadeListener {
 
     @Override
     public void beforeImportTable(Connection con, String table, DBFacade.TableInfo tableInfo) {
-        System.out.println("DummyListener.beforeImportTable "+ table);
+        System.out.println("DummyListener.beforeImportTable " + table);
     }
 
     @Override
@@ -35,7 +34,7 @@ public class DummyListener implements DBFacadeListener {
         System.out.println("DummyListener.afterImportTable" + table);
     }
 
-    public String toString(){
+    public String toString() {
         return "Dummy";
     }
 

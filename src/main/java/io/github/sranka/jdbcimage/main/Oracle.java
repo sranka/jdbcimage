@@ -31,12 +31,12 @@ public class Oracle extends DBFacade {
     public List<String> getDbUserTables(Connection con) throws SQLException {
         // return tables that are not materialized views as well
         // exclude materialized views
-        Map<String,Boolean> toExclude = new HashMap<>();
+        Map<String, Boolean> toExclude = new HashMap<>();
         mainToolBase.executeQuery(
                 "SELECT OBJECT_NAME FROM USER_OBJECTS WHERE OBJECT_TYPE='MATERIALIZED VIEW'",
-                row ->{
+                row -> {
                     try {
-                        toExclude.put(row.getString(1),true);
+                        toExclude.put(row.getString(1), true);
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
@@ -46,12 +46,12 @@ public class Oracle extends DBFacade {
         // include tables
         return mainToolBase.executeQuery(
                 "SELECT OBJECT_NAME FROM USER_OBJECTS WHERE OBJECT_TYPE='TABLE'",
-                row ->{
+                row -> {
                     try {
                         String tableName = row.getString(1);
-                        if (toExclude.containsKey(tableName)){
+                        if (toExclude.containsKey(tableName)) {
                             return null;
-                        } else{
+                        } else {
                             return tableName;
                         }
                     } catch (SQLException e) {
@@ -76,7 +76,7 @@ public class Oracle extends DBFacade {
         // enable/disable triggers
         TableGroupedCommands triggerCommands = new TableGroupedCommands();
         mainToolBase.executeQuery(
-                "SELECT TABLE_OWNER,TABLE_NAME,TRIGGER_NAME FROM user_triggers WHERE STATUS='"+(enable?"DISABLED":"ENABLED")+"'",
+                "SELECT TABLE_OWNER,TABLE_NAME,TRIGGER_NAME FROM user_triggers WHERE STATUS='" + (enable ? "DISABLED" : "ENABLED") + "'",
                 row -> {
                     try {
                         String owner = row.getString(1);
@@ -89,12 +89,10 @@ public class Oracle extends DBFacade {
                             } else {
                                 desc = "Disable trigger " + triggerName + " on table " + tableName;
                             }
-                            String sql = "ALTER TRIGGER "+owner+"."+triggerName+" "+(enable?"ENABLE":"DISABLE");
+                            String sql = "ALTER TRIGGER " + owner + "." + triggerName + " " + (enable ? "ENABLE" : "DISABLE");
                             triggerCommands.add(tableName, desc, sql);
-                            return null;
-                        } else {
-                            return null;
                         }
+                        return null;
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
@@ -121,28 +119,27 @@ public class Oracle extends DBFacade {
         }
         for (int i = 0; i < 2; i++) {
             mainToolBase.executeQuery(
-                    "SELECT OWNER,TABLE_NAME,CONSTRAINT_NAME FROM user_constraints WHERE " + conditions[i] + " and STATUS='"+(enable?"DISABLED":"ENABLED")+"' order by TABLE_NAME",
+                    "SELECT OWNER,TABLE_NAME,CONSTRAINT_NAME FROM user_constraints WHERE " + conditions[i] + " and STATUS='" + (enable ? "DISABLED" : "ENABLED") + "' order by TABLE_NAME",
                     row -> {
                         try {
                             String owner = row.getString(1);
                             String tableName = row.getString(2);
                             String constraint = row.getString(3);
                             if (mainToolBase.containsTable(tableName)) {
+                                String desc;
+                                String sql;
                                 if (enable) {
-                                    String desc = "Enable constraint " + constraint + " on table " + tableName;
-                                    String sql = "ALTER TABLE " + owner + "." + tableName
+                                    desc = "Enable constraint " + constraint + " on table " + tableName;
+                                    sql = "ALTER TABLE " + owner + "." + tableName
                                             + " MODIFY CONSTRAINT " + constraint + " ENABLE";
-                                    constraintCommands.add(tableName, desc, sql);
                                 } else {
-                                    String desc = "Disable constraint " + constraint + " on table " + tableName;
-                                    String sql = "ALTER TABLE " + owner + "." + tableName
+                                    desc = "Disable constraint " + constraint + " on table " + tableName;
+                                    sql = "ALTER TABLE " + owner + "." + tableName
                                             + " MODIFY CONSTRAINT " + constraint + " DISABLE";
-                                    constraintCommands.add(tableName, desc, sql);
                                 }
-                                return null;
-                            } else {
-                                return null;
+                                constraintCommands.add(tableName, desc, sql);
                             }
+                            return null;
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
@@ -171,22 +168,21 @@ public class Oracle extends DBFacade {
                         String tableName = row.getString(2);
                         String index = row.getString(3);
                         if (mainToolBase.containsTable(tableName)) {
+                            String desc;
+                            String sql;
                             if (enable) {
-                                String desc = "Rebuild index " + index + " on table " + tableName;
-                                String sql = "ALTER INDEX " + owner + "." + index
+                                desc = "Rebuild index " + index + " on table " + tableName;
+                                sql = "ALTER INDEX " + owner + "." + index
                                         // SHOULD BE "REBUILD ONLINE" ... but it works only on Enterprise Edition on oracle
                                         + " REBUILD";
-                                commands.add(tableName, desc, sql);
                             } else {
-                                String desc = "Disable index " + index + " on table " + tableName;
-                                String sql = "ALTER INDEX " + owner + "." + index
+                                desc = "Disable index " + index + " on table " + tableName;
+                                sql = "ALTER INDEX " + owner + "." + index
                                         + " UNUSABLE";
-                                commands.add(tableName, desc, sql);
                             }
-                            return null;
-                        } else {
-                            return null;
+                            commands.add(tableName, desc, sql);
                         }
+                        return null;
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
@@ -211,6 +207,7 @@ public class Oracle extends DBFacade {
 
         public static final int BINARY_DOUBLE = 101;
 
-        private Types() { }
+        private Types() {
+        }
     }
 }
