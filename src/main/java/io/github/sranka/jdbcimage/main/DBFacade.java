@@ -53,7 +53,7 @@ public abstract class DBFacade implements DBFacadeListener{
         if (ignoredTables == null){
             ignoredTables = Stream.of(
                     IGNORED_TABLES.split(","))
-                    .filter(x -> x!=null && x.trim().length()>0)
+                    .filter(x -> !x.trim().isEmpty())
                     .map(x -> {
                         Pattern pattern = Pattern.compile(x);
                         return (Predicate<String>) s -> pattern.matcher(s).matches();
@@ -152,7 +152,6 @@ public abstract class DBFacade implements DBFacadeListener{
     }
     /**
      * Converts the requested value to a DB-supported value.
-     * @param sqlType SQL type defined in {@link java.sql.Types java.sql.Types}
      * @param value value to process
      * @return supported value
      */
@@ -180,7 +179,7 @@ public abstract class DBFacade implements DBFacadeListener{
 
     @SuppressWarnings("WeakerAccess")
     public static class TableInfo{
-        private String tableName;
+        private final String tableName;
         private Map<String, Object> data;
         private Map<String, String> tableColumns;
 

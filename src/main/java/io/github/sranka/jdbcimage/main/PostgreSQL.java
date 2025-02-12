@@ -28,7 +28,7 @@ public class PostgreSQL extends DBFacade {
     public static final String STATE_TABLE_DDL = "CREATE TABLE "+STATE_TABLE_NAME+"( tableName varchar(64),constraintName varchar(64),sql varchar(512))";
     public static final String STATE_TABLE_SQL = "SELECT tableName,constraintName,sql FROM "+STATE_TABLE_NAME+ " order by tableName,constraintName";
 
-    private static Pattern identifyColumnPattern = Pattern.compile("^.*_([a-zA-z]*)_seq$");
+    private static final Pattern identifyColumnPattern = Pattern.compile("^.*_([a-zA-z]*)_seq$");
 
     @Override
     public void setupDataSource(BasicDataSource bds) {
@@ -302,7 +302,8 @@ public class PostgreSQL extends DBFacade {
         return sqlType;
     }
 
-    public Object toSupportedValue(Object value){
+    @Override
+    public Object toSupportedValue(int sqlType, Object value){
         // postgres doesn't support storing NULL (\0x00) characters in text fields
         if (value instanceof String){
             return ((String)value).replace("\u0000", "");
@@ -330,7 +331,6 @@ public class PostgreSQL extends DBFacade {
         if (cachedSchema == null) {
             // get current schema and create state table
             String schema;
-            boolean createStateTable = false;
             try (Connection con = mainToolBase.getReadOnlyConnection()) {
                 schema = con.getSchema(); // get current schema
             }
