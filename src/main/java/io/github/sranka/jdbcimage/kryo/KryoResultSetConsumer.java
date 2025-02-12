@@ -160,6 +160,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         val = rs.getObject(i + 1);
                         if (val == null) {
                             clazz = String.class; // any class is good for serializing null
+                            out.writeInt(Types.VARCHAR);
                         } else {
                             // check that the class is supported
                             clazz = val.getClass();
@@ -170,6 +171,22 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                                         + ", Object: " + val);
                             }
                             out.writeInt(type);
+                        }
+                        break;
+                    case Types.OTHER:
+                        val = rs.getObject(i + 1);
+                        if (val == null) {
+                            clazz = String.class; // any class is good for serializing null
+                            out.writeInt(Types.VARCHAR);
+                        } else if (val.getClass().getName().equals("org.postgresql.util.PGobject")) {
+                            // PGObject serialized as a string
+                            clazz = String.class;
+                            val = val.toString();
+                            out.writeInt(Types.VARCHAR);
+                        } else {
+                            throw new IllegalStateException("Unable to serialize SQL OTHER type: " + info.types[i]
+                                    + ", Class: " + val.getClass().getName()
+                                    + ", Object: " + val);
                         }
                         break;
                     default:

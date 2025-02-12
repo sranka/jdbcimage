@@ -115,7 +115,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
                     if (value == null){
                         stmt.setNull(pos, type);
                     } else{
-                        // ENHANCEMENT: could be set directly from producer to avoid rowData
+                        value = db.toSupportedValue(type, value);
                         switch(type){
                             case Types.BIGINT:
                                 stmt.setLong(pos, (Long)value);
@@ -208,6 +208,13 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
                             case Mssql.Types.SQL_VARIANT:
                                 stmt.setObject(pos, value);
                                 break;
+                            case Types.OTHER:
+                                if (value instanceof String){
+                                    // requires stringtype=unspecified in postgres connection string
+                                    stmt.setString(pos, (String)value);
+                                    break;
+                                }
+                                throw new IllegalStateException("Unable to set SQL type: "+type+" for value: "+value);
                             default:
                                 throw new IllegalStateException("Unable to set SQL type: "+type+" for value: "+value);
                         }

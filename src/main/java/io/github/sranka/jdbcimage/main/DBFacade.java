@@ -53,7 +53,7 @@ public abstract class DBFacade implements DBFacadeListener{
         if (ignoredTables == null){
             ignoredTables = Stream.of(
                     IGNORED_TABLES.split(","))
-                    .filter(x -> x!=null && x.trim().length()>0)
+                    .filter(x -> !x.trim().isEmpty())
                     .map(x -> {
                         Pattern pattern = Pattern.compile(x);
                         return (Predicate<String>) s -> pattern.matcher(s).matches();
@@ -151,6 +151,14 @@ public abstract class DBFacade implements DBFacadeListener{
         return sqlType;
     }
     /**
+     * Converts the requested value to a DB-supported value.
+     * @param value value to process
+     * @return supported value
+     */
+    public Object toSupportedValue(int sqlType, Object value) {
+        return value;
+    }
+    /**
      * Checks whether the database instance can create and use BLOB, CLOB and NCLOB instances.
      *
      * @return can create blobs?
@@ -171,7 +179,7 @@ public abstract class DBFacade implements DBFacadeListener{
 
     @SuppressWarnings("WeakerAccess")
     public static class TableInfo{
-        private String tableName;
+        private final String tableName;
         private Map<String, Object> data;
         private Map<String, String> tableColumns;
 
