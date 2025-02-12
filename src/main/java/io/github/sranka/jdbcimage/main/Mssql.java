@@ -1,23 +1,32 @@
 package io.github.sranka.jdbcimage.main;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import io.github.sranka.jdbcimage.LoggedUtils;
 import io.github.sranka.jdbcimage.ResultSetInfo;
 import io.github.sranka.jdbcimage.db.SqlExecuteCommand;
 import io.github.sranka.jdbcimage.db.TableGroupedCommands;
 import org.apache.commons.dbcp2.BasicDataSource;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * DB facade for MSSQL database.
  */
 @SuppressWarnings({"WeakerAccess", "SqlNoDataSourceInspection", "SqlDialectInspection"})
 public class Mssql extends DBFacade {
+    private Map<String, Set<String>> tableIdentityColumns = Collections.emptyMap();
+
     @Override
     public void setupDataSource(BasicDataSource bds) {
         bds.setDefaultTransactionIsolation(Connection.TRANSACTION_NONE);
@@ -100,8 +109,6 @@ public class Mssql extends DBFacade {
         // unable to use TRUNCATE TABLE on MSSQL server even with CONSTRAINTS DISABLED!
         return "DELETE FROM " + escapeTableName(tableName);
     }
-
-    private Map<String, Set<String>> tableIdentityColumns = Collections.emptyMap();
 
     private boolean importsToIdentityColumn(TableInfo tableInfo, ResultSetInfo fileInfo) {
         Set<String> identityColumns = tableIdentityColumns.get(tableInfo.getTableName());

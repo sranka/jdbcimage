@@ -11,18 +11,18 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("SpellCheckingInspection")
 public interface DBFacadeListener {
-    static DBFacadeListener getInstance(String className){
-        if (!className.contains(".")){
-            className = "io.github.sranka.jdbcimage.main.listener."+className;
+    static DBFacadeListener getInstance(String className) {
+        if (!className.contains(".")) {
+            className = "io.github.sranka.jdbcimage.main.listener." + className;
         }
         try {
-            return (DBFacadeListener)Class.forName(className+"Listener").newInstance();
+            return (DBFacadeListener) Class.forName(className + "Listener").newInstance();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    static List<DBFacadeListener> getInstances(String classNames){
+    static List<DBFacadeListener> getInstances(String classNames) {
         if (classNames == null || classNames.isEmpty()) {
             return Collections.emptyList();
         }
@@ -38,9 +38,13 @@ public interface DBFacadeListener {
     void setToolBase(MainToolBase mainToolBase);
 
     void importStarted();
+
     void importFinished();
+
     void beforeImportTable(Connection con, String table, DBFacade.TableInfo tableInfo) throws SQLException;
+
     void afterImportTable(Connection con, String table, DBFacade.TableInfo tableInfo) throws SQLException;
+
     default void beforeImportTableData(Connection con, String table, DBFacade.TableInfo tableInfo, ResultSetInfo fileInfo) throws SQLException {
     }
 }

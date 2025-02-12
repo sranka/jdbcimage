@@ -26,7 +26,7 @@ public class DummyListener implements DBFacadeListener {
 
     @Override
     public void beforeImportTable(Connection con, String table, DBFacade.TableInfo tableInfo) {
-        System.out.println("DummyListener.beforeImportTable "+ table);
+        System.out.println("DummyListener.beforeImportTable " + table);
     }
 
     @Override
@@ -34,7 +34,7 @@ public class DummyListener implements DBFacadeListener {
         System.out.println("DummyListener.afterImportTable" + table);
     }
 
-    public String toString(){
+    public String toString() {
         return "Dummy";
     }
 

@@ -1,5 +1,10 @@
 package io.github.sranka.jdbcimage.main;
 
+import io.github.sranka.jdbcimage.ChunkedReader;
+import io.github.sranka.jdbcimage.db.SqlExecuteCommand;
+import io.github.sranka.jdbcimage.db.TableGroupedCommands;
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -15,21 +20,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import io.github.sranka.jdbcimage.ChunkedReader;
-import io.github.sranka.jdbcimage.db.SqlExecuteCommand;
-import io.github.sranka.jdbcimage.db.TableGroupedCommands;
-import org.apache.commons.dbcp2.BasicDataSource;
-
 /**
  * DB facade for PostgreSQL database.
  */
 @SuppressWarnings("SpellCheckingInspection")
 public class PostgreSQL extends DBFacade {
     public static final String STATE_TABLE_NAME = "jdbcimage_create_constraints";
-    public static final String STATE_TABLE_DDL = "CREATE TABLE "+STATE_TABLE_NAME+"( tableName varchar(64),constraintName varchar(64),sql varchar(512))";
-    public static final String STATE_TABLE_SQL = "SELECT tableName,constraintName,sql FROM "+STATE_TABLE_NAME+ " order by tableName,constraintName";
+    public static final String STATE_TABLE_DDL = "CREATE TABLE " + STATE_TABLE_NAME + "( tableName varchar(64),constraintName varchar(64),sql varchar(512))";
+    public static final String STATE_TABLE_SQL = "SELECT tableName,constraintName,sql FROM " + STATE_TABLE_NAME + " order by tableName,constraintName";
 
     private static final Pattern identifyColumnPattern = Pattern.compile("^.*_([a-zA-z]*)_seq$");
+    private Map<String, IdentityInfo> allIdentityInfo = null;
+    private volatile String cachedSchema = null;
 
     @Override
     public void setupDataSource(BasicDataSource bds) {
@@ -45,8 +47,8 @@ public class PostgreSQL extends DBFacade {
     @Override
     public List<String> getDbUserTables(Connection con) throws SQLException {
         List<String> retVal = new ArrayList<>();
-        try(ResultSet tables = con.getMetaData().getTables(con.getCatalog(), con.getSchema(), "%", new String[]{"TABLE"})){
-            while(tables.next()){
+        try (ResultSet tables = con.getMetaData().getTables(con.getCatalog(), con.getSchema(), "%", new String[]{"TABLE"})) {
+            while (tables.next()) {
                 String tableName = tables.getString(3);
                 retVal.add(tableName);
             }
@@ -54,7 +56,6 @@ public class PostgreSQL extends DBFacade {
         return retVal;
     }
 
-    private Map<String, IdentityInfo> allIdentityInfo = null;
     @Override
     public void importStarted() {
         HashMap<String, IdentityInfo> retVal = new HashMap<>();
@@ -62,25 +63,25 @@ public class PostgreSQL extends DBFacade {
             try (Statement stmt = con.createStatement()) {
                 try (ResultSet rs = stmt.executeQuery(
                         "WITH fq_objects AS (SELECT c.oid,n.nspname AS nsp,c.relname AS name , \n" +
-                        "                           c.relkind, c.relname AS relation \n" +
-                        "                    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace ),\n" +
-                        "     sequences AS (SELECT oid, nsp, name FROM fq_objects WHERE relkind = 'S'),  \n" +
-                        "     tables    AS (SELECT oid, nsp, name FROM fq_objects WHERE relkind = 'r' )  \n" +
-                        "SELECT\n" +
-                        "       t.name AS tableName, \n" +
-                        "       s.name AS sequence \n" +
-                        "FROM \n" +
-                        "     pg_depend d JOIN sequences s ON s.oid = d.objid  \n" +
-                        "                 JOIN tables t ON t.oid = d.refobjid  \n" +
-                        "WHERE \n" +
-                        "     d.deptype = 'a' and t.nsp='"+currentSchema()+"'"
-                        )){
-                    while(rs.next()){
+                                "                           c.relkind, c.relname AS relation \n" +
+                                "                    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace ),\n" +
+                                "     sequences AS (SELECT oid, nsp, name FROM fq_objects WHERE relkind = 'S'),  \n" +
+                                "     tables    AS (SELECT oid, nsp, name FROM fq_objects WHERE relkind = 'r' )  \n" +
+                                "SELECT\n" +
+                                "       t.name AS tableName, \n" +
+                                "       s.name AS sequence \n" +
+                                "FROM \n" +
+                                "     pg_depend d JOIN sequences s ON s.oid = d.objid  \n" +
+                                "                 JOIN tables t ON t.oid = d.refobjid  \n" +
+                                "WHERE \n" +
+                                "     d.deptype = 'a' and t.nsp='" + currentSchema() + "'"
+                )) {
+                    while (rs.next()) {
                         String tableName = rs.getString(1);
                         String sequence = rs.getString(2);
                         // extract column from generated name
                         Matcher matcher = identifyColumnPattern.matcher(sequence);
-                        if (matcher.matches()){
+                        if (matcher.matches()) {
                             String columnName = matcher.group(1);
                             retVal.put(tableName, new IdentityInfo(sequence, columnName));
                         }
@@ -89,21 +90,11 @@ public class PostgreSQL extends DBFacade {
                     con.rollback();
                 }
             }
-        }catch (SQLException e){
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
         allIdentityInfo = retVal;
-    }
-
-    private static class IdentityInfo{
-        String sequenceName;
-        String columnName;
-
-        IdentityInfo(String sequenceName, String columnName) {
-            this.sequenceName = sequenceName;
-            this.columnName = columnName;
-        }
     }
 
     @Override
@@ -117,14 +108,14 @@ public class PostgreSQL extends DBFacade {
     @Override
     public void afterImportTable(Connection con, String table, TableInfo tableInfo) throws SQLException {
         super.afterImportTable(con, table, tableInfo);
-        IdentityInfo info = (IdentityInfo)tableInfo.get("IdInfo");
+        IdentityInfo info = (IdentityInfo) tableInfo.get("IdInfo");
         if (info != null) {
-            String sql = "select setval('"+info.sequenceName+"', (select coalesce(max("+info.columnName+")+1,1) from "+table+"))";
+            String sql = "select setval('" + info.sequenceName + "', (select coalesce(max(" + info.columnName + ")+1,1) from " + table + "))";
             try (Statement stmt = con.createStatement()) {
                 try (ResultSet rs = stmt.executeQuery(sql)) {
                     rs.next();
                     Object val = rs.getLong(1); // read the next value of the sequence
-                    System.out.println("Sequence "+info.sequenceName+" reset to "+val);
+                    System.out.println("Sequence " + info.sequenceName + " reset to " + val);
                 }
             }
         }
@@ -133,24 +124,24 @@ public class PostgreSQL extends DBFacade {
 
     @Override
     public String escapeColumnName(String s) {
-        return "\""+s+"\"";
+        return "\"" + s + "\"";
     }
 
     @Override
     public String escapeTableName(String s) {
-        return "\""+s+"\"";
+        return "\"" + s + "\"";
     }
 
     @Override
     public void modifyConstraints(boolean enable) throws SQLException {
         final TableGroupedCommands commands = new TableGroupedCommands();
         if (!enable) {
-            if (requiresCreateStateTable()){
+            if (requiresCreateStateTable()) {
                 try (Connection con = mainToolBase.getWriteConnection()) {
-                    try(Statement stmt = con.createStatement()){
+                    try (Statement stmt = con.createStatement()) {
                         stmt.execute(STATE_TABLE_DDL);
                         con.commit();
-                    } catch(Exception e){
+                    } catch (Exception e) {
                         con.rollback();
                     }
                 }
@@ -167,7 +158,7 @@ public class PostgreSQL extends DBFacade {
                     "  join information_schema.table_constraints C2 on (C.constraint_schema = C2.constraint_schema and C.constraint_name = C2.constraint_name) \n" +
                     "  join information_schema.key_column_usage S on (S.constraint_schema = C.constraint_schema and S.constraint_name = C.constraint_name) \n" +
                     "  join information_schema.key_column_usage T on (T.constraint_schema = C.unique_constraint_schema and T.constraint_name = C.unique_constraint_name and S.ordinal_position = T.ordinal_position) \n" +
-                    "  where C.constraint_schema='" + currentSchema()+ "' order by S.table_name, C.constraint_name, S.ordinal_position";
+                    "  where C.constraint_schema='" + currentSchema() + "' order by S.table_name, C.constraint_name, S.ordinal_position";
             Map<String, ForeignKeyConstraint> constraints = new LinkedHashMap<>();
             mainToolBase.executeQuery(
                     query,
@@ -181,7 +172,7 @@ public class PostgreSQL extends DBFacade {
                                 String targetColumn = row.getString(5);
 
                                 ForeignKeyConstraint data;
-                                if(!constraints.containsKey(constraint)) {
+                                if (!constraints.containsKey(constraint)) {
                                     String match_option = row.getString(6);
                                     String update_rule = row.getString(7);
                                     String delete_rule = row.getString(8);
@@ -228,8 +219,8 @@ public class PostgreSQL extends DBFacade {
                 if (is_deferrable) createSql.append(" DEFERRABLE");
                 if (initially_deferred) createSql.append(" INITIALLY DEFERRED");
                 desc = "Persist DDL for constraint " + constraint + " on table " + tableName;
-                sql = "INSERT INTO "+STATE_TABLE_NAME+"(tableName,constraintName,sql) " +
-                        "VALUES('"+tableName+"','"+constraint+"','"+createSql+"')";
+                sql = "INSERT INTO " + STATE_TABLE_NAME + "(tableName,constraintName,sql) " +
+                        "VALUES('" + tableName + "','" + constraint + "','" + createSql + "')";
                 commands.add(tableName, desc, sql);
             });
         } else {
@@ -237,7 +228,7 @@ public class PostgreSQL extends DBFacade {
             mainToolBase.executeQuery(
                     STATE_TABLE_SQL,
                     row -> {
-                        try{
+                        try {
                             String tableName = row.getString(1);
                             String constraint = row.getString(2);
                             String sql = row.getString(3);
@@ -247,8 +238,8 @@ public class PostgreSQL extends DBFacade {
                             commands.add(tableName, desc, sql);
                             // create constraint
                             desc = "Delete persisted DDL for constraint " + constraint + " on table " + tableName;
-                            sql = "DELETE FROM "+STATE_TABLE_NAME+" WHERE" +
-                                    " tableName='"+tableName+"' AND constraintName='"+constraint+"'";
+                            sql = "DELETE FROM " + STATE_TABLE_NAME + " WHERE" +
+                                    " tableName='" + tableName + "' AND constraintName='" + constraint + "'";
                             commands.add(tableName, desc, sql);
 
                         } catch (SQLException e) {
@@ -295,24 +286,30 @@ public class PostgreSQL extends DBFacade {
     @SuppressWarnings("DuplicateBranchesInSwitch")
     @Override
     public int toSupportedSqlType(int sqlType) {
-        switch (sqlType){
+        switch (sqlType) {
             // postgresql does not support Unicode character types
-            case Types.NCHAR: return Types.CHAR;
-            case Types.NVARCHAR: return Types.VARCHAR;
-            case Types.LONGNVARCHAR: return Types.LONGVARCHAR;
+            case Types.NCHAR:
+                return Types.CHAR;
+            case Types.NVARCHAR:
+                return Types.VARCHAR;
+            case Types.LONGNVARCHAR:
+                return Types.LONGVARCHAR;
             // postgresql does not support BLOBs and CLOBs in the JDBC driver
-            case Types.BLOB: return Types.VARBINARY;
-            case Types.CLOB: return Types.LONGVARCHAR;
-            case Types.NCLOB: return Types.LONGVARCHAR;
+            case Types.BLOB:
+                return Types.VARBINARY;
+            case Types.CLOB:
+                return Types.LONGVARCHAR;
+            case Types.NCLOB:
+                return Types.LONGVARCHAR;
         }
         return sqlType;
     }
 
     @Override
-    public Object toSupportedValue(int sqlType, Object value){
+    public Object toSupportedValue(int sqlType, Object value) {
         // postgres doesn't support storing NULL (\0x00) characters in text fields
-        if (value instanceof String){
-            return ((String)value).replace("\u0000", "");
+        if (value instanceof String) {
+            return ((String) value).replace("\u0000", "");
         }
         return value;
     }
@@ -324,15 +321,14 @@ public class PostgreSQL extends DBFacade {
 
     @Override
     public Object convertCharacterStreamInput(Reader reader) {
-        if (reader instanceof ChunkedReader){
-            return ((ChunkedReader)reader).readAsString();
-        } else{
+        if (reader instanceof ChunkedReader) {
+            return ((ChunkedReader) reader).readAsString();
+        } else {
             // let the implementation handle this
             return reader;
         }
     }
 
-    private volatile String cachedSchema = null;
     private String currentSchema() throws SQLException {
         if (cachedSchema == null) {
             // get current schema and create state table
@@ -342,8 +338,18 @@ public class PostgreSQL extends DBFacade {
             }
             this.cachedSchema = schema;
             return schema;
-        } else{
+        } else {
             return cachedSchema;
+        }
+    }
+
+    private static class IdentityInfo {
+        String sequenceName;
+        String columnName;
+
+        IdentityInfo(String sequenceName, String columnName) {
+            this.sequenceName = sequenceName;
+            this.columnName = columnName;
         }
     }
 

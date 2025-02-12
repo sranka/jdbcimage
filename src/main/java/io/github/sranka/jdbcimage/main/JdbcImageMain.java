@@ -2,15 +2,16 @@ package io.github.sranka.jdbcimage.main;
 
 @SuppressWarnings("CallToPrintStackTrace")
 public class JdbcImageMain {
-    private static void help(){
+    private static void help() {
         System.out.println("See documentation at https://sranka.github.io/jdbcimage");
     }
-    public static void main(String... args)  throws Exception{
+
+    public static void main(String... args) throws Exception {
         args = MainToolBase.setupSystemProperties(args);
-        String action = args.length>0?args[0]:null;
-        if (action!=null) {
-            String[] restArgs = new String[args.length-1];
-            System.arraycopy(args, 1, restArgs,0,args.length-1);
+        String action = args.length > 0 ? args[0] : null;
+        if (action != null) {
+            String[] restArgs = new String[args.length - 1];
+            System.arraycopy(args, 1, restArgs, 0, args.length - 1);
 
             try {
                 switch (action) {
@@ -35,12 +36,12 @@ public class JdbcImageMain {
                         action = null;
                         break;
                 }
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
                 System.exit(1);
             }
         }
-        if (action == null){
+        if (action == null) {
             help();
             System.exit(1);
         }

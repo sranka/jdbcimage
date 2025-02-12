@@ -17,12 +17,12 @@ import java.util.stream.Stream;
  * Restarts global sequence out of maximum value of "id" column on all imported tables after data import.
  */
 @SuppressWarnings({"unused", "WeakerAccess", "SpellCheckingInspection"}) // used by reflection
-public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
+public class OracleRestartGlobalSequenceListener implements DBFacadeListener {
     protected MainToolBase mainToolBase;
     protected AtomicLong maxValue; // import of tables can run in parallel
     protected String sequenceName = System.getProperty("OracleRestartGlobalSequence.sequenceName");
     protected String onFinishSqls = System.getProperty("OracleRestartGlobalSequence.sql",
-                    "declare\n" +
+            "declare\n" +
                     "  seq_notexist exception;\n" +
                     "  pragma exception_init (seq_notexist , -2289);\n" +
                     "begin\n" +
@@ -38,7 +38,7 @@ public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
         if (onFinishSqls == null || onFinishSqls.isEmpty()) {
             throw new RuntimeException("Specify the sequence name using parameter OracleRestartGlobalSequence.sequenceName!");
         }
-        if (sequenceName == null || sequenceName.isEmpty()){
+        if (sequenceName == null || sequenceName.isEmpty()) {
             throw new RuntimeException("Parameter OracleRestartGlobalSequence.sql is empty!");
         }
     }
@@ -53,17 +53,17 @@ public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
         if (onFinishSqls == null || onFinishSqls.isEmpty()) return;
         if (sequenceName == null || sequenceName.isEmpty()) return;
         // update sequence
-        final String newValue = String.valueOf(maxValue.longValue()+1);
+        final String newValue = String.valueOf(maxValue.longValue() + 1);
         Connection con = null;
-        try{
+        try {
             con = mainToolBase.getWriteConnection();
             try (Statement stmt = con.createStatement()) {
                 Stream.of(onFinishSqls.split("\n/"))
                         .map(String::trim)
                         .filter(x -> !x.isEmpty())
                         .forEach(x -> {
-                            String toExecute = x.replace("$1", sequenceName).replace("$2",newValue);
-                            LoggedUtils.info("OracleRestartGlobalSequenceListener.execute: "+toExecute);
+                            String toExecute = x.replace("$1", sequenceName).replace("$2", newValue);
+                            LoggedUtils.info("OracleRestartGlobalSequenceListener.execute: " + toExecute);
                             try {
                                 stmt.execute(toExecute);
                             } catch (SQLException e) {
@@ -73,10 +73,18 @@ public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
             }
             con.commit();
         } catch (SQLException e) {
-            if (con!=null) try{con.rollback();}catch(Exception e2) { LoggedUtils.ignore("Cannot rollback",e2);}
+            if (con != null) try {
+                con.rollback();
+            } catch (Exception e2) {
+                LoggedUtils.ignore("Cannot rollback", e2);
+            }
             throw new RuntimeException(e);
-        } finally{
-            if (con!=null) try{con.close();} catch(Exception e2) { LoggedUtils.ignore("Cannot close",e2);}
+        } finally {
+            if (con != null) try {
+                con.close();
+            } catch (Exception e2) {
+                LoggedUtils.ignore("Cannot close", e2);
+            }
         }
     }
 
@@ -88,14 +96,14 @@ public class OracleRestartGlobalSequenceListener implements DBFacadeListener{
     @Override
     public void afterImportTable(Connection con, String table, DBFacade.TableInfo tableInfo) throws SQLException {
         Map<String, String> tableColumns = tableInfo.getTableColumns();
-        String id = tableColumns == null? null:tableColumns.get("id");
-        if (id!=null) {
+        String id = tableColumns == null ? null : tableColumns.get("id");
+        if (id != null) {
             try (Statement stmt = con.createStatement()) {
-                try(ResultSet rs = stmt.executeQuery("select max(" + id + ") from " + table)){
+                try (ResultSet rs = stmt.executeQuery("select max(" + id + ") from " + table)) {
                     rs.next();
                     long l = rs.getLong(1);
                     if (!rs.wasNull()) {
-                        maxValue.accumulateAndGet(l, (current,newVal) -> Math.max(newVal, current));
+                        maxValue.accumulateAndGet(l, (current, newVal) -> Math.max(newVal, current));
                     }
                 }
             }

@@ -21,12 +21,11 @@ import java.util.HashMap;
 
 /**
  * Serializes the result set into the supplied output stream.
- *
- * @author zavora
  */
 public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
     // allows serializing sql_variant type, where a specific type information is required
     private static final HashMap<Class<?>, Integer> SQL_VARIANT_CLASS_TO_TYPE;
+
     static {
         SQL_VARIANT_CLASS_TO_TYPE = new HashMap<>();
         SQL_VARIANT_CLASS_TO_TYPE.put(Long.class, Types.BIGINT);
@@ -165,7 +164,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                             // check that the class is supported
                             clazz = val.getClass();
                             Integer type = SQL_VARIANT_CLASS_TO_TYPE.get(clazz);
-                            if (type == null ){
+                            if (type == null) {
                                 throw new IllegalStateException("Unable to serialize sql_variant SQL type: " + info.types[i]
                                         + ", Class: " + clazz.getName()
                                         + ", Object: " + val);

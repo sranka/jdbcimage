@@ -31,12 +31,12 @@ public class Oracle extends DBFacade {
     public List<String> getDbUserTables(Connection con) throws SQLException {
         // return tables that are not materialized views as well
         // exclude materialized views
-        Map<String,Boolean> toExclude = new HashMap<>();
+        Map<String, Boolean> toExclude = new HashMap<>();
         mainToolBase.executeQuery(
                 "SELECT OBJECT_NAME FROM USER_OBJECTS WHERE OBJECT_TYPE='MATERIALIZED VIEW'",
-                row ->{
+                row -> {
                     try {
-                        toExclude.put(row.getString(1),true);
+                        toExclude.put(row.getString(1), true);
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
@@ -46,12 +46,12 @@ public class Oracle extends DBFacade {
         // include tables
         return mainToolBase.executeQuery(
                 "SELECT OBJECT_NAME FROM USER_OBJECTS WHERE OBJECT_TYPE='TABLE'",
-                row ->{
+                row -> {
                     try {
                         String tableName = row.getString(1);
-                        if (toExclude.containsKey(tableName)){
+                        if (toExclude.containsKey(tableName)) {
                             return null;
-                        } else{
+                        } else {
                             return tableName;
                         }
                     } catch (SQLException e) {
@@ -76,7 +76,7 @@ public class Oracle extends DBFacade {
         // enable/disable triggers
         TableGroupedCommands triggerCommands = new TableGroupedCommands();
         mainToolBase.executeQuery(
-                "SELECT TABLE_OWNER,TABLE_NAME,TRIGGER_NAME FROM user_triggers WHERE STATUS='"+(enable?"DISABLED":"ENABLED")+"'",
+                "SELECT TABLE_OWNER,TABLE_NAME,TRIGGER_NAME FROM user_triggers WHERE STATUS='" + (enable ? "DISABLED" : "ENABLED") + "'",
                 row -> {
                     try {
                         String owner = row.getString(1);
@@ -89,7 +89,7 @@ public class Oracle extends DBFacade {
                             } else {
                                 desc = "Disable trigger " + triggerName + " on table " + tableName;
                             }
-                            String sql = "ALTER TRIGGER "+owner+"."+triggerName+" "+(enable?"ENABLE":"DISABLE");
+                            String sql = "ALTER TRIGGER " + owner + "." + triggerName + " " + (enable ? "ENABLE" : "DISABLE");
                             triggerCommands.add(tableName, desc, sql);
                         }
                         return null;
@@ -119,7 +119,7 @@ public class Oracle extends DBFacade {
         }
         for (int i = 0; i < 2; i++) {
             mainToolBase.executeQuery(
-                    "SELECT OWNER,TABLE_NAME,CONSTRAINT_NAME FROM user_constraints WHERE " + conditions[i] + " and STATUS='"+(enable?"DISABLED":"ENABLED")+"' order by TABLE_NAME",
+                    "SELECT OWNER,TABLE_NAME,CONSTRAINT_NAME FROM user_constraints WHERE " + conditions[i] + " and STATUS='" + (enable ? "DISABLED" : "ENABLED") + "' order by TABLE_NAME",
                     row -> {
                         try {
                             String owner = row.getString(1);
@@ -207,6 +207,7 @@ public class Oracle extends DBFacade {
 
         public static final int BINARY_DOUBLE = 101;
 
-        private Types() { }
+        private Types() {
+        }
     }
 }
