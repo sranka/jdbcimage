@@ -16,80 +16,89 @@ import static org.junit.Assert.assertTrue;
 public class ChunkedReaderTest {
     @Test
     public void testEmptyStreamSingle() throws IOException {
-        ChunkedReader cis1 = new ChunkedReader(null, 0);
-        assertEquals(cis1.read(), -1);
-        assertEquals(cis1.read(), -1); // repetitive read is no problem
-        ChunkedReader cis2 = new ChunkedReader(Collections.emptyList(), -1);
-        assertEquals(cis2.read(), -1);
-        assertEquals(cis2.read(), -1); // repetitive read is no problem
-        ChunkedReader cis3 = new ChunkedReader(Arrays.asList(null,new char[0]), -1);
-        assertEquals(cis3.read(), -1);
-        assertEquals(cis3.read(), -1); // repetitive read is no problem
+        try(ChunkedReader cis1 = new ChunkedReader(null, 0)) {
+            assertEquals(-1, cis1.read());
+            assertEquals(-1, cis1.read()); // repetitive read is no problem
+        }
+        try(ChunkedReader cis2 = new ChunkedReader(Collections.emptyList(), -1)) {
+            assertEquals(-1, cis2.read());
+            assertEquals(-1, cis2.read()); // repetitive read is no problem
+        }
+        try(ChunkedReader cis3 = new ChunkedReader(Arrays.asList(null,new char[0]), -1)) {
+            assertEquals(-1, cis3.read());
+            assertEquals(-1, cis3.read()); // repetitive read is no problem
+        }
     }
     @Test
     public void testEmptyStreamBuffer() throws IOException {
         char[] buffer = new char[10];
         try(ChunkedReader cis1 = new ChunkedReader(null, 0)){
-            assertEquals(cis1.read(buffer, 0, 10), -1);
-            assertEquals(cis1.read(buffer, 0, 10), -1); // repetitive read is no problem
+            assertEquals(-1, cis1.read(buffer, 0, 10));
+            assertEquals(-1, cis1.read(buffer, 0, 10)); // repetitive read is no problem
         }
         try(ChunkedReader cis2 = new ChunkedReader(Collections.emptyList(), -1)) {
-            assertEquals(cis2.read(buffer, 0, 10), -1);
-            assertEquals(cis2.read(buffer, 0, 10), -1); // repetitive read is no problem
+            assertEquals(-1, cis2.read(buffer, 0, 10));
+            assertEquals(-1, cis2.read(buffer, 0, 10)); // repetitive read is no problem
         }
         try(ChunkedReader cis3 = new ChunkedReader(Arrays.asList(null,new char[0]), -1)) {
-            assertEquals(cis3.read(buffer, 0, 10), -1);
-            assertEquals(cis3.read(buffer, 0, 10), -1); // repetitive read is no problem
+            assertEquals(-1, cis3.read(buffer, 0, 10));
+            assertEquals(-1, cis3.read(buffer, 0, 10)); // repetitive read is no problem
         }
     }
     @Test
-    public void testStreamOfUnknownSize(){
-        ChunkedReader cis1 = new ChunkedReader(null, 0);
-        assertEquals(cis1.length(), 0);
-        ChunkedReader cis2 = new ChunkedReader(Collections.emptyList(), -1);
-        assertEquals(cis2.length(), 0);
-        ChunkedReader cis3 = new ChunkedReader(Arrays.asList(null,new char[0]), -1);
-        assertEquals(cis3.length(), 0);
-        ChunkedReader cis4 = new ChunkedReader(Collections.singletonList(new char[2]), -1);
-        assertEquals(cis4.length(), 2);
-        ChunkedReader cis5 = new ChunkedReader(Arrays.asList(new char[2], new char[3], new char[4]), -1);
-        assertEquals(cis5.length(), 9);
+    public void testStreamOfUnknownSize() throws IOException{
+        try(ChunkedReader cis1 = new ChunkedReader(null, 0)) {
+            assertEquals(0, cis1.length());
+        }
+        try(ChunkedReader cis2 = new ChunkedReader(Collections.emptyList(), -1)) {
+            assertEquals(0,cis2.length());
+        }
+        try(ChunkedReader cis3 = new ChunkedReader(Arrays.asList(null,new char[0]), -1)) {
+            assertEquals(0, cis3.length());
+        }
+        try(ChunkedReader cis4 = new ChunkedReader(Collections.singletonList(new char[2]), -1)) {
+            assertEquals(2, cis4.length());
+        }
+        try(ChunkedReader cis5 = new ChunkedReader(Arrays.asList(new char[2], new char[3], new char[4]), -1)) {
+            assertEquals(9, cis5.length());
+        }
     }
     @Test
     public void testOneChunkStreamSingle() throws IOException {
         char[] chunk = new char[255];
         for(int i=0; i<chunk.length; i++) chunk[i] = (char)(255-i);
-        ChunkedReader cis = new ChunkedReader(chunk);
-        assertEquals(cis.length(), chunk.length);
-        for (char aChunk : chunk) {
-            int val = cis.read();
-            assertTrue(val >= 0);
-            assertEquals(val, (aChunk & 0xFFFF));
+        try(ChunkedReader cis = new ChunkedReader(chunk)) {
+            assertEquals(cis.length(), chunk.length);
+            for (char aChunk : chunk) {
+                int val = cis.read();
+                assertTrue(val >= 0);
+                assertEquals((aChunk & 0xFFFF), val);
+            }
+            assertEquals(-1, cis.read());
         }
-        assertEquals(cis.read(), -1);
     }
     @Test
     public void testOneChunkStreamBuffer() throws IOException {
         char[] chunk = new char[255];
         for(int i=0; i<chunk.length; i++) chunk[i] = (char)(255-i);
-        ChunkedReader cis = new ChunkedReader(chunk);
-        assertEquals(cis.length(), chunk.length);
-        char[] buffer = new char[4];
-        int total = 0;
-        int val;
-        for(;;){
-            val = cis.read(buffer,1,2);
-            if (val<=0){
-                break;
+        try(ChunkedReader cis = new ChunkedReader(chunk)) {
+            assertEquals(cis.length(), chunk.length);
+            char[] buffer = new char[4];
+            int total = 0;
+            int val;
+            for (; ; ) {
+                val = cis.read(buffer, 1, 2);
+                if (val <= 0) {
+                    break;
+                }
+                assertTrue(val <= 2);
+                assertEquals(chunk[total++], buffer[1]);
+                if (val > 1) assertEquals(chunk[total++], buffer[2]);
             }
-            assertTrue(val<=2);
-            assertEquals(buffer[1], chunk[total++]);
-            if (val>1) assertEquals(buffer[2], chunk[total++]);
+            assertEquals(-1, val);
+            assertEquals(chunk.length, total);
+            assertEquals(-1, cis.read(buffer, 1, 2));
         }
-        assertEquals(val, -1);
-        assertEquals(total, chunk.length);
-        assertEquals(total, cis.length());
-        assertEquals(cis.read(buffer, 1, 2), -1);
     }
     @Test
     public void testMultipleChunkStreamSingle() throws IOException {
@@ -102,16 +111,17 @@ public class ChunkedReaderTest {
                 chunk[j] = (char)size++;
             }
         }
-        ChunkedReader cis = new ChunkedReader(chunks, -1);
-        assertEquals(cis.length(), size);
-        int total = 0;
-        while(total<size){
-            int val = cis.read();
-            assertTrue(val>=0);
-            assertEquals(val, (total & 0xFFFF));
-            total++;
+        try(ChunkedReader cis = new ChunkedReader(chunks, -1)) {
+            assertEquals(cis.length(), size);
+            int total = 0;
+            while (total < size) {
+                int val = cis.read();
+                assertTrue(val >= 0);
+                assertEquals((total & 0xFFFF), val);
+                total++;
+            }
+            assertEquals(-1, cis.read());
         }
-        assertEquals(cis.read(), -1);
     }
     @Test
     public void testMultipleChunkStreamBuffer() throws IOException {
@@ -124,29 +134,29 @@ public class ChunkedReaderTest {
                 chunk[j] = (char)size++;
             }
         }
-        ChunkedReader cis = new ChunkedReader(chunks, -1);
-        assertEquals(cis.length(), size);
+        try(ChunkedReader cis = new ChunkedReader(chunks, -1)) {
+            assertEquals(size, cis.length());
 
-        char[] buffer = new char[4];
-        int total = 0;
-        int val;
-        for(;;){
-            val = cis.read(buffer,1,2);
-            if (val<=0){
-                break;
-            }
-            assertTrue(val<=2);
-            assertEquals((buffer[1] & 0xFFFF), (total & 0xFFFF));
-            total++;
-            if (val>1) {
-                assertEquals((buffer[2] & 0xFFFF), (total & 0xFFFF));
+            char[] buffer = new char[4];
+            int total = 0;
+            int val;
+            for (; ; ) {
+                val = cis.read(buffer, 1, 2);
+                if (val <= 0) {
+                    break;
+                }
+                assertTrue(val <= 2);
+                assertEquals((total & 0xFFFF), (buffer[1] & 0xFFFF));
                 total++;
+                if (val > 1) {
+                    assertEquals((total & 0xFFFF), (buffer[2] & 0xFFFF));
+                    total++;
+                }
             }
+            assertEquals(-1, val);
+            assertEquals(size, total);
+            assertEquals(-1, cis.read(buffer, 1, 2));
         }
-        assertEquals(val, -1);
-        assertEquals(total, size);
-        assertEquals(cis.read(buffer, 1, 2), -1);
-
     }
 
 }
