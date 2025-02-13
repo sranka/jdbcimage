@@ -68,6 +68,7 @@ public class ChunkedInputStream extends InputStream {
         return retVal;
     }
 
+    @SuppressWarnings("NullableProblems")
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (finished) return -1;

@@ -198,11 +198,6 @@ public class Oracle extends DBFacade {
                 .collect(Collectors.toList()));
     }
 
-    @Override
-    public void importStarted() {
-        super.importStarted();
-    }
-
     public static class Types {
 
         public static final int BINARY_DOUBLE = 101;
