@@ -12,6 +12,15 @@
             <scope>test</scope>
             <useStrictFiltering>true</useStrictFiltering>
         </dependencySet>
+        <dependencySet>
+            <useProjectArtifact>true</useProjectArtifact>
+            <outputDirectory/>
+            <includes>
+                <include>io.github.sranka:jdbcimage:jar</include>
+            </includes>
+            <outputFileNameMapping>jdbcimage.jar</outputFileNameMapping>
+            <useStrictFiltering>true</useStrictFiltering>
+        </dependencySet>
     </dependencySets>
     <fileSets>
         <fileSet>
@@ -50,13 +59,6 @@
                 <include>LICENSE</include>
             </includes>
             <fileMode>644</fileMode>
-        </fileSet>
-        <fileSet>
-            <directory>${project.build.directory}</directory>
-            <outputDirectory/>
-            <includes>
-                <include>jdbcimage.jar</include>
-            </includes>
         </fileSet>
     </fileSets>
 </component>
