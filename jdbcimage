@@ -27,4 +27,4 @@ done
 INSTALLDIR=`dirname "$PRG"`
 
 echo "Starting Java with: $JAVA_OPTS"
-java $JAVA_OPTS -classpath "$INSTALLDIR/target/jdbcimage.jar:$INSTALLDIR/lib/*" io.github.sranka.jdbcimage.main.JdbcImageMain "$@"
+java $JAVA_OPTS -classpath "$INSTALLDIR/jdbcimage.jar:$INSTALLDIR/lib/*" io.github.sranka.jdbcimage.main.JdbcImageMain "$@"

@@ -14,6 +14,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<version.jdk>1.8</version.jdk>
+		<app.main.class>io.github.sranka.jdbcimage.main.JdbcImageMain</app.main.class>
 	</properties>
 
 	<licenses>
@@ -34,7 +35,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-dbcp2</artifactId>
-			<version>2.9.0</version>
+			<version>2.13.0</version>
 		</dependency>
 		<!-- logging -->
 		<dependency>
@@ -49,22 +50,41 @@
 			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- JDBC drivers -->
+		<dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+			<version>3.5.2</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.7.5</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>mssql-jdbc</artifactId>
+			<version>12.8.1.jre8</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
+		<finalName>jdbcimage</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version> <!-- only because of maven warnings -->
+				<version>3.4.2</version>
 				<configuration>
-					<finalName>jdbcimage</finalName>
 				</configuration>
 			</plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>1.16</version>
+                <version>2.5.0</version>
                 <executions>
                     <execution>
                         <id>add-third-party</id>
@@ -88,7 +108,20 @@
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>3.6.0</version>
 				<configuration>
+					<artifactSet>
+						<excludes>
+							<exclude>org.mariadb.jdbc:mariadb-java-client:*</exclude>
+							<exclude>org.postgresql:postgresql:*</exclude>
+							<exclude>com.microsoft.sqlserver:mssql-jdbc:*</exclude>
+						</excludes>
+					</artifactSet>
 					<transformers>
+						<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+							<manifestEntries>
+								<Main-Class>${app.main.class}</Main-Class>
+								<X-Compile-Source-JDK>${version.jdk}</X-Compile-Source-JDK>
+							</manifestEntries>
+						</transformer>
 						<!-- merge licenses -->
 						<transformer
 							implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer">
@@ -97,6 +130,15 @@
 							implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
 						</transformer>
 					</transformers>
+					<filters>
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<exclude>META-INF/MANIFEST.MF</exclude>
+								<exclude>META-INF/versions/9/module-info.class</exclude>
+							</excludes>
+						</filter>
+					</filters>
 				</configuration>
 				<executions>
 					<execution>

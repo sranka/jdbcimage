@@ -6,10 +6,10 @@ The tool ignores missing tables and columns when importing the data.
 ## Quick Start
 1. Java must be installed, 1.8 or newer
 2. Install `jdbcimage` tool 
-   * download the latest [release](https://github.com/sranka/jdbcimage/releases) as `jdbcimage${version}.tar.gz` or `jdbcimage${version}.zip`, or build it from sources
+   * download the latest [release](https://github.com/sranka/jdbcimage/releases) as `jdbcimage.tar.gz` or `jdbcimage.zip`, or build it from sources
       * mvn install, the same files appear in the `target` directory 
-   * `tar xvf jdbcimage${version}.tar.gz` or `unzip jdbcimage${version}.zip` in a directory of your choice, 
-      * the examples below assume that the directory is in your `PATH` environment variable
+   * `tar xvf jdbcimage.tar.gz` or `unzip jdbcimage.zip` in a directory of your choice, 
+      * the examples below assume that the directory `jdbcimage-${version}` is in your `PATH` environment variable
    * if you are using oracle database, copy its JDBC drivers to the lib directory 
 3. Know how to connect to your database
    * *url* - JDBC connection URL, observe examples below
