@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 /**
  * DB facade for PostgreSQL database.
  */
-@SuppressWarnings("SpellCheckingInspection")
 public class PostgreSQL extends DBFacade {
     public static final String STATE_TABLE_NAME = "jdbcimage_create_constraints";
     public static final String STATE_TABLE_DDL = "CREATE TABLE " + STATE_TABLE_NAME + "( tableName varchar(64),constraintName varchar(64),sql varchar(512))";

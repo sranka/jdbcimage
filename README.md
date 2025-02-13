@@ -6,10 +6,9 @@ The tool ignores missing tables and columns when importing the data.
 ## Quick Start
 1. Java must be installed, 1.8 or newer
 2. Install `jdbcimage` tool 
-   * download the latest [release](https://github.com/sranka/jdbcimage/releases) as `jdbcimage${version}.tar.gz` or `jdbcimage${version}.zip`, or build it from sources
-      * mvn install, the same files appear in the `target` directory 
-   * `tar xvf jdbcimage${version}.tar.gz` or `unzip jdbcimage${version}.zip` in a directory of your choice, 
-      * the examples below assume that the directory is in your `PATH` environment variable
+   * download the latest [release](https://github.com/sranka/jdbcimage/releases) as `jdbcimage-${version}.tar.gz` or `jdbcimage-${version}.zip`, or build it from sources
+   * `tar xvf jdbcimage-${version}.tar.gz` or `unzip jdbcimage-${version}.zip` in a directory of your choice, 
+      * the examples below assume that the extracted directory `jdbcimage-${version}` is in your `PATH` environment variable
    * if you are using oracle database, copy its JDBC drivers to the lib directory 
 3. Know how to connect to your database
    * *url* - JDBC connection URL, observe examples below
@@ -43,24 +42,24 @@ The tool ignores missing tables and columns when importing the data.
 The key principles are:
 1. More threads are used to speed up data export/import, OOTB all (client) 
 machine processors should be used. See `tool_concurrency` parameter in the scripts.
-1. The lowest transaction isolation level is used to make database export/import faster. 
-1. Database metadata are used to export/import all user+schema tables to/from a zip file with entries 
+2. The lowest transaction isolation level is used to make database export/import faster. 
+3. Database metadata are used to export/import all user+schema tables to/from a zip file with entries 
 per exported/imported table.
-1. Table and column names are always case-insensitive internally, error is reported when there are more tables 
+4. Table and column names are always case-insensitive internally, error is reported when there are more tables 
 with the same case-insensitive name.
-1. Concurrent execution requires an extra setup/teardown instructions during data import. 
+5. Concurrent execution requires an extra setup/teardown instructions during data import. 
 These vary between database types, but they always include disabling/enabling foreign 
 key constraints, see database classes defined in the [main package](https://github.com/sranka/jdbcimage/tree/master/src/main/java/io/github/sranka/jdbcimage/main) for more details.
    * All triggers are disabled on Oracle before data import and then enabled after data import.
    * Oracle sequences, when used, are out of scope and usually have to be reset manually after data import.
    * All foreign key constraints are dropped by the tool on Postgress before importing the data, but a table jdbcimage_create_constraints is created with rows that are used to recreate them after data import.  
    * Identity column sequences are reset to the lowest value after data import on Postgres.
-1. Streams of data are used for both export and import to have the lowest memory footprint, typically 256M of heap 
+6. Streams of data are used for both export and import to have the lowest memory footprint, typically 256M of heap 
 memory is good enough. BLOB, CLOBs and lengthy columns still might require more heap memory depending on data
 and JDBC driver in use, so you also might have to increase java heap memory and/or lower batch size used during 
 data import. There are parameters in the scripts to do so.
-1. The result files are binary encoded using Kryo and zipped to be small on file system.
-1. The scripts accept several properties as arguments supplied as -property=value pairs
+7. The result files are binary encoded using Kryo and zipped to be small on file system.
+8. The scripts accept several properties as arguments supplied as -property=value pairs
    * -url=jdbc:mariadb://localhost:3306/qa - JDBC connection string 
    * -user=user 
    * -password=password 

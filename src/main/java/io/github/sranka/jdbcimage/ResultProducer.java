@@ -22,5 +22,6 @@ public interface ResultProducer {
     /**
      * Called to inform about finished processing.
      */
+    @SuppressWarnings("EmptyMethod")
     void close();
 }

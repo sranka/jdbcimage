@@ -48,6 +48,7 @@ public class ChunkedReader extends Reader {
      * @param count count of position to move
      * @return false if an end of stream was reached
      */
+    @SuppressWarnings("DuplicatedCode")
     private boolean forward(int count) {
         while (count >= (currentChunk.length - pos)) {
             count -= currentChunk.length - pos;
@@ -72,6 +73,7 @@ public class ChunkedReader extends Reader {
         return retVal;
     }
 
+    @SuppressWarnings({"DuplicatedCode", "NullableProblems"})
     @Override
     public int read(char[] b, int off, int len) throws IOException {
         if (finished) return -1;
