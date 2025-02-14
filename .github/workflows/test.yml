@@ -21,7 +21,7 @@ jobs:
           cache: 'maven'  # Caches Maven dependencies
 
       - name: Build, Run Unit Tests and create distributions
-        run: mvn clean test package
+        run: mvn clean package
 
       - name: Run E2E tests
-        run: mvn failsafe:integration-test
+        run: mvn failsafe:integration-test failsafe:verify
