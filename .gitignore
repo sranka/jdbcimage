@@ -9,7 +9,7 @@ target
 atlassian-ide-plugin.xml
 *.iml
 *.log
-*.zip
+/*.zip
 .java-version
 sonar-project.properties
 dependency-reduced-pom.xml
