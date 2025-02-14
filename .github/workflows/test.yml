@@ -20,8 +20,8 @@ jobs:
           java-version: '8'
           cache: 'maven'  # Caches Maven dependencies
 
-      - name: Build and Unit Test
-        run: mvn clean test
+      - name: Build, Run Unit Tests and create distributions
+        run: mvn clean test package
 
-      - name: Package the distribution
-        run: mvn package
+      - name: Run E2E tests
+        run: mvn failsafe:integration-test
