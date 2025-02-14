@@ -18,6 +18,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * Serializes the result set into the supplied output stream.
@@ -179,6 +180,10 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                             out.writeInt(Types.VARCHAR);
                         } else if (val.getClass().getName().equals("org.postgresql.util.PGobject")) {
                             // PGObject serialized as a string
+                            clazz = String.class;
+                            val = val.toString();
+                            out.writeInt(Types.VARCHAR);
+                        } else if (val instanceof UUID) {
                             clazz = String.class;
                             val = val.toString();
                             out.writeInt(Types.VARCHAR);
