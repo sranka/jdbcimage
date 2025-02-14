@@ -22,7 +22,6 @@ public class ExecTool extends MainToolBase {
         try (ExecTool tool = new ExecTool()) {
             tool.run();
         } catch (IllegalArgumentException e) {
-            System.out.println("FAILED: " + e.getMessage());
             Env.exit(1, e);
         }
     }
