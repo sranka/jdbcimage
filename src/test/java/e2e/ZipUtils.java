@@ -2,8 +2,11 @@ package e2e;
 
 import org.apache.commons.compress.utils.IOUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.zip.DeflaterInputStream;
 import java.util.zip.ZipEntry;
@@ -11,6 +14,9 @@ import java.util.zip.ZipFile;
 
 public class ZipUtils {
     public static byte[] getKryoDataFromZipFile(File zip, String tableName) throws Exception {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        IOUtils.copy(Files.newInputStream(zip.toPath()), bos);
+        System.out.println("Kryo zip file: "+ Base64.getEncoder().encodeToString(bos.toByteArray()));
         try(ZipFile zipFile = new ZipFile(zip)){
             ZipEntry entry = Objects.requireNonNull(zipFile.getEntry(tableName));
             return IOUtils.toByteArray(new DeflaterInputStream(zipFile.getInputStream(entry)));
@@ -25,6 +31,12 @@ public class ZipUtils {
             }
             return getKryoDataFromZipFile(tempFile, tableName);
         } finally {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            IOUtils.copy(Objects.requireNonNull(ZipUtils.class.getResourceAsStream(zipResourceName)), bos);
+            System.out.println("Resource file: "+ Base64.getEncoder().encodeToString(bos.toByteArray()));
+            bos.reset();
+            IOUtils.copy(Files.newInputStream(tempFile.toPath()), bos);
+            System.out.println("Copied file: "+ Base64.getEncoder().encodeToString(bos.toByteArray()));
             tempFile.delete();
         }
 /*
