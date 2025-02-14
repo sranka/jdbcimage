@@ -3,21 +3,31 @@ package e2e;
 import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.File;
-import java.io.InputStream;
-import java.net.URL;
+import java.io.FileOutputStream;
 import java.util.Objects;
+import java.util.zip.DeflaterInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 public class ZipUtils {
-    public static byte[] getTableDataFromZip(File zip, String tableName) throws Exception {
+    public static byte[] getKryoDataFromZipFile(File zip, String tableName) throws Exception {
         try(ZipFile zipFile = new ZipFile(zip)){
             ZipEntry entry = Objects.requireNonNull(zipFile.getEntry(tableName));
-            return IOUtils.toByteArray(zipFile.getInputStream(entry));
+            return IOUtils.toByteArray(new DeflaterInputStream(zipFile.getInputStream(entry)));
         }
     }
-    public static byte[] getTableDataFromZipResource(String zipResourceName, String tableName) throws Exception {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static byte[] getKryoDataFromZipResource(String zipResourceName, String tableName) throws Exception {
+        File tempFile = File.createTempFile("zip-utils",".zip");
+        try {
+            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                IOUtils.copy(Objects.requireNonNull(ZipUtils.class.getResourceAsStream(zipResourceName)), fos);
+            }
+            return getKryoDataFromZipFile(tempFile, tableName);
+        } finally {
+            tempFile.delete();
+        }
+/*
         URL zipURL = Objects.requireNonNull(ZipUtils.class.getResource(zipResourceName));
 
         try(InputStream inputStream = zipURL.openStream()){
@@ -31,8 +41,10 @@ public class ZipUtils {
             if (zipEntry == null) {
                 throw new IllegalStateException("Table " + tableName + " not found");
             }
-            return IOUtils.toByteArray(zipInputStream);
+            return IOUtils.toByteArray(new DeflaterInputStream(zipInputStream));
         }
+*/
+
     }
 
 }
