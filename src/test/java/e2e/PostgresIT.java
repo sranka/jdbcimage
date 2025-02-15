@@ -22,8 +22,8 @@ public class PostgresIT {
 
     private File createFile(String name) {
         // use this for debugging problems
-//        return new File("/tmp", name);
-        return new File(temporaryFolder.getRoot(), name);
+        return new File("/tmp", name);
+//        return new File(temporaryFolder.getRoot(), name);
     }
 
     @Test
