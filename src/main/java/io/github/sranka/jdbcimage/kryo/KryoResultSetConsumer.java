@@ -97,6 +97,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         val = rs.getBytes(i + 1);
                         clazz = byte[].class;
                         break;
+                    case Types.BOOLEAN:
                     case Types.BIT:
                         val = rs.getBoolean(i + 1);
                         clazz = Boolean.class;

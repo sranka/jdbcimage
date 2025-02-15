@@ -72,6 +72,7 @@ public class KryoResultProducer implements ResultProducer {
                 case Types.BINARY:
                     val = kryo.readObjectOrNull(in, byte[].class);
                     break;
+                case Types.BOOLEAN:
                 case Types.BIT:
                     val = kryo.readObjectOrNull(in, Boolean.class);
                     break;
