@@ -22,7 +22,6 @@ public class PostgresIT {
 
     private File createFile(String name) {
         // use this for debugging problems:
-        // return new File("/tmp", name);
         return new File(temporaryFolder.getRoot(), name);
     }
 
@@ -55,8 +54,8 @@ public class PostgresIT {
         System.out.println(toolSetup.getOutput());
 
         // finally compare content of exported files, it must be the same
-        byte[] exampleTableKryo1 = ZipUtils.getKryoDataFromZipFile(exportedFile1, "example_table");
-        byte[] exampleTableKryo2 = ZipUtils.getKryoDataFromZipFile(exportedFile2, "example_table");
+        byte[] exampleTableKryo1 = TestUtils.getKryoDataFromZipFile(exportedFile1, "example_table");
+        byte[] exampleTableKryo2 = TestUtils.getKryoDataFromZipFile(exportedFile2, "example_table");
         assertArrayEquals(exampleTableKryo1, exampleTableKryo2);
 
         // compare exportedBytes with stored data
@@ -65,7 +64,7 @@ public class PostgresIT {
         System.out.println("----- DUMP -----");
         System.out.println(toolSetup.getOutput());
 
-        byte[] expectedKryoBytes = ZipUtils.getKryoDataFromZipResource("/e2e/postgres/example_table.zip", "example_table");
+        byte[] expectedKryoBytes = TestUtils.getKryoDataFromZipResource("/e2e/postgres/example_table.zip", "example_table");
         assertArrayEquals(expectedKryoBytes, exampleTableKryo1);
     }
 }

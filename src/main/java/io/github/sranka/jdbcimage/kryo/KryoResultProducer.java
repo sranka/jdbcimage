@@ -16,7 +16,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 
-import static io.github.sranka.jdbcimage.kryo.KryoResultSetConsumer.VERSION_1_0;
+import static io.github.sranka.jdbcimage.kryo.KryoResultSetConsumer.*;
 
 /**
  * Pull-style produced with all row data out of the supplied input stream.
@@ -109,9 +109,22 @@ public class KryoResultProducer implements ResultProducer {
                         // produces https://github.com/sranka/jdbcimage/issues/19
                         val = kryo.readObjectOrNull(in, Timestamp.class);
                     } else {
-                        val = kryo.readObjectOrNull(in, String.class);
-                        if (val != null) {
-                            val = Timestamp.valueOf((String)val);
+                        byte timeType = in.readByte();
+                        switch (timeType) {
+                            case TIME_TYPE_NULL:
+                                val = kryo.readObjectOrNull(in, String.class);
+                                break;
+                            case TIME_TYPE_EXACT:
+                                val = new Timestamp(in.readLong());
+                                ((Timestamp) val).setNanos(in.readInt());
+                                kryo.readObjectOrNull(in, String.class);
+                                break;
+                            case TIME_TYPE_LOCAL:
+                                val = kryo.readObjectOrNull(in, String.class);
+                                val = Timestamp.valueOf((String)val);
+                                break;
+                            default:
+                                throw new IllegalStateException("Unsupported time type: " + timeType);
                         }
                     }
                     break;

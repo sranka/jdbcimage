@@ -11,7 +11,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
-public class ZipUtils {
+public class TestUtils {
     public static byte[] getKryoDataFromZipFile(File zip, String tableName) throws Exception {
         try(ZipFile zipFile = new ZipFile(zip)){
             ZipEntry entry = Objects.requireNonNull(zipFile.getEntry(tableName));
@@ -19,7 +19,7 @@ public class ZipUtils {
         }
     }
     public static byte[] getKryoDataFromZipResource(String zipResourceName, String tableName) throws Exception {
-        URL zipURL = Objects.requireNonNull(ZipUtils.class.getResource(zipResourceName));
+        URL zipURL = Objects.requireNonNull(TestUtils.class.getResource(zipResourceName));
 
         try(InputStream inputStream = zipURL.openStream()){
             ZipInputStream zipInputStream = new ZipInputStream(inputStream);

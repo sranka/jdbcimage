@@ -17,7 +17,9 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.TimeZone;
 import java.util.UUID;
 
 /**
@@ -27,6 +29,12 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
     public static final String VERSION_1_0 = "1.0";
     public static final String VERSION_1_1 = "1.1";
 
+    public static final byte TIME_TYPE_NULL = 0;
+    public static final byte TIME_TYPE_EXACT = 1;
+    public static final byte TIME_TYPE_LOCAL = 2;
+
+    private static final Calendar CALENDAR_LOCAL = Calendar.getInstance();
+    private static final Calendar CALENDAR_OTHER = Calendar.getInstance(TimeZone.getTimeZone("GMT+0130"));
     // allows serializing sql_variant type, where a specific type information is required
     private static final HashMap<Class<?>, Integer> SQL_VARIANT_CLASS_TO_TYPE;
 
@@ -125,13 +133,28 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         }
                         break;
                     case Types.TIMESTAMP:
-                        val = rs.getTimestamp(i + 1);
                         // version 1.0 was:
+                        // val = rs.getTimestamp(i + 1);
                         // clazz = Timestamp.class;
                         // version 1.1:
+                        val = rs.getTimestamp(i + 1, CALENDAR_LOCAL);
                         clazz = String.class;
-                        if (val != null) {
-                            val = val.toString();
+                        if (val == null) {
+                            out.writeByte(TIME_TYPE_NULL); // storing null value
+                        } else {
+                            Timestamp val1 = (Timestamp) val;
+                            Timestamp val2 = rs.getTimestamp(i + 1, CALENDAR_OTHER);
+                            if (val1.getTime() == val2.getTime()) {
+                                // exact timestamp is specified, store nanos and millis
+                                out.writeByte(TIME_TYPE_EXACT);
+                                out.writeLong(val1.getTime());
+                                out.writeInt(val1.getNanos());
+                                val = null;
+                            } else {
+                                // timestamp is a local datetime
+                                out.writeByte(TIME_TYPE_LOCAL); // storing null value
+                                val = val1.toString();
+                            }
                         }
                         break;
                     case Types.DECIMAL:
