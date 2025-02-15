@@ -1,5 +1,6 @@
 package e2e;
 
+import io.github.sranka.jdbcimage.RowData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -66,5 +67,38 @@ public class PostgresIT {
 
         byte[] expectedKryoBytes = TestUtils.getKryoDataFromZipResource("/e2e/postgres/example_table.zip", "example_table");
         assertArrayEquals(expectedKryoBytes, exampleTableKryo1);
+    }
+
+    @Test
+    public void testImportFromMariaDB() throws Exception {
+        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_drop.sql");
+        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_create.sql");
+        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_insert.sql");
+
+        // import
+        System.out.println("----- IMPORT -----");
+        File otherdbFile = createFile("mariadb_example_table.zip");
+        TestUtils.copyResourceToFile("/e2e/mariadb/example_table.zip", otherdbFile);
+        toolSetup.execTool(container, "import", otherdbFile.getPath());
+        System.out.println("-------------------");
+        System.out.println(toolSetup.getOutput());
+
+        // export
+        System.out.println("----- EXPORT -----");
+        File exportedFile = createFile("pg_export3.zip");
+        toolSetup.execTool(container, "export", exportedFile.getPath());
+        System.out.println("-------------------");
+        System.out.println(toolSetup.getOutput());
+
+        // compare exportedBytes with stored data
+        // dump to be able the differences
+        toolSetup.execTool(container, "dump", exportedFile.getPath()+"#example_table");
+        System.out.println("----- DUMP -----");
+        System.out.println(toolSetup.getOutput());
+
+        // compare columns, but exclude the timestamp column (updated at), it cannot be the same because it lacks the timezone
+        byte[] exportedTableKryo = TestUtils.getKryoDataFromZipFile(exportedFile, "example_table");
+        RowData row = TestUtils.readFirstRowFromKryoData(exportedTableKryo);
+        new ExampleTableData().ignoreUpdatedAtColumn().assertEquals(row);
     }
 }
