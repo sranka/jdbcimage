@@ -105,7 +105,15 @@ public class KryoResultProducer implements ResultProducer {
                     }
                     break;
                 case Types.TIMESTAMP:
-                    val = kryo.readObjectOrNull(in, Timestamp.class);
+                    if (isVersion1_0) {
+                        // produces https://github.com/sranka/jdbcimage/issues/19
+                        val = kryo.readObjectOrNull(in, Timestamp.class);
+                    } else {
+                        val = kryo.readObjectOrNull(in, String.class);
+                        if (val != null) {
+                            val = Timestamp.valueOf((String)val);
+                        }
+                    }
                     break;
                 case Types.DECIMAL:
                 case Types.NUMERIC:

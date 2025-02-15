@@ -126,7 +126,13 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         break;
                     case Types.TIMESTAMP:
                         val = rs.getTimestamp(i + 1);
-                        clazz = Timestamp.class;
+                        // version 1.0 was:
+                        // clazz = Timestamp.class;
+                        // version 1.1:
+                        clazz = String.class;
+                        if (val != null) {
+                            val = val.toString();
+                        }
                         break;
                     case Types.DECIMAL:
                     case Types.NUMERIC:

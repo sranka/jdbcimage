@@ -21,9 +21,9 @@ public class PostgresIT {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private File createFile(String name) {
-        // use this for debugging problems
-        return new File("/tmp", name);
-//        return new File(temporaryFolder.getRoot(), name);
+        // use this for debugging problems:
+        // return new File("/tmp", name);
+        return new File(temporaryFolder.getRoot(), name);
     }
 
     @Test
