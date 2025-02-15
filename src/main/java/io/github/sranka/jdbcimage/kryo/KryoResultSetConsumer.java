@@ -24,6 +24,9 @@ import java.util.UUID;
  * Serializes the result set into the supplied output stream.
  */
 public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
+    public static final String VERSION_1_0 = "1.0";
+    public static final String VERSION_1_1 = "1.1";
+
     // allows serializing sql_variant type, where a specific type information is required
     private static final HashMap<Class<?>, Integer> SQL_VARIANT_CLASS_TO_TYPE;
 
@@ -63,7 +66,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
         this.info = info;
         this.processedRows = 0;
         columnCount = info.columns.length;
-        kryo.writeObject(out, "1.0"); // 1.0 version of the serialization
+        kryo.writeObject(out, VERSION_1_1);
         kryo.writeObject(out, info); // write header
     }
 
@@ -103,11 +106,23 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         break;
                     case Types.DATE:
                         val = rs.getDate(i + 1);
-                        clazz = Date.class;
+                        // version 1.0 was:
+                        // clazz = Date.class;
+                        // version 1.1:
+                        if (val != null) {
+                            val = val.toString();
+                        }
+                        clazz = String.class;
                         break;
                     case Types.TIME:
                         val = rs.getTime(i + 1);
-                        clazz = Time.class;
+                        // version 1.0 was:
+                        // clazz = Time.class;
+                        // version 1.1:
+                        clazz = String.class;
+                        if (val != null) {
+                            val = val.toString();
+                        }
                         break;
                     case Types.TIMESTAMP:
                         val = rs.getTimestamp(i + 1);
