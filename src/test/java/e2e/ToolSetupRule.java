@@ -57,6 +57,7 @@ public class ToolSetupRule implements TestRule {
     }
 
     public void execTool(JdbcDatabaseContainer<?> container, String action, String... rest) throws Exception {
+        clearOutput();
         JdbcImageMain.main(toolArgs(container, action, rest));
     }
 

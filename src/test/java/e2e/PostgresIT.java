@@ -60,6 +60,10 @@ public class PostgresIT {
         assertArrayEquals(exampleTableKryo1, exampleTableKryo2);
 
         // compare exportedBytes with stored data
+        // dump to be able the differences
+        toolSetup.execTool(container, "dump", exportedFile1.getPath()+"#example_table");
+        System.out.println("----- DUMP -----");
+        System.out.println(toolSetup.getOutput());
 
         byte[] expectedKryoBytes = ZipUtils.getKryoDataFromZipResource("/e2e/postgres/example_table.zip", "example_table");
         assertArrayEquals(expectedKryoBytes, exampleTableKryo1);
