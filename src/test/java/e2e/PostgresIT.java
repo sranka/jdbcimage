@@ -73,7 +73,6 @@ public class PostgresIT {
     public void testImportFromMariaDB() throws Exception {
         toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_drop.sql");
         toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_create.sql");
-        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_insert.sql");
 
         // import
         System.out.println("----- IMPORT -----");
@@ -96,7 +95,7 @@ public class PostgresIT {
         System.out.println("----- DUMP -----");
         System.out.println(toolSetup.getOutput());
 
-        // compare columns, but exclude the timestamp column (updated at), it cannot be the same because it lacks the timezone
+        // compare columns, but exclude the timestamp column (updated at), it cannot be the same because mariadb timestamp is not zoned
         byte[] exportedTableKryo = TestUtils.getKryoDataFromZipFile(exportedFile, "example_table");
         RowData row = TestUtils.readFirstRowFromKryoData(exportedTableKryo);
         new ExampleTableData().ignoreUpdatedAtColumn().assertEquals(row);
