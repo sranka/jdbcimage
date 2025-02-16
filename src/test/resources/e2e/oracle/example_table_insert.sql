@@ -13,5 +13,5 @@ INSERT INTO example_table (
      TIMESTAMP '2024-01-01 14:30:00',
      '{"key": "value"}',
      '192.168.1.1',
-     HEXTORAW('550E8400E29B41D4A716446655440000')
+     '550e8400-e29b-41d4-a716-446655440000'
  );

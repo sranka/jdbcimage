@@ -11,5 +11,5 @@ CREATE TABLE example_table (
     event_time TIMESTAMP,
     metadata CLOB,
     ip_address VARCHAR2(45),
-    user_uuid RAW(16)
+    user_uuid CHAR(36)
 );
