@@ -7,6 +7,7 @@ import io.github.sranka.jdbcimage.ResultConsumer;
 import io.github.sranka.jdbcimage.ResultSetInfo;
 import io.github.sranka.jdbcimage.RowData;
 import io.github.sranka.jdbcimage.main.DBFacade;
+import io.github.sranka.jdbcimage.main.DBFacade.ColumnInfo;
 import io.github.sranka.jdbcimage.main.Mssql;
 import io.github.sranka.jdbcimage.main.Oracle;
 import org.apache.commons.logging.Log;
@@ -38,7 +39,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
     private final String tableName;
     private final Connection con;
     private final DBFacade db;
-    private final Map<String, String> actualColumns;
+    private final Map<String, ColumnInfo> actualColumns;
     // state
     int batchPosition; // current batch position
     long processedRows = -1;
@@ -49,6 +50,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
     private ResultSetInfo info;
     // mapping of input positions to SQL statement positions
     private Integer[] placeholderPositions;
+    private ColumnInfo[] columnInfos;
 
     /**
      * Creates database importer.
@@ -59,7 +61,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
      * @param actualColumns list of actual columns to know what columns to skip
      *                      with a key being lower case of the name, value is the actual name
      */
-    public DbImportResultConsumer(String tableName, Connection connection, DBFacade db, Map<String, String> actualColumns) {
+    public DbImportResultConsumer(String tableName, Connection connection, DBFacade db, Map<String, ColumnInfo> actualColumns) {
         this.tableName = tableName;
         this.con = connection;
         this.db = db;
@@ -84,19 +86,22 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
         this.info = info;
         String[] columns = info.columns;
         this.placeholderPositions = new Integer[columns.length];
+        this.columnInfos = new ColumnInfo[columns.length];
 
         // create SQL and placeholder positions
         StringBuilder insertSQL = new StringBuilder(200);
         insertSQL.append("INSERT INTO ").append(db.escapeTableName(tableName)).append(" (");
         int pos = 1;
         for (int i = 0; i < columns.length; i++) {
-            String column = actualColumns.get(columns[i].toLowerCase());
-            if (column != null) {
+            ColumnInfo columnInfo = actualColumns.get(columns[i].toLowerCase());
+            if (columnInfo != null) {
                 if (pos != 1) insertSQL.append(',');
-                insertSQL.append(db.escapeColumnName(column));
+                insertSQL.append(db.escapeColumnName(columnInfo.getName()));
                 placeholderPositions[i] = pos++;
+                columnInfos[i] = columnInfo;
             } else {
                 placeholderPositions[i] = null;
+                columnInfos[i] = null;
             }
         }
         if (pos == 1) {
@@ -129,7 +134,7 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
                     if (value == null) {
                         stmt.setNull(pos, type);
                     } else {
-                        value = db.toSupportedValue(type, value);
+                        value = db.toSupportedValue(type, columnInfos[i], value);
                         switch (type) {
                             case Types.BIGINT:
                                 stmt.setLong(pos, (Long) value);

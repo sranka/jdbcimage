@@ -95,8 +95,8 @@ public class OracleRestartGlobalSequenceListener implements DBFacadeListener {
 
     @Override
     public void afterImportTable(Connection con, String table, DBFacade.TableInfo tableInfo) throws SQLException {
-        Map<String, String> tableColumns = tableInfo.getTableColumns();
-        String id = tableColumns == null ? null : tableColumns.get("id");
+        Map<String, DBFacade.ColumnInfo> tableColumns = tableInfo.getTableColumns();
+        String id = tableColumns == null ? null : tableColumns.get("id").getName();
         if (id != null) {
             try (Statement stmt = con.createStatement()) {
                 try (ResultSet rs = stmt.executeQuery("select max(" + id + ") from " + table)) {

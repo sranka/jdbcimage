@@ -173,7 +173,7 @@ public class Mssql extends DBFacade {
         tableIdentityColumns = retVal;
     }
     @Override
-    public Object toSupportedValue(int sqlType, Object value) {
+    public Object toSupportedValue(int sqlType, ColumnInfo columnInfo, Object value) {
         if (sqlType == Types.DATETIMEOFFSET && value instanceof Timestamp){
             // type must be changed, a set timestamp would be wrongly assumed in UTC timezone
             Timestamp timestamp = (Timestamp) value;

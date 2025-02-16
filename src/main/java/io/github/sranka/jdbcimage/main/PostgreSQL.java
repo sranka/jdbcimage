@@ -305,7 +305,7 @@ public class PostgreSQL extends DBFacade {
     }
 
     @Override
-    public Object toSupportedValue(int sqlType, Object value) {
+    public Object toSupportedValue(int sqlType, ColumnInfo columnInfo, Object value) {
         // postgres doesn't support storing NULL (\0x00) characters in text fields
         if (value instanceof String) {
             return ((String) value).replace("\u0000", "");
