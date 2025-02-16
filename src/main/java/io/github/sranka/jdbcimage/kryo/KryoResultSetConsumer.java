@@ -104,7 +104,6 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         break;
                     case Types.CHAR:
                     case Types.VARCHAR:
-                    case Mssql.Types.DATETIMEOFFSET:
                         val = rs.getString(i + 1);
                         clazz = String.class;
                         break;
@@ -156,6 +155,23 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                                 out.writeByte(TIME_TYPE_LOCAL); // storing null value
                                 val = val1.toString();
                             }
+                        }
+                        break;
+                    case Mssql.Types.DATETIMEOFFSET:
+                        // version 1.0 was:
+                        // val = rs.getTimestamp(i + 1);
+                        // clazz = Timestamp.class;
+                        // version 1.1:
+                        val = rs.getTimestamp(i + 1);
+                        clazz = String.class;
+                        if (val == null) {
+                            out.writeByte(TIME_TYPE_NULL); // storing null value
+                        } else {
+                            Timestamp ts = (Timestamp) val;
+                            out.writeByte(TIME_TYPE_EXACT);
+                            out.writeLong(ts.getTime());
+                            out.writeInt(ts.getNanos());
+                            val = null;
                         }
                         break;
                     case Types.DECIMAL:

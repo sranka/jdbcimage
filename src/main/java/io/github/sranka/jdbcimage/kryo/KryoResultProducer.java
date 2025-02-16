@@ -80,7 +80,6 @@ public class KryoResultProducer implements ResultProducer {
                 case Types.NCHAR:
                 case Types.VARCHAR:
                 case Types.NVARCHAR:
-                case Mssql.Types.DATETIMEOFFSET:
                     val = kryo.readObjectOrNull(in, String.class);
                     break;
                 case Types.DATE:
@@ -110,23 +109,14 @@ public class KryoResultProducer implements ResultProducer {
                         // produces https://github.com/sranka/jdbcimage/issues/19
                         val = kryo.readObjectOrNull(in, Timestamp.class);
                     } else {
-                        byte timeType = in.readByte();
-                        switch (timeType) {
-                            case TIME_TYPE_NULL:
-                                val = kryo.readObjectOrNull(in, String.class);
-                                break;
-                            case TIME_TYPE_EXACT:
-                                val = new Timestamp(in.readLong());
-                                ((Timestamp) val).setNanos(in.readInt());
-                                kryo.readObjectOrNull(in, String.class);
-                                break;
-                            case TIME_TYPE_LOCAL:
-                                val = kryo.readObjectOrNull(in, String.class);
-                                val = Timestamp.valueOf((String)val);
-                                break;
-                            default:
-                                throw new IllegalStateException("Unsupported time type: " + timeType);
-                        }
+                        val = getTimestamp();
+                    }
+                    break;
+                case Mssql.Types.DATETIMEOFFSET:
+                    if(isVersion1_0) {
+                        val = kryo.readObjectOrNull(in, String.class);
+                    } else {
+                        val = getTimestamp();
                     }
                     break;
                 case Types.DECIMAL:
@@ -170,6 +160,29 @@ public class KryoResultProducer implements ResultProducer {
         }
 
         return true;
+    }
+
+    private Object getTimestamp() {
+        Object val;
+        byte timeType = in.readByte();
+        switch (timeType) {
+            case TIME_TYPE_NULL:
+                val = kryo.readObjectOrNull(in, String.class);
+                break;
+            case TIME_TYPE_EXACT:
+                val = new Timestamp(in.readLong());
+                ((Timestamp) val).setNanos(in.readInt());
+                kryo.readObjectOrNull(in, String.class);
+                break;
+            case TIME_TYPE_LOCAL:
+                val = kryo.readObjectOrNull(in, String.class);
+                val = Timestamp.valueOf((String)val);
+                break;
+            default:
+                throw new IllegalStateException("Unsupported time type: " + timeType);
+
+        }
+        return val;
     }
 
     @Override

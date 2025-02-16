@@ -116,7 +116,8 @@ public class MssqlIT {
         System.out.println("----- DUMP -----");
         System.out.println(toolSetup.getOutput());
 
-        // compare columns, but exclude the timestamp column (updated at), it cannot be the same because mariadb timestamp is not zoned
+        // compare columns, but exclude the timestamp column (updatedAt)
+        // when a timestamp is stored to MSSQL datetimeoffset, timestamp's local time is stored as UTC time
         byte[] exportedTableKryo = TestUtils.getKryoDataFromZipFile(exportedFile, "example_table");
         RowData row = TestUtils.readFirstRowFromKryoData(exportedTableKryo);
         new ExampleTableData().ignoreUpdatedAtColumn().assertEquals(row);

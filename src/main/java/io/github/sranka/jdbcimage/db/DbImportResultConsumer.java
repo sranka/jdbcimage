@@ -143,8 +143,13 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
                                 break;
                             case Types.CHAR:
                             case Types.VARCHAR:
-                            case Mssql.Types.DATETIMEOFFSET:
                                 stmt.setString(pos, (String) value);
+                            case Mssql.Types.DATETIMEOFFSET:
+                                if (value instanceof Timestamp){
+                                    stmt.setTimestamp(pos, (Timestamp) value);
+                                } else {
+                                    stmt.setString(pos, (String) value);
+                                }
                                 break;
                             case Types.NCHAR:
                             case Types.NVARCHAR:

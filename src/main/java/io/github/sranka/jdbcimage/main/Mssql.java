@@ -10,6 +10,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -170,6 +172,23 @@ public class Mssql extends DBFacade {
         }
         tableIdentityColumns = retVal;
     }
+    @Override
+    public Object toSupportedValue(int sqlType, Object value) {
+        if (sqlType == Types.DATETIMEOFFSET && value instanceof Timestamp){
+            // type must be changed, a set timestamp would be wrongly assumed in UTC timezone
+            Timestamp timestamp = (Timestamp) value;
+            String isoValue = Instant.ofEpochMilli(timestamp.getTime()).toString();
+            String jdbcValue = value.toString();
+            // constructing value in a format 2018-07-23 16:09:14.0000000 +00:00
+            return isoValue.substring(0, 10) +
+                    ' ' +
+                    isoValue.substring(11, 19) +
+                    jdbcValue.substring(19) +
+                    " +00:00";
+        }
+        return value;
+    }
+
 
     @SuppressWarnings("SpellCheckingInspection")
     public static class Types {
