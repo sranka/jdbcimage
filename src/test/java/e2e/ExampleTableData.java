@@ -7,10 +7,12 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 import static org.junit.Assert.assertArrayEquals;
 
 public class ExampleTableData {
+    public static final long UPDATED_AT_MILLIS = Instant.parse("2024-01-01T12:00:00.0Z").toEpochMilli();
     private final Object[] data = new Object[]{
             1,
             "John Doe",
@@ -19,7 +21,7 @@ public class ExampleTableData {
             new BigDecimal("99.99"),
             true,
             Timestamp.valueOf("2024-01-01 12:00:00.0"),
-            Timestamp.valueOf("2024-01-01 12:00:00.0"),
+            new Timestamp(UPDATED_AT_MILLIS),
             Date.valueOf("1993-05-20"),
             Time.valueOf("14:30:00"),
             "{\"key\": \"value\"}",
@@ -45,6 +47,11 @@ public class ExampleTableData {
         // lowercase UUID for comparison, MSSQL exports in uppercase but can import independently on case
         if (toCompare.length >= rowData.values.length) {
             toCompare[12] = toCompare[12].toString().toLowerCase();
+        }
+        // normalize timestamp as millis
+        if (data[7] != null && toCompare[7] instanceof Timestamp) {
+            data[7] = UPDATED_AT_MILLIS;
+            toCompare[7] = ((Timestamp)toCompare[7]).getTime();
         }
         assertArrayEquals(this.data, toCompare);
     }
