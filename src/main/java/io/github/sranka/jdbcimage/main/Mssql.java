@@ -174,7 +174,9 @@ public class Mssql extends DBFacade {
     }
     @Override
     public Object toSupportedValue(int sqlType, ColumnInfo columnInfo, Object value) {
-        if (sqlType == Types.DATETIMEOFFSET && value instanceof Timestamp){
+        if (value instanceof Timestamp
+                && (sqlType == Types.DATETIMEOFFSET || "DATETIMEOFFSET".equals(columnInfo.getDbType()))
+        ) {
             // type must be changed, a set timestamp would be wrongly assumed in UTC timezone
             Timestamp timestamp = (Timestamp) value;
             String isoValue = Instant.ofEpochMilli(timestamp.getTime()).toString();

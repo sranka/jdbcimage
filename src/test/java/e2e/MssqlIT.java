@@ -120,7 +120,7 @@ public class MssqlIT {
         // when a timestamp is stored to MSSQL datetimeoffset, timestamp's local time is stored as UTC time
         byte[] exportedTableKryo = TestUtils.getKryoDataFromZipFile(exportedFile, "example_table");
         RowData row = TestUtils.readFirstRowFromKryoData(exportedTableKryo);
-        new ExampleTableData().ignoreUpdatedAtColumn().assertEquals(row);
+        new ExampleTableData().assertEquals(row);
     }
 
     @Test

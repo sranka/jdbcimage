@@ -149,12 +149,6 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
                             case Types.CHAR:
                             case Types.VARCHAR:
                                 stmt.setString(pos, (String) value);
-                            case Mssql.Types.DATETIMEOFFSET:
-                                if (value instanceof Timestamp){
-                                    stmt.setTimestamp(pos, (Timestamp) value);
-                                } else {
-                                    stmt.setString(pos, (String) value);
-                                }
                                 break;
                             case Types.NCHAR:
                             case Types.NVARCHAR:
@@ -167,7 +161,12 @@ public class DbImportResultConsumer implements ResultConsumer<RowData> {
                                 stmt.setTime(pos, (Time) value);
                                 break;
                             case Types.TIMESTAMP:
-                                stmt.setTimestamp(pos, (Timestamp) value);
+                            case Mssql.Types.DATETIMEOFFSET:
+                                if (value instanceof Timestamp){
+                                    stmt.setTimestamp(pos, (Timestamp) value);
+                                } else {
+                                    stmt.setString(pos, (String) value);
+                                }
                                 break;
                             case Types.DECIMAL:
                             case Types.NUMERIC:
