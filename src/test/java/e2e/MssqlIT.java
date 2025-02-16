@@ -1,6 +1,7 @@
 package e2e;
 
 import io.github.sranka.jdbcimage.RowData;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -16,7 +17,7 @@ public class MssqlIT {
     public static class TestMSSQLServerContainer<SELF extends TestMSSQLServerContainer<SELF>> extends MSSQLServerContainer<SELF> {
         @SuppressWarnings("resource")
         public TestMSSQLServerContainer() {
-            super("mcr.microsoft.com/mssql/server:2017-latest");
+            super("mcr.microsoft.com/mssql/server:2022-latest");
             withUrlParam("encrypt", "false");
             acceptLicense();
             withLogConsumer(CONTAINER_LOG);
@@ -28,13 +29,15 @@ public class MssqlIT {
             // it can exceed the default 60 seconds to boot
             Wait.forLogMessage(".*SQL Server is now ready for client connections.*",1)
                     .waitUntilReady(this);
+            super.waitUntilContainerStarted();
         }
+
     }
 
     @Rule
     public ToolSetupRule toolSetup = new ToolSetupRule();
-    @Rule
-    public TestMSSQLServerContainer<?> container = new TestMSSQLServerContainer<>();
+    @ClassRule
+    public static TestMSSQLServerContainer<?> container = new TestMSSQLServerContainer<>();
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

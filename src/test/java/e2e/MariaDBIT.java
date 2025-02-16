@@ -1,6 +1,7 @@
 package e2e;
 
 import io.github.sranka.jdbcimage.RowData;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -15,8 +16,8 @@ public class MariaDBIT {
     @Rule
     public ToolSetupRule toolSetup = new ToolSetupRule();
     @SuppressWarnings({"resource"})
-    @Rule
-    public MariaDBContainer<?> container = new MariaDBContainer<>("mariadb:11.7.2")
+    @ClassRule
+    public static MariaDBContainer<?> container = new MariaDBContainer<>("mariadb:11.7.2")
             .withLogConsumer(CONTAINER_LOG);
 
     @Rule

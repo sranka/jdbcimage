@@ -1,6 +1,7 @@
 package e2e;
 
 import io.github.sranka.jdbcimage.RowData;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -15,8 +16,8 @@ public class PostgresIT {
     @Rule
     public ToolSetupRule toolSetup = new ToolSetupRule();
     @SuppressWarnings({"SpellCheckingInspection", "resource"})
-    @Rule
-    public PostgreSQLContainer<?> container = new PostgreSQLContainer<>("postgres:13-alpine").withUrlParam("stringtype", "unspecified").withLogConsumer(CONTAINER_LOG);
+    @ClassRule
+    public static PostgreSQLContainer<?> container = new PostgreSQLContainer<>("postgres:13-alpine").withUrlParam("stringtype", "unspecified").withLogConsumer(CONTAINER_LOG);
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
