@@ -11,7 +11,21 @@ import java.sql.Timestamp;
 import static org.junit.Assert.assertArrayEquals;
 
 public class ExampleTableData {
-    private final Object[] data = new Object[]{1, "John Doe", "This is a sample description.", 30, new BigDecimal("99.99"), true, Timestamp.valueOf("2024-01-01 12:00:00.0"), Timestamp.valueOf("2024-01-01 12:00:00.0"), Date.valueOf("1993-05-20"), Time.valueOf("14:30:00"), "{\"key\": \"value\"}", "192.168.1.1", "550e8400-e29b-41d4-a716-446655440000"};
+    private final Object[] data = new Object[]{
+            1,
+            "John Doe",
+            "This is a sample description.",
+            30,
+            new BigDecimal("99.99"),
+            true,
+            Timestamp.valueOf("2024-01-01 12:00:00.0"),
+            Timestamp.valueOf("2024-01-01 12:00:00.0"),
+            Date.valueOf("1993-05-20"),
+            Time.valueOf("14:30:00"),
+            "{\"key\": \"value\"}",
+            "192.168.1.1",
+            "550e8400-e29b-41d4-a716-446655440000"
+    };
 
     public ExampleTableData ignoreUpdatedAtColumn() {
         data[7] = null;
@@ -27,6 +41,10 @@ public class ExampleTableData {
             } else if (toCompare[i] instanceof ChunkedReader) {
                 toCompare[i] = ((ChunkedReader) toCompare[i]).readAsString();
             }
+        }
+        // lowercase UUID for comparison, MSSQL exports in uppercase but can import independently on case
+        if (toCompare.length >= rowData.values.length) {
+            toCompare[12] = toCompare[12].toString().toLowerCase();
         }
         assertArrayEquals(this.data, toCompare);
     }

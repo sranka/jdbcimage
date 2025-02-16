@@ -4,52 +4,54 @@ import io.github.sranka.jdbcimage.RowData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.MSSQLServerContainer;
 
 import java.io.File;
 
 import static e2e.ToolSetupRule.CONTAINER_LOG;
 import static org.junit.Assert.assertArrayEquals;
 
-public class PostgresIT {
+public class MssqlIT {
     @Rule
     public ToolSetupRule toolSetup = new ToolSetupRule();
-    @SuppressWarnings({"SpellCheckingInspection", "resource"})
+    @SuppressWarnings({"resource"})
     @Rule
-    public PostgreSQLContainer<?> container = new PostgreSQLContainer<>("postgres:13-alpine").withUrlParam("stringtype", "unspecified").withLogConsumer(CONTAINER_LOG);
+    public MSSQLServerContainer<?> container = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2017-latest")
+            .acceptLicense()
+            .withLogConsumer(CONTAINER_LOG);
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private File createFile(String name) {
-        return new File(temporaryFolder.getRoot(), name);
-//        return new File("/tmp", name);
+//        return new File(temporaryFolder.getRoot(), name);
+        return new File("/tmp", name);
     }
 
     @Test
     public void testExportImportExport() throws Exception {
-        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_drop.sql");
-        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_create.sql");
-        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_insert.sql");
+        toolSetup.execSqlFromResource(container, "/e2e/mssql/example_table_drop.sql");
+        toolSetup.execSqlFromResource(container, "/e2e/mssql/example_table_create.sql");
+        toolSetup.execSqlFromResource(container, "/e2e/mssql/example_table_insert.sql");
 
         // export1
         System.out.println("----- EXPORT1 -----");
-        File exportedFile1 = createFile("pg_export1.zip");
+        File exportedFile1 = createFile("mssql_export1.zip");
         toolSetup.execTool(container, "export", exportedFile1.getPath());
         System.out.println("-------------------");
         System.out.println(toolSetup.getOutput());
 
         // import
         System.out.println("----- IMPORT -----");
-        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_drop.sql");
-        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_create.sql");
+        toolSetup.execSqlFromResource(container, "/e2e/mssql/example_table_drop.sql");
+        toolSetup.execSqlFromResource(container, "/e2e/mssql/example_table_create.sql");
         toolSetup.execTool(container, "import", exportedFile1.getPath());
         System.out.println("-------------------");
         System.out.println(toolSetup.getOutput());
 
         // export2
         System.out.println("----- EXPORT2 -----");
-        File exportedFile2 = createFile("pg_export2.zip");
+        File exportedFile2 = createFile("mssql_export2.zip");
         toolSetup.execTool(container, "export", exportedFile2.getPath());
         System.out.println("-------------------");
         System.out.println(toolSetup.getOutput());
@@ -65,26 +67,26 @@ public class PostgresIT {
         System.out.println("----- DUMP -----");
         System.out.println(toolSetup.getOutput());
 
-        byte[] expectedKryoBytes = TestUtils.getKryoDataFromZipResource("/e2e/postgres/example_table.zip", "example_table");
+        byte[] expectedKryoBytes = TestUtils.getKryoDataFromZipResource("/e2e/mssql/example_table.zip", "example_table");
         assertArrayEquals(expectedKryoBytes, exampleTableKryo1);
     }
 
     @Test
-    public void testImportFromMariaDB() throws Exception {
-        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_drop.sql");
-        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_create.sql");
+    public void testImportFromPostgres() throws Exception {
+        toolSetup.execSqlFromResource(container, "/e2e/mssql/example_table_drop.sql");
+        toolSetup.execSqlFromResource(container, "/e2e/mssql/example_table_create.sql");
 
         // import
         System.out.println("----- IMPORT -----");
-        File otherdbFile = createFile("mariadb_example_table.zip");
-        TestUtils.copyResourceToFile("/e2e/mariadb/example_table.zip", otherdbFile);
+        File otherdbFile = createFile("postgres_example_table.zip");
+        TestUtils.copyResourceToFile("/e2e/postgres/example_table.zip", otherdbFile);
         toolSetup.execTool(container, "import", otherdbFile.getPath());
         System.out.println("-------------------");
         System.out.println(toolSetup.getOutput());
 
         // export
         System.out.println("----- EXPORT -----");
-        File exportedFile = createFile("pg_export3.zip");
+        File exportedFile = createFile("mssql_export3.zip");
         toolSetup.execTool(container, "export", exportedFile.getPath());
         System.out.println("-------------------");
         System.out.println(toolSetup.getOutput());
