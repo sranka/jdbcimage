@@ -131,6 +131,6 @@ public class PostgresIT {
         // compare exported data, ignore updated at column because the value depends on actual timezone
         byte[] exportedTableKryo = TestUtils.getKryoDataFromZipFile(exportedFile, "example_table");
         RowData row = TestUtils.readFirstRowFromKryoData(exportedTableKryo);
-        new ExampleTableData().ignoreUpdatedAtColumn().assertEquals(row);
+        new ExampleTableData().assertEquals(row);
     }
 }
