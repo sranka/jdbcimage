@@ -101,4 +101,36 @@ public class PostgresIT {
         RowData row = TestUtils.readFirstRowFromKryoData(exportedTableKryo);
         new ExampleTableData().ignoreUpdatedAtColumn().assertEquals(row);
     }
+
+    @Test
+    public void testImportFromMSSQL() throws Exception {
+        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_drop.sql");
+        toolSetup.execSqlFromResource(container, "/e2e/postgres/example_table_create.sql");
+
+        // import
+        System.out.println("----- IMPORT -----");
+        File otherdbFile = createFile("mssql_example_table.zip");
+        TestUtils.copyResourceToFile("/e2e/mssql/example_table.zip", otherdbFile);
+        toolSetup.execTool(container, "import", otherdbFile.getPath());
+        System.out.println("-------------------");
+        System.out.println(toolSetup.getOutput());
+
+        // export
+        System.out.println("----- EXPORT -----");
+        File exportedFile = createFile("pg_export4.zip");
+        toolSetup.execTool(container, "export", exportedFile.getPath());
+        System.out.println("-------------------");
+        System.out.println(toolSetup.getOutput());
+
+        // compare exportedBytes with stored data
+        // dump to be able the differences
+        toolSetup.execTool(container, "dump", exportedFile.getPath()+"#example_table");
+        System.out.println("----- DUMP -----");
+        System.out.println(toolSetup.getOutput());
+
+        // compare exported data, ignore updated at column because the value depends on actual timezone
+        byte[] exportedTableKryo = TestUtils.getKryoDataFromZipFile(exportedFile, "example_table");
+        RowData row = TestUtils.readFirstRowFromKryoData(exportedTableKryo);
+        new ExampleTableData().ignoreUpdatedAtColumn().assertEquals(row);
+    }
 }
