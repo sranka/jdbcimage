@@ -20,8 +20,11 @@ jobs:
           java-version: '8'
           cache: 'maven'  # Caches Maven dependencies
 
-      - name: Build and Unit Test
-        run: mvn clean test
+      - name: Build, Run Unit Tests and create distributions
+        run: mvn clean package
 
-      - name: Package the distribution
-        run: mvn package
+      - name: Run E2E tests in GMT timezone
+        run: mvn -Duser.timezone=GMT failsafe:integration-test failsafe:verify
+
+      - name: Run E2E tests in non GMT timezone
+        run: mvn -Duser.timezone=GMT+0100 failsafe:integration-test failsafe:verify

@@ -17,12 +17,24 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.TimeZone;
+import java.util.UUID;
 
 /**
  * Serializes the result set into the supplied output stream.
  */
 public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
+    public static final String VERSION_1_0 = "1.0";
+    public static final String VERSION_1_1 = "1.1";
+
+    public static final byte TIME_TYPE_NULL = 0;
+    public static final byte TIME_TYPE_EXACT = 1;
+    public static final byte TIME_TYPE_LOCAL = 2;
+
+    private static final Calendar CALENDAR_LOCAL = Calendar.getInstance();
+    private static final Calendar CALENDAR_OTHER = Calendar.getInstance(TimeZone.getTimeZone("GMT+0130"));
     // allows serializing sql_variant type, where a specific type information is required
     private static final HashMap<Class<?>, Integer> SQL_VARIANT_CLASS_TO_TYPE;
 
@@ -62,7 +74,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
         this.info = info;
         this.processedRows = 0;
         columnCount = info.columns.length;
-        kryo.writeObject(out, "1.0"); // 1.0 version of the serialization
+        kryo.writeObject(out, VERSION_1_1);
         kryo.writeObject(out, info); // write header
     }
 
@@ -85,13 +97,13 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         val = rs.getBytes(i + 1);
                         clazz = byte[].class;
                         break;
+                    case Types.BOOLEAN:
                     case Types.BIT:
                         val = rs.getBoolean(i + 1);
                         clazz = Boolean.class;
                         break;
                     case Types.CHAR:
                     case Types.VARCHAR:
-                    case Mssql.Types.DATETIMEOFFSET:
                         val = rs.getString(i + 1);
                         clazz = String.class;
                         break;
@@ -102,15 +114,65 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         break;
                     case Types.DATE:
                         val = rs.getDate(i + 1);
-                        clazz = Date.class;
+                        // version 1.0 was:
+                        // clazz = Date.class;
+                        // version 1.1:
+                        if (val != null) {
+                            val = val.toString();
+                        }
+                        clazz = String.class;
                         break;
                     case Types.TIME:
                         val = rs.getTime(i + 1);
-                        clazz = Time.class;
+                        // version 1.0 was:
+                        // clazz = Time.class;
+                        // version 1.1:
+                        clazz = String.class;
+                        if (val != null) {
+                            val = val.toString();
+                        }
                         break;
                     case Types.TIMESTAMP:
+                        // version 1.0 was:
+                        // val = rs.getTimestamp(i + 1);
+                        // clazz = Timestamp.class;
+                        // version 1.1:
+                        val = rs.getTimestamp(i + 1, CALENDAR_LOCAL);
+                        clazz = String.class;
+                        if (val == null) {
+                            out.writeByte(TIME_TYPE_NULL);
+                        } else {
+                            Timestamp val1 = (Timestamp) val;
+                            Timestamp val2 = rs.getTimestamp(i + 1, CALENDAR_OTHER);
+                            if (val1.getTime() == val2.getTime()) {
+                                // exact timestamp is specified
+                                out.writeByte(TIME_TYPE_EXACT);
+                                out.writeLong(val1.getTime());
+                                out.writeInt(val1.getNanos());
+                                val = null;
+                            } else {
+                                // timestamp is a local datetime
+                                out.writeByte(TIME_TYPE_LOCAL);
+                                val = val1.toString();
+                            }
+                        }
+                        break;
+                    case Mssql.Types.DATETIMEOFFSET:
+                        // version 1.0 was:
+                        // val = rs.getTimestamp(i + 1);
+                        // clazz = Timestamp.class;
+                        // version 1.1:
                         val = rs.getTimestamp(i + 1);
-                        clazz = Timestamp.class;
+                        clazz = String.class;
+                        if (val == null) {
+                            out.writeByte(TIME_TYPE_NULL);
+                        } else {
+                            Timestamp ts = (Timestamp) val;
+                            out.writeByte(TIME_TYPE_EXACT);
+                            out.writeLong(ts.getTime());
+                            out.writeInt(ts.getNanos());
+                            val = null;
+                        }
                         break;
                     case Types.DECIMAL:
                     case Types.NUMERIC:
@@ -179,6 +241,10 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                             out.writeInt(Types.VARCHAR);
                         } else if (val.getClass().getName().equals("org.postgresql.util.PGobject")) {
                             // PGObject serialized as a string
+                            clazz = String.class;
+                            val = val.toString();
+                            out.writeInt(Types.VARCHAR);
+                        } else if (val instanceof UUID) {
                             clazz = String.class;
                             val = val.toString();
                             out.writeInt(Types.VARCHAR);

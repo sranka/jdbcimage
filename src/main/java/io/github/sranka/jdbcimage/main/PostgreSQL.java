@@ -114,7 +114,7 @@ public class PostgreSQL extends DBFacade {
                 try (ResultSet rs = stmt.executeQuery(sql)) {
                     rs.next();
                     Object val = rs.getLong(1); // read the next value of the sequence
-                    System.out.println("Sequence " + info.sequenceName + " reset to " + val);
+                    Env.out.println("Sequence " + info.sequenceName + " reset to " + val);
                 }
             }
         }
@@ -305,7 +305,7 @@ public class PostgreSQL extends DBFacade {
     }
 
     @Override
-    public Object toSupportedValue(int sqlType, Object value) {
+    public Object toSupportedValue(int sqlType, ColumnInfo columnInfo, Object value) {
         // postgres doesn't support storing NULL (\0x00) characters in text fields
         if (value instanceof String) {
             return ((String) value).replace("\u0000", "");

@@ -4,6 +4,7 @@ import io.github.sranka.jdbcimage.LoggedUtils;
 import io.github.sranka.jdbcimage.ResultProducerRunner;
 import io.github.sranka.jdbcimage.db.DbImportResultConsumer;
 import io.github.sranka.jdbcimage.kryo.KryoResultProducer;
+import io.github.sranka.jdbcimage.main.DBFacade.ColumnInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,14 +94,15 @@ public class SingleTableImport extends MainToolBase {
 
         try {
             // detect actual columns, ignore case
-            Map<String, String> actualColumns = new HashMap<>();
+            Map<String, ColumnInfo> actualColumns = new HashMap<>();
             try (Statement detect = con.createStatement()) {
                 try (ResultSet rs = detect.executeQuery("SELECT * FROM " + tableName + " WHERE 0=1")) {
                     ResultSetMetaData metaData = rs.getMetaData();
                     int cols = metaData.getColumnCount();
                     for (int i = 1; i <= cols; i++) {
                         String colName = metaData.getColumnName(i);
-                        actualColumns.put(colName.toLowerCase(), colName);
+                        String dbType = metaData.getColumnTypeName(i);
+                        actualColumns.put(colName.toLowerCase(), new ColumnInfo(colName, dbType));
                     }
                 }
             } finally {

@@ -163,7 +163,7 @@ public abstract class DBFacade implements DBFacadeListener {
      * @param value value to process
      * @return supported value
      */
-    public Object toSupportedValue(int sqlType, Object value) {
+    public Object toSupportedValue(int sqlType, ColumnInfo columnInfo, Object value) {
         return value;
     }
 
@@ -213,11 +213,26 @@ public abstract class DBFacade implements DBFacadeListener {
         }
     }
 
+    public static class ColumnInfo {
+        private final String name;
+        private final String dbType;
+
+        public ColumnInfo(String name, String dbType) {
+            this.name = name;
+            this.dbType = dbType.toUpperCase();
+        }
+        public String getName() {
+            return name;
+        }
+        public String getDbType() {
+            return dbType;
+        }
+    }
     @SuppressWarnings("WeakerAccess")
     public static class TableInfo {
         private final String tableName;
         private Map<String, Object> data;
-        private Map<String, String> tableColumns;
+        private Map<String, ColumnInfo> tableColumns;
 
         public TableInfo(String tableName) {
             this.tableName = tableName;
@@ -243,11 +258,11 @@ public abstract class DBFacade implements DBFacadeListener {
             return data == null ? null : data.get(key);
         }
 
-        public Map<String, String> getTableColumns() {
+        public Map<String, ColumnInfo> getTableColumns() {
             return tableColumns;
         }
 
-        public void setTableColumns(Map<String, String> tableColumns) {
+        public void setTableColumns(Map<String, ColumnInfo> tableColumns) {
             this.tableColumns = tableColumns;
         }
     }

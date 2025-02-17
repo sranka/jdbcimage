@@ -16,6 +16,8 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 
+import static io.github.sranka.jdbcimage.kryo.KryoResultSetConsumer.*;
+
 /**
  * Pull-style produced with all row data out of the supplied input stream.
  */
@@ -27,6 +29,7 @@ public class KryoResultProducer implements ResultProducer {
     // state
     private int[] types;
     private boolean finished = false;
+    private boolean isVersion1_0 = false;
 
     public KryoResultProducer(InputStream in) {
         super();
@@ -37,7 +40,8 @@ public class KryoResultProducer implements ResultProducer {
     @Override
     public RowData start() {
         // skip version information
-        kryo.readObject(in, String.class);
+        String version = kryo.readObject(in, String.class);
+        isVersion1_0 = version.equals(VERSION_1_0);
         // prepare new row data
         ResultSetInfo info = kryo.readObject(in, ResultSetInfo.class);
         types = new int[info.types.length];
@@ -68,6 +72,7 @@ public class KryoResultProducer implements ResultProducer {
                 case Types.BINARY:
                     val = kryo.readObjectOrNull(in, byte[].class);
                     break;
+                case Types.BOOLEAN:
                 case Types.BIT:
                     val = kryo.readObjectOrNull(in, Boolean.class);
                     break;
@@ -75,17 +80,44 @@ public class KryoResultProducer implements ResultProducer {
                 case Types.NCHAR:
                 case Types.VARCHAR:
                 case Types.NVARCHAR:
-                case Mssql.Types.DATETIMEOFFSET:
                     val = kryo.readObjectOrNull(in, String.class);
                     break;
                 case Types.DATE:
-                    val = kryo.readObjectOrNull(in, Date.class);
+                    if (isVersion1_0) {
+                        // produces https://github.com/sranka/jdbcimage/issues/19
+                        val = kryo.readObjectOrNull(in, Date.class);
+                    } else {
+                        val = kryo.readObjectOrNull(in, String.class);
+                        if (val != null) {
+                            val = Date.valueOf((String)val);
+                        }
+                    }
                     break;
                 case Types.TIME:
-                    val = kryo.readObjectOrNull(in, Time.class);
+                    if (isVersion1_0) {
+                        // produces https://github.com/sranka/jdbcimage/issues/19
+                        val = kryo.readObjectOrNull(in, Time.class);
+                    } else {
+                        val = kryo.readObjectOrNull(in, String.class);
+                        if (val != null) {
+                            val = Time.valueOf((String)val);
+                        }
+                    }
                     break;
                 case Types.TIMESTAMP:
-                    val = kryo.readObjectOrNull(in, Timestamp.class);
+                    if (isVersion1_0) {
+                        // produces https://github.com/sranka/jdbcimage/issues/19
+                        val = kryo.readObjectOrNull(in, Timestamp.class);
+                    } else {
+                        val = getTimestamp();
+                    }
+                    break;
+                case Mssql.Types.DATETIMEOFFSET:
+                    if(isVersion1_0) {
+                        val = kryo.readObjectOrNull(in, String.class);
+                    } else {
+                        val = getTimestamp();
+                    }
                     break;
                 case Types.DECIMAL:
                 case Types.NUMERIC:
@@ -128,6 +160,29 @@ public class KryoResultProducer implements ResultProducer {
         }
 
         return true;
+    }
+
+    private Object getTimestamp() {
+        Object val;
+        byte timeType = in.readByte();
+        switch (timeType) {
+            case TIME_TYPE_NULL:
+                val = kryo.readObjectOrNull(in, String.class);
+                break;
+            case TIME_TYPE_EXACT:
+                val = new Timestamp(in.readLong());
+                ((Timestamp) val).setNanos(in.readInt());
+                kryo.readObjectOrNull(in, String.class);
+                break;
+            case TIME_TYPE_LOCAL:
+                val = kryo.readObjectOrNull(in, String.class);
+                val = Timestamp.valueOf((String)val);
+                break;
+            default:
+                throw new IllegalStateException("Unsupported time type: " + timeType);
+
+        }
+        return val;
     }
 
     @Override

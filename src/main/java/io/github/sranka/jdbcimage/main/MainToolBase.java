@@ -312,7 +312,7 @@ public abstract class MainToolBase implements AutoCloseable {
     }
 
     protected void initOutput() {
-        this.out = System.out;
+        this.out = Env.out;
     }
 
     protected void initDataSource() {

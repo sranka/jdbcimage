@@ -1,9 +1,8 @@
 package io.github.sranka.jdbcimage.main;
 
-@SuppressWarnings("CallToPrintStackTrace")
 public class JdbcImageMain {
     private static void help() {
-        System.out.println("See documentation at https://sranka.github.io/jdbcimage");
+        Env.out.println("See documentation at https://github.com/sranka/jdbcimage.");
     }
 
     public static void main(String... args) throws Exception {
@@ -31,19 +30,21 @@ public class JdbcImageMain {
                     case "exec":
                         ExecTool.main(restArgs);
                         break;
+                    case "help":
+                        help();
+                        break;
                     default:
-                        System.out.println("Unknown action: " + action);
+                        Env.out.println("Unknown action: " + action);
                         action = null;
                         break;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(1);
+                Env.exit(1, e);
             }
         }
         if (action == null) {
             help();
-            System.exit(1);
+            Env.exit(1, null);
         }
     }
 }
