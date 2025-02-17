@@ -140,19 +140,19 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         val = rs.getTimestamp(i + 1, CALENDAR_LOCAL);
                         clazz = String.class;
                         if (val == null) {
-                            out.writeByte(TIME_TYPE_NULL); // storing null value
+                            out.writeByte(TIME_TYPE_NULL);
                         } else {
                             Timestamp val1 = (Timestamp) val;
                             Timestamp val2 = rs.getTimestamp(i + 1, CALENDAR_OTHER);
                             if (val1.getTime() == val2.getTime()) {
-                                // exact timestamp is specified, store nanos and millis
+                                // exact timestamp is specified
                                 out.writeByte(TIME_TYPE_EXACT);
                                 out.writeLong(val1.getTime());
                                 out.writeInt(val1.getNanos());
                                 val = null;
                             } else {
                                 // timestamp is a local datetime
-                                out.writeByte(TIME_TYPE_LOCAL); // storing null value
+                                out.writeByte(TIME_TYPE_LOCAL);
                                 val = val1.toString();
                             }
                         }
@@ -165,7 +165,7 @@ public class KryoResultSetConsumer implements ResultConsumer<ResultSet> {
                         val = rs.getTimestamp(i + 1);
                         clazz = String.class;
                         if (val == null) {
-                            out.writeByte(TIME_TYPE_NULL); // storing null value
+                            out.writeByte(TIME_TYPE_NULL);
                         } else {
                             Timestamp ts = (Timestamp) val;
                             out.writeByte(TIME_TYPE_EXACT);
